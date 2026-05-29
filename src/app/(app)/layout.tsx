@@ -17,15 +17,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         aria-hidden
         className="fixed inset-0 -z-20 h-full w-full object-cover"
       />
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-navy-900/85 via-navy-900/82 to-navy-900/90" />
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-navy-900/75 via-navy-900/72 to-navy-900/85" />
 
       {user.isMentor && <PendingRequestBanner userId={user.id} />}
       <Sidebar user={user} />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar user={user} />
-        {/* Content panel — opaque white so cards dominate; campus shows around edges */}
-        <main className="flex-1 px-5 pb-24 pt-6 lg:px-10 lg:pb-10">
-          <div className="mx-auto max-w-6xl">{children}</div>
+        {/* Content panel: light surface so dark text has full contrast.
+            Campus shows in the margin around it. */}
+        <main className="flex-1 p-3 pb-24 lg:p-5 lg:pb-6">
+          <div className="rounded-3xl bg-slate-50 px-5 py-8 shadow-lift lg:px-8 lg:py-10">
+            <div className="mx-auto max-w-6xl">{children}</div>
+          </div>
         </main>
       </div>
       <MobileBar user={user} />
