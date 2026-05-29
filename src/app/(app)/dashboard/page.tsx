@@ -5,7 +5,7 @@ import { matches, meetingLogs, monthlyFeedback, requests, users } from "@/db/sch
 import { and, desc, eq, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getCurrentUser } from "@/lib/session";
-import { StatCard, StatIcon } from "@/components/stat-card";
+import { StatTile } from "@/components/stat-card";
 
 export default async function DashboardPage() {
   const me = await getCurrentUser();
@@ -134,48 +134,43 @@ export default async function DashboardPage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
+        <StatTile
           label="Active matches"
           value={activeMatches.length}
           hint={activeMatches.length ? "View contact info" : "Send your first request"}
           href="/matches"
-          tint="emerald"
-          icon={<StatIcon kind="match" />}
+          tone="emerald"
         />
-        <StatCard
+        <StatTile
           label="Requests sent"
           value={sentByMe.length}
           hint={`${sentByMe.filter((r) => r.status === "pending").length} pending`}
           href="/requests"
-          tint="navy"
-          icon={<StatIcon kind="inbox" />}
+          tone="navy"
         />
         {me.isMentor ? (
-          <StatCard
+          <StatTile
             label="Pending for me"
             value={pendingForMe.length}
             hint="Review and accept or decline"
             href="/requests"
-            tint="amber"
-            icon={<StatIcon kind="spark" />}
+            tone="amber"
           />
         ) : (
-          <StatCard
+          <StatTile
             label="Mentors available"
             value={mentorCount?.count ?? 0}
             hint="Filter by major and interest"
             href="/mentors"
-            tint="violet"
-            icon={<StatIcon kind="users" />}
+            tone="gold"
           />
         )}
-        <StatCard
+        <StatTile
           label="Monthly check-in"
           value="Open"
           hint="Both sides answer once a month"
           href="/check-in"
-          tint="rose"
-          icon={<StatIcon kind="calendar" />}
+          tone="violet"
         />
       </section>
 

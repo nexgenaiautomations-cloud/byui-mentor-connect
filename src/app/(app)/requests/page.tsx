@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { requests, users } from "@/db/schema";
 import { desc, eq, or } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { StatTile } from "@/components/stat-card";
 import { RequestRow } from "./request-row";
 
 export default async function RequestsPage() {
@@ -29,12 +30,32 @@ export default async function RequestsPage() {
   const incoming = rows.filter((r) => r.mentorId === me.id);
   const outgoing = rows.filter((r) => r.menteeId === me.id);
 
+  // Status counters for the 2x2 grid up top
+  const visible = me.isMentor ? rows : outgoing;
+  const counts = {
+    pending: visible.filter((r) => r.status === "pending").length,
+    accepted: visible.filter((r) => r.status === "accepted").length,
+    declined: visible.filter((r) => r.status === "declined").length,
+    cancelled: visible.filter((r) => r.status === "cancelled").length,
+  };
+
   return (
     <div className="space-y-10">
       <header>
-        <h1 className="font-display text-3xl font-bold text-navy-800">Requests</h1>
-        <p className="mt-1 text-slate-600">Pending mentorship requests, sent and received.</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Pipeline</p>
+        <h1 className="mt-1 font-display text-3xl font-black text-navy-800">Requests</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Mentorship requests, sent and received.
+        </p>
       </header>
+
+      {/* 4-tile status counter row */}
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatTile label="Pending"   value={counts.pending}   tone="amber"   />
+        <StatTile label="Accepted"  value={counts.accepted}  tone="emerald" />
+        <StatTile label="Declined"  value={counts.declined}  tone="slate"   />
+        <StatTile label="Cancelled" value={counts.cancelled} tone="slate"   />
+      </section>
 
       {me.isMentor && (
         <section className="space-y-3">

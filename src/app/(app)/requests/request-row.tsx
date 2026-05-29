@@ -38,12 +38,12 @@ export function RequestRow({
     router.refresh();
   }
 
-  const color = {
-    pending: "bg-amber-50 border-amber-200 text-amber-800",
-    accepted: "bg-emerald-50 border-emerald-200 text-emerald-800",
-    declined: "bg-slate-50 border-slate-200 text-slate-600",
-    cancelled: "bg-slate-50 border-slate-200 text-slate-500",
-  }[request.status] ?? "bg-slate-50 border-slate-200";
+  const pillClass = {
+    pending: "pill-pending",
+    accepted: "pill-accepted",
+    declined: "pill-declined",
+    cancelled: "pill-declined",
+  }[request.status] ?? "pill";
 
   return (
     <div className="card flex items-center justify-between gap-4">
@@ -57,9 +57,7 @@ export function RequestRow({
         </p>
       </div>
       <div className="flex items-center gap-2">
-        <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${color}`}>
-          {request.status}
-        </span>
+        <span className={pillClass}>{request.status}</span>
         {request.status === "pending" && viewerRole === "mentor" && (
           <>
             <button onClick={() => act("decline")} disabled={busy} className="btn-outline">Decline</button>

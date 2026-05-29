@@ -96,13 +96,7 @@ export default async function AdminApplicationsPage() {
                     </p>
                   )}
                 </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    a.status === "approved"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-slate-100 text-slate-500"
-                  }`}
-                >
+                <span className={a.status === "approved" ? "pill-accepted" : "pill-declined"}>
                   {a.status}
                 </span>
               </div>

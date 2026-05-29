@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { mentorApplications, users, matches, requests, meetingLogs } from "@/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
-import { StatCard, StatIcon } from "@/components/stat-card";
+import { StatTile } from "@/components/stat-card";
 import { ApplicationActions } from "./actions";
 
 export default async function AdminPage() {
@@ -75,13 +75,13 @@ export default async function AdminPage() {
         </p>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <StatCard label="Total members" value={counts?.members ?? 0} tint="navy" icon={<StatIcon kind="users" />} hint="All registered users" />
-        <StatCard label="Active mentors" value={counts?.mentors ?? 0} tint="emerald" icon={<StatIcon kind="spark" />} hint="Approved and available" />
-        <StatCard label="Active matches" value={counts?.activeMatches ?? 0} tint="violet" icon={<StatIcon kind="match" />} />
-        <StatCard label="Pending requests" value={counts?.pendingRequests ?? 0} tint="amber" icon={<StatIcon kind="inbox" />} />
-        <StatCard label="Meeting logs" value={counts?.meetingLogs ?? 0} tint="rose" icon={<StatIcon kind="calendar" />} hint="All-time" />
-        <StatCard label="Applications to review" value={counts?.pendingApps ?? 0} tint="amber" icon={<StatIcon kind="chart" />} />
+      <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <StatTile label="Members"      value={counts?.members ?? 0}        tone="navy"    hint="Registered" />
+        <StatTile label="Mentors"      value={counts?.mentors ?? 0}        tone="emerald" hint="Approved" />
+        <StatTile label="Matches"      value={counts?.activeMatches ?? 0}  tone="violet"  hint="Active" />
+        <StatTile label="Requests"     value={counts?.pendingRequests ?? 0} tone="amber"   hint="Pending" />
+        <StatTile label="Meetings"     value={counts?.meetingLogs ?? 0}    tone="sky"     hint="All time" />
+        <StatTile label="To review"    value={counts?.pendingApps ?? 0}    tone="gold"    hint="Applications" />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
@@ -179,7 +179,7 @@ export default async function AdminPage() {
                   <p className="truncate text-sm font-semibold text-navy-800">{a.applicantName}</p>
                   <p className="text-xs text-slate-500">{a.applicantEmail}</p>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${a.status === "approved" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+                <span className={a.status === "approved" ? "pill-accepted" : "pill-declined"}>
                   {a.status}
                 </span>
               </div>

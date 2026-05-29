@@ -1,45 +1,38 @@
 import Link from "next/link";
 
-type Tint = "navy" | "emerald" | "amber" | "violet" | "rose";
+export type Tone = "navy" | "emerald" | "amber" | "gold" | "violet" | "rose" | "sky" | "slate";
 
-const TINTS: Record<Tint, { bg: string; ring: string; text: string }> = {
-  navy: { bg: "bg-navy-50", ring: "ring-navy-100", text: "text-navy-700" },
-  emerald: { bg: "bg-emerald-50", ring: "ring-emerald-100", text: "text-emerald-700" },
-  amber: { bg: "bg-amber-50", ring: "ring-amber-100", text: "text-amber-700" },
-  violet: { bg: "bg-violet-50", ring: "ring-violet-100", text: "text-violet-700" },
-  rose: { bg: "bg-rose-50", ring: "ring-rose-100", text: "text-rose-700" },
+const TONES: Record<Tone, { bg: string; label: string; hint: string }> = {
+  navy:    { bg: "bg-navy-700",     label: "text-navy-100",    hint: "text-navy-200" },
+  emerald: { bg: "bg-emerald-600",  label: "text-emerald-100", hint: "text-emerald-100/80" },
+  amber:   { bg: "bg-amber-500",    label: "text-amber-50",    hint: "text-amber-100" },
+  gold:    { bg: "bg-gold-500",     label: "text-gold-50",     hint: "text-gold-100" },
+  violet:  { bg: "bg-violet-600",   label: "text-violet-100",  hint: "text-violet-200" },
+  rose:    { bg: "bg-rose-600",     label: "text-rose-100",    hint: "text-rose-200" },
+  sky:     { bg: "bg-sky-600",      label: "text-sky-100",     hint: "text-sky-200" },
+  slate:   { bg: "bg-slate-700",    label: "text-slate-300",   hint: "text-slate-400" },
 };
 
-export function StatCard({
+// Filled colored stat tile — replaces the icon-on-pastel-circle pattern.
+export function StatTile({
   label,
   value,
   hint,
   href,
-  tint = "navy",
-  icon,
+  tone = "navy",
 }: {
   label: string;
   value: React.ReactNode;
   hint?: string;
   href?: string;
-  tint?: Tint;
-  icon?: React.ReactNode;
+  tone?: Tone;
 }) {
-  const t = TINTS[tint];
+  const t = TONES[tone];
   const inner = (
-    <div className="card flex items-start gap-4">
-      {icon && (
-        <span
-          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${t.bg} ${t.text} ring-1 ${t.ring}`}
-        >
-          {icon}
-        </span>
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p>
-        <p className="mt-1 font-display text-3xl font-black text-navy-800">{value}</p>
-        {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
-      </div>
+    <div className={`relative overflow-hidden rounded-2xl p-5 text-white ${t.bg} shadow-soft`}>
+      <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${t.label}`}>{label}</p>
+      <p className="mt-1 font-display text-4xl font-black leading-none">{value}</p>
+      {hint && <p className={`mt-2 text-[11px] font-medium ${t.hint}`}>{hint}</p>}
     </div>
   );
   if (href) {
@@ -52,16 +45,18 @@ export function StatCard({
   return inner;
 }
 
-export function StatIcon({ kind }: { kind: "users" | "match" | "inbox" | "spark" | "calendar" | "chart" }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}
-         strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-      {kind === "users" && <><circle cx={9} cy={8} r={3.5} /><path d="M3 21c0-3.5 3-6 6-6s6 2.5 6 6" /><circle cx={17} cy={9} r={2.5} /><path d="M14 21c0-2.7 2-5 4-5" /></>}
-      {kind === "match" && <><path d="M9 12a5 5 0 0 1 0-7L11 3a5 5 0 0 1 7 7l-1 1" /><path d="M15 12a5 5 0 0 1 0 7l-2 2a5 5 0 0 1-7-7l1-1" /></>}
-      {kind === "inbox" && <><path d="M3 7h18" /><rect x={3} y={7} width={18} height={13} rx={2} /><path d="M3 13h5l2 3h4l2-3h5" /></>}
-      {kind === "spark" && <><path d="m12 3 2.5 5 5.5.8-4 4 1 5.7-5-3-5 3 1-5.7-4-4 5.5-.8z" /></>}
-      {kind === "calendar" && <><rect x={3} y={5} width={18} height={16} rx={2} /><path d="M3 9h18M8 3v4M16 3v4" /></>}
-      {kind === "chart" && <><path d="M4 20V4" /><path d="M20 20H4" /><path d="m7 16 4-5 3 3 6-7" /></>}
-    </svg>
-  );
+// Backwards-compat shim — older pages may still import StatCard / StatIcon.
+export function StatCard(props: {
+  label: string;
+  value: React.ReactNode;
+  hint?: string;
+  href?: string;
+  tint?: Tone;
+  icon?: React.ReactNode;
+}) {
+  return <StatTile label={props.label} value={props.value} hint={props.hint} href={props.href} tone={props.tint ?? "navy"} />;
+}
+
+export function StatIcon() {
+  return null;
 }
