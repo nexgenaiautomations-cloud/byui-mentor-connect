@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Fixed campus background — sits behind everything */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/campus-hero.jpg"
+        src="/byui-campus.jpg"
         alt=""
         aria-hidden
         className="fixed inset-0 -z-20 h-full w-full object-cover"

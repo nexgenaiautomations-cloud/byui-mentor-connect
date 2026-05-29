@@ -15,7 +15,7 @@ export default async function LandingPage() {
       <section className="relative isolate min-h-[640px] overflow-hidden bg-navy-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/campus-hero.jpg"
+          src="/byui-campus.jpg"
           alt="BYU-Idaho campus"
           className="absolute inset-0 -z-10 h-full w-full object-cover opacity-90"
         />
@@ -133,7 +133,7 @@ export default async function LandingPage() {
           <div className="relative h-72 overflow-hidden rounded-3xl bg-navy-900 lg:h-auto">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/campus-students.jpg"
+              src="/byui-campus.jpg"
               alt="BYU-Idaho students"
               className="h-full w-full object-cover"
             />
@@ -175,7 +175,7 @@ export default async function LandingPage() {
       <section className="relative h-64 overflow-hidden bg-navy-900 md:h-80">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/campus-library.jpg"
+          src="/byui-campus.jpg"
           alt="BYU-Idaho campus"
           className="absolute inset-0 h-full w-full object-cover opacity-80"
         />

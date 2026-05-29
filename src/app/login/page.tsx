@@ -4,7 +4,7 @@ import { auth, signIn } from "../../../auth";
 import { DemoButtons } from "./demo-buttons";
 import { Logo } from "@/components/logo";
 
-const CAMPUS_LOGIN = "/campus-hero.jpg";
+const CAMPUS_LOGIN = "/byui-campus.jpg";
 
 export default async function LoginPage({
   searchParams,
