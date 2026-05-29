@@ -27,7 +27,7 @@ export async function PendingRequestBanner({ userId }: { userId: string }) {
 
   return (
     <div className="fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-3xl rounded-2xl bg-navy-700 p-4 text-white shadow-lift ring-4 ring-gold-400">
+      <div className="pointer-events-auto w-full max-w-3xl rounded-2xl bg-navy-700 p-4 text-white ring-4 ring-gold-400">
         <div className="flex items-start gap-3">
           <span className="inline-flex h-2.5 w-2.5 shrink-0 translate-y-1.5 animate-pulse rounded-full bg-amber-300" />
           {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -126,8 +126,8 @@ export default async function DashboardPage() {
             Find a mentor →
           </Link>
           {!me.isMentor && (
-            <Link href="/apply-mentor" className="rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/30 hover:bg-white/20 cursor-pointer">
-              Apply to mentor
+            <Link href="/apply-mentor" className="btn-gold">
+              Apply to mentor →
             </Link>
           )}
         </div>

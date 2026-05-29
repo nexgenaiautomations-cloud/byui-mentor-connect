@@ -115,7 +115,7 @@ function MentorCard({ mentor: m, highlight }: { mentor: Mentor; highlight?: bool
     <article
       className={
         "card flex flex-col gap-4 " +
-        (highlight ? "ring-2 ring-emerald-200" : "")
+        (highlight ? "ring-4 ring-gold-300" : "")
       }
     >
       <div className="flex items-center gap-3">
@@ -141,14 +141,10 @@ function MentorCard({ mentor: m, highlight }: { mentor: Mentor; highlight?: bool
       </div>
 
       {highlight && (
-        <div className="flex flex-wrap gap-1.5 text-[11px]">
-          {m.sameMajor > 0 && (
-            <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 font-bold text-emerald-700 ring-1 ring-emerald-100">
-              Same major
-            </span>
-          )}
+        <div className="flex flex-wrap gap-1.5">
+          {m.sameMajor > 0 && <span className="pill-gold">Same major</span>}
           {m.overlap > 0 && (
-            <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 font-bold text-emerald-700 ring-1 ring-emerald-100">
+            <span className="pill-gold">
               {m.overlap} shared interest{m.overlap === 1 ? "" : "s"}
             </span>
           )}

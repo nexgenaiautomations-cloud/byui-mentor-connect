@@ -20,7 +20,8 @@ export default async function ApplyMentorPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <header>
-        <h1 className="font-display text-3xl font-bold text-navy-800">Apply to mentor</h1>
+        <p className="text-xs font-bold uppercase tracking-wider text-gold-700">Pay it forward</p>
+        <h1 className="mt-1 font-display text-3xl font-black text-navy-800">Apply to mentor</h1>
         <p className="mt-1 text-slate-600">
           Every member is welcome to apply. An admin reviews your application and approves it
           once you&apos;re ready to take on mentees.

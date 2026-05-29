@@ -37,7 +37,7 @@ export function PendingRequestActions({ requestId }: { requestId: string }) {
       <button
         onClick={() => act("accept")}
         disabled={busy}
-        className="rounded-lg bg-white px-4 py-1.5 text-xs font-bold text-navy-800 hover:bg-navy-50 cursor-pointer"
+        className="rounded-lg bg-gold-500 px-4 py-1.5 text-xs font-bold text-navy-900 hover:bg-gold-400 cursor-pointer"
       >
         {busy ? "…" : "Accept"}
       </button>

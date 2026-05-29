@@ -103,8 +103,8 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
       )}
 
-      <button type="submit" disabled={submitting} className="btn-primary w-full">
-        {submitting ? "Submitting…" : "Submit application"}
+      <button type="submit" disabled={submitting} className="btn-gold w-full">
+        {submitting ? "Submitting…" : "Submit application →"}
       </button>
     </form>
   );
