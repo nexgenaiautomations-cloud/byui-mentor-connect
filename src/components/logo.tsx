@@ -1,39 +1,49 @@
-// BYUI CAN crest. Uses the official crest PNG. Two sizes:
-// - default (small): 256px source, used in sidebar/topbar/login
-// - large: 800px source, used hero-sized on the landing page
+// BYUI CAN logo — the simpler shield + handshake + wordmark (no 1-2-3 columns).
+// For the full 1-2-3 crest (used only in the landing "rhythm" section), see
+// /public/byuican-crest.png.
 export function Logo({
-  size = 64,
-  variant = "default",
+  size = 56,
   className = "",
   withText = false,
 }: {
   size?: number;
-  variant?: "default" | "large";
   className?: string;
   withText?: boolean;
 }) {
-  const src = variant === "large" ? "/byuican-crest.png" : "/byuican-crest-sm.png";
-  // The official crest is ~2:3 aspect (1024x1536) — keep that.
-  const aspectH = (size * 1536) / 1024;
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        src="/byuican-icon.png"
         alt="BYUI CAN — Career Advancement Network"
         width={size}
-        height={aspectH}
-        style={{ width: size, height: aspectH }}
+        height={size}
+        style={{ width: size, height: size }}
         className="select-none"
       />
       {withText && (
         <span className="leading-tight">
-          <span className="block font-display text-sm font-black tracking-tight text-navy-800">BYUI CAN</span>
-          <span className="block text-[10px] font-semibold uppercase tracking-wider text-navy-700/70">
+          <span className="block font-display text-sm font-black tracking-tight text-white">BYUI CAN</span>
+          <span className="block text-[10px] font-semibold uppercase tracking-wider text-white/70">
             Mentor Connect
           </span>
         </span>
       )}
     </span>
+  );
+}
+
+// Full 1-2-3 crest — used only for the landing's BYUI CAN rhythm section.
+export function FullCrest({ size = 380 }: { size?: number }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/byuican-crest.png"
+      alt="BYUI CAN — 1 Career Task weekly, 2 Internships before senior year, 3 Career Chats monthly"
+      width={size}
+      height={(size * 1536) / 1024}
+      style={{ width: size, height: (size * 1536) / 1024 }}
+      className="select-none"
+    />
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "../../auth";
-import { Logo } from "@/components/logo";
+import { Logo, FullCrest } from "@/components/logo";
 import { InstallButton } from "@/components/install-button";
 
 export default async function LandingPage() {
@@ -109,7 +109,7 @@ export default async function LandingPage() {
           let it speak for itself at hero size. No duplicate bubbles below. */}
       <section id="how" className="relative bg-white px-6 py-20">
         <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
-          <Logo size={380} variant="large" />
+          <FullCrest size={380} />
           <h2 className="mt-8 font-display text-3xl font-black text-navy-800 md:text-4xl">
             The BYUI CAN rhythm
           </h2>

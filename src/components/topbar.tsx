@@ -9,33 +9,25 @@ function initials(name: string | null | undefined, fallback: string) {
 
 export function TopBar({ user, title }: { user: User; title?: string }) {
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-white/10 bg-white/95 px-6 backdrop-blur lg:px-8">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-white/15 bg-transparent px-6 lg:px-10">
       <div className="flex items-center gap-3">
         <Link href="/dashboard" className="lg:hidden flex items-center gap-2">
           <Logo size={32} />
-          <span className="font-display text-sm font-black tracking-tight text-navy-800">
+          <span className="font-display text-sm font-black tracking-tight text-white">
             BYUI CAN
           </span>
         </Link>
         {title && (
-          <h2 className="hidden lg:block font-display text-lg font-bold text-navy-800">{title}</h2>
+          <h2 className="hidden lg:block font-display text-lg font-bold text-white">{title}</h2>
         )}
       </div>
       <div className="flex items-center gap-3">
-        <span
-          className={`hidden sm:inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${
-            user.isAdmin
-              ? "bg-rose-50 text-rose-700"
-              : user.isMentor
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-navy-50 text-navy-700"
-          }`}
-        >
+        <span className="hidden sm:inline-flex items-center rounded-full bg-gold-500/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-gold-200 ring-1 ring-gold-400/40">
           {user.isAdmin ? "Admin" : user.isMentor ? "Mentor" : "Member"}
         </span>
         <Link
           href="/profile"
-          className="grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-navy-700 text-xs font-semibold text-white cursor-pointer ring-2 ring-white"
+          className="grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-white/10 text-xs font-semibold text-white cursor-pointer ring-2 ring-white/30"
         >
           {user.image ? (
             // eslint-disable-next-line @next/next/no-img-element
