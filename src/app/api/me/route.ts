@@ -16,7 +16,16 @@ const profileSchema = z.object({
   phone: z.string().max(40).optional().nullable(),
   preferredContactMethod: z.enum(["email", "phone", "teams"]),
   bio: z.string().max(2000).optional().nullable(),
-  image: z.string().url().max(500).optional().nullable().or(z.literal("")),
+  // Image URLs must be https:// — no javascript:, data:, or http: tracking
+  // pixels. Length cap mitigates header smuggling / log floods.
+  image: z
+    .string()
+    .max(500)
+    .refine((v) => v === "" || /^https:\/\//i.test(v), {
+      message: "image must be an https:// URL",
+    })
+    .optional()
+    .nullable(),
   careerInterests: z
     .array(z.enum(CAREER_OPTIONS as unknown as [string, ...string[]]))
     .max(CAREER_OPTIONS.length),

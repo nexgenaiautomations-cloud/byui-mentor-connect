@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { Buffer } from "node:buffer";
+import { timingSafeEqual } from "node:crypto";
 import { db } from "@/db/client";
 import { matches } from "@/db/schema";
-import { and, eq, lt, sql } from "drizzle-orm";
+import { and, eq, lt } from "drizzle-orm";
 import { INACTIVITY_DISCONNECT_DAYS } from "@/lib/possible-actions";
 
 // Daily job: auto-disconnect matches with no activity for 180+ days.
@@ -12,9 +14,15 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   // Verify the request came from Vercel Cron (or someone with the secret).
-  const auth = req.headers.get("authorization");
+  // Constant-time compare to avoid leaking the secret via response timing.
+  if (!process.env.CRON_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const auth = req.headers.get("authorization") ?? "";
   const expected = `Bearer ${process.env.CRON_SECRET}`;
-  if (!process.env.CRON_SECRET || auth !== expected) {
+  const a = Buffer.from(auth);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

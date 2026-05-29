@@ -28,47 +28,93 @@ export async function PATCH(
 
   const { action } = parsed.data;
 
+  // ---------- Cancel (mentee only) ----------
   if (action === "cancel") {
     if (r.menteeId !== me.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    const [updated] = await db
+    // Only transition from pending → cancelled. The WHERE clause guards TOCTOU:
+    // if another flow has already accepted/declined, RETURNING yields nothing.
+    const updated = await db
       .update(requests)
       .set({ status: "cancelled", respondedAt: new Date() })
-      .where(eq(requests.id, id))
+      .where(and(eq(requests.id, id), eq(requests.status, "pending")))
       .returning();
-    return NextResponse.json({ request: updated });
+    if (updated.length === 0) {
+      return NextResponse.json(
+        { error: "Request is no longer pending" },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json({ request: updated[0] });
   }
 
+  // ---------- Accept / Decline (mentor only) ----------
   if (r.mentorId !== me.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const status = action === "accept" ? "accepted" : "declined";
-  const [updated] = await db
+  const newStatus = action === "accept" ? "accepted" : "declined";
+  const updated = await db
     .update(requests)
-    .set({ status, respondedAt: new Date() })
-    .where(eq(requests.id, id))
+    .set({ status: newStatus, respondedAt: new Date() })
+    .where(and(eq(requests.id, id), eq(requests.status, "pending")))
     .returning();
 
-  if (status === "accepted") {
-    await db.insert(matches).values({
-      mentorId: r.mentorId,
-      menteeId: r.menteeId,
-      requestId: r.id,
-    });
+  if (updated.length === 0) {
+    return NextResponse.json(
+      { error: "Request is no longer pending" },
+      { status: 409 }
+    );
+  }
 
-    // Enforce capacity — if mentor now at capacity, flip mentorAvailable off.
+  if (newStatus === "accepted") {
+    // Insert the match.
+    const [newMatch] = await db
+      .insert(matches)
+      .values({
+        mentorId: r.mentorId,
+        menteeId: r.menteeId,
+        requestId: r.id,
+      })
+      .returning();
+
+    // Detect capacity overrun: if a concurrent accept also inserted, total
+    // active matches may now exceed the mentor's capacity. Roll back ours.
     const [{ count } = { count: 0 }] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(matches)
       .where(and(eq(matches.mentorId, r.mentorId), eq(matches.status, "active")));
 
-    const [mentor] = await db.select().from(users).where(eq(users.id, r.mentorId)).limit(1);
-    if (mentor && mentor.mentorCapacity && count >= mentor.mentorCapacity) {
-      await db.update(users).set({ mentorAvailable: false }).where(eq(users.id, r.mentorId));
+    const [mentor] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, r.mentorId))
+      .limit(1);
+    const cap = mentor?.mentorCapacity ?? 5;
+
+    if (count > cap) {
+      // Roll back: delete our match and revert request to pending.
+      await db.delete(matches).where(eq(matches.id, newMatch.id));
+      await db
+        .update(requests)
+        .set({ status: "pending", respondedAt: null })
+        .where(eq(requests.id, id));
+      return NextResponse.json(
+        { error: "Mentor reached capacity — try again or pick another mentor" },
+        { status: 409 }
+      );
+    }
+
+    // At capacity (not over) → flip mentorAvailable off so they stop appearing
+    // in new browses.
+    if (count >= cap) {
+      await db
+        .update(users)
+        .set({ mentorAvailable: false })
+        .where(eq(users.id, r.mentorId));
     }
   }
 
-  return NextResponse.json({ request: updated });
+  return NextResponse.json({ request: updated[0] });
 }

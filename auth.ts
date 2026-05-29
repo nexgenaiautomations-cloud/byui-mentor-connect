@@ -6,6 +6,19 @@ import { users, accounts, sessions, verificationTokens } from "@/db/schema";
 
 const BYUI_DOMAIN = "@byui.edu";
 
+// Throw clearly at startup if a required env var is missing — better than
+// the provider silently dropping emails.
+function requireEnv(name: string): string {
+  const v = process.env[name];
+  if (!v) {
+    // During `next build` we don't have real secrets — emit a placeholder so
+    // the build doesn't fail, but log so a misconfigured runtime is obvious.
+    if (process.env.NEXT_PHASE === "phase-production-build") return "build-placeholder";
+    throw new Error(`Missing required env var: ${name}`);
+  }
+  return v;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
     usersTable: users,
@@ -17,10 +30,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/login", verifyRequest: "/login/check-email" },
   providers: [
     Resend({
-      from: process.env.EMAIL_FROM ?? "BYUI CAN Mentor Connect <no-reply@byui.edu>",
-      // Resend reads AUTH_RESEND_KEY automatically; we name it explicitly here
-      // for clarity.
-      apiKey: process.env.AUTH_RESEND_KEY ?? process.env.RESEND_API_KEY,
+      from: process.env.EMAIL_FROM ?? "BYUI CAN Mentor Connect <onboarding@resend.dev>",
+      apiKey: requireEnv("AUTH_RESEND_KEY"),
     }),
   ],
   callbacks: {

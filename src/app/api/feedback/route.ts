@@ -33,23 +33,35 @@ export async function POST(req: Request) {
   const role = match.mentorId === me.id ? "mentor" : match.menteeId === me.id ? "mentee" : null;
   if (!role) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const [fb] = await db
-    .insert(monthlyFeedback)
-    .values({
-      matchId: match.id,
-      submittedByUserId: me.id,
-      submittedByRole: role,
-      month: parsed.data.month,
-      year: parsed.data.year,
-      rating: parsed.data.rating,
-      answers: parsed.data.answers ? JSON.stringify(parsed.data.answers) : null,
-    })
-    .returning();
+  try {
+    const [fb] = await db
+      .insert(monthlyFeedback)
+      .values({
+        matchId: match.id,
+        submittedByUserId: me.id,
+        submittedByRole: role,
+        month: parsed.data.month,
+        year: parsed.data.year,
+        rating: parsed.data.rating,
+        answers: parsed.data.answers ? JSON.stringify(parsed.data.answers) : null,
+      })
+      .returning();
 
-  await db
-    .update(matches)
-    .set({ lastActivityAt: new Date() })
-    .where(eq(matches.id, match.id));
+    await db
+      .update(matches)
+      .set({ lastActivityAt: new Date() })
+      .where(eq(matches.id, match.id));
 
-  return NextResponse.json({ feedback: fb }, { status: 201 });
+    return NextResponse.json({ feedback: fb }, { status: 201 });
+  } catch (err) {
+    // Unique constraint on (match_id, submitted_by_user_id, month, year)
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("monthly_feedback_uniq") || msg.toLowerCase().includes("unique")) {
+      return NextResponse.json(
+        { error: "You already submitted this month's check-in for that match" },
+        { status: 409 }
+      );
+    }
+    throw err;
+  }
 }

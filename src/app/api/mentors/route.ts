@@ -1,16 +1,28 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { and, eq, ne } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+
+const queryParams = z.object({
+  major: z.string().max(120).optional(),
+  semester: z.string().max(40).optional(),
+});
 
 export async function GET(req: Request) {
   const me = await getCurrentUser();
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const url = new URL(req.url);
-  const major = url.searchParams.get("major");
-  const semester = url.searchParams.get("semester");
+  const parsed = queryParams.safeParse({
+    major: url.searchParams.get("major") ?? undefined,
+    semester: url.searchParams.get("semester") ?? undefined,
+  });
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  const { major, semester } = parsed.data;
 
   const conditions = [eq(users.isMentor, true), eq(users.mentorAvailable, true), ne(users.id, me.id)];
   if (major) conditions.push(eq(users.major, major));

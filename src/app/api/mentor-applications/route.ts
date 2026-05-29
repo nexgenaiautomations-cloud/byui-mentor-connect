@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { mentorApplications } from "@/db/schema";
-import { desc, eq } from "drizzle-orm";
-import { getCurrentUser, requireAdmin } from "@/lib/session";
+import { and, desc, eq, inArray } from "drizzle-orm";
+import { getCurrentUser } from "@/lib/session";
 
 const applicationSchema = z.object({
   motivation: z.string().min(20).max(2000),
@@ -39,6 +39,24 @@ export async function POST(req: Request) {
   const parsed = applicationSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  // Prevent duplicate submissions: one open or approved application per user.
+  const existing = await db
+    .select({ id: mentorApplications.id, status: mentorApplications.status })
+    .from(mentorApplications)
+    .where(
+      and(
+        eq(mentorApplications.userId, me.id),
+        inArray(mentorApplications.status, ["pending", "approved"] as const)
+      )
+    )
+    .limit(1);
+  if (existing.length > 0) {
+    return NextResponse.json(
+      { error: `You already have a ${existing[0].status} mentor application` },
+      { status: 409 }
+    );
   }
 
   const [app] = await db

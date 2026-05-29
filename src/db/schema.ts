@@ -7,6 +7,8 @@ import {
   primaryKey,
   pgEnum,
   uuid,
+  index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
@@ -124,76 +126,110 @@ export const mentorApplications = pgTable("mentor_application", {
   reviewedAt: timestamp("reviewed_at", { mode: "date" }),
 });
 
-export const requests = pgTable("request", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  mentorId: text("mentor_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  menteeId: text("mentee_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  message: text("message"),
-  status: requestStatus("status").notNull().default("pending"),
-  requestedAt: timestamp("requested_at", { mode: "date" })
-    .notNull()
-    .defaultNow(),
-  respondedAt: timestamp("responded_at", { mode: "date" }),
-});
+export const requests = pgTable(
+  "request",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    mentorId: text("mentor_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    menteeId: text("mentee_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    message: text("message"),
+    status: requestStatus("status").notNull().default("pending"),
+    requestedAt: timestamp("requested_at", { mode: "date" })
+      .notNull()
+      .defaultNow(),
+    respondedAt: timestamp("responded_at", { mode: "date" }),
+  },
+  (t) => ({
+    mentorStatusIdx: index("request_mentor_status_idx").on(t.mentorId, t.status),
+    menteeIdx: index("request_mentee_idx").on(t.menteeId),
+  })
+);
 
-export const matches = pgTable("match", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  mentorId: text("mentor_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  menteeId: text("mentee_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  requestId: uuid("request_id").references(() => requests.id),
-  startedAt: timestamp("started_at", { mode: "date" }).notNull().defaultNow(),
-  // Bumped on every meeting log or check-in. Drives the 30-day reminder and
-  // 6-month auto-disconnect.
-  lastActivityAt: timestamp("last_activity_at", { mode: "date" }).notNull().defaultNow(),
-  endedAt: timestamp("ended_at", { mode: "date" }),
-  status: matchStatus("status").notNull().default("active"),
-});
+export const matches = pgTable(
+  "match",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    mentorId: text("mentor_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    menteeId: text("mentee_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    requestId: uuid("request_id").references(() => requests.id),
+    startedAt: timestamp("started_at", { mode: "date" }).notNull().defaultNow(),
+    // Bumped on every meeting log or check-in. Drives the 30-day reminder and
+    // 6-month auto-disconnect.
+    lastActivityAt: timestamp("last_activity_at", { mode: "date" }).notNull().defaultNow(),
+    endedAt: timestamp("ended_at", { mode: "date" }),
+    status: matchStatus("status").notNull().default("active"),
+  },
+  (t) => ({
+    mentorStatusIdx: index("match_mentor_status_idx").on(t.mentorId, t.status),
+    menteeStatusIdx: index("match_mentee_status_idx").on(t.menteeId, t.status),
+    activityIdx: index("match_activity_idx").on(t.lastActivityAt),
+  })
+);
 
-export const meetingLogs = pgTable("meeting_log", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  matchId: uuid("match_id")
-    .notNull()
-    .references(() => matches.id, { onDelete: "cascade" }),
-  mentorId: text("mentor_id")
-    .notNull()
-    .references(() => users.id),
-  menteeId: text("mentee_id")
-    .notNull()
-    .references(() => users.id),
-  meetingDate: timestamp("meeting_date", { mode: "date" }).notNull(),
-  meetingType: meetingType("meeting_type").notNull().default("video"),
-  durationMinutes: integer("duration_minutes"),
-  topicsDiscussed: text("topics_discussed"),
-  actionItems: text("action_items"),
-  nextMeetingDate: timestamp("next_meeting_date", { mode: "date" }),
-  mentorNotes: text("mentor_notes"),
-  menteeConfirmed: boolean("mentee_confirmed").notNull().default(false),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
+export const meetingLogs = pgTable(
+  "meeting_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    matchId: uuid("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "cascade" }),
+    mentorId: text("mentor_id")
+      .notNull()
+      .references(() => users.id),
+    menteeId: text("mentee_id")
+      .notNull()
+      .references(() => users.id),
+    meetingDate: timestamp("meeting_date", { mode: "date" }).notNull(),
+    meetingType: meetingType("meeting_type").notNull().default("video"),
+    durationMinutes: integer("duration_minutes"),
+    topicsDiscussed: text("topics_discussed"),
+    actionItems: text("action_items"),
+    nextMeetingDate: timestamp("next_meeting_date", { mode: "date" }),
+    mentorNotes: text("mentor_notes"),
+    menteeConfirmed: boolean("mentee_confirmed").notNull().default(false),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    matchIdx: index("meeting_log_match_idx").on(t.matchId),
+    mentorIdx: index("meeting_log_mentor_idx").on(t.mentorId),
+  })
+);
 
-export const monthlyFeedback = pgTable("monthly_feedback", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  matchId: uuid("match_id")
-    .notNull()
-    .references(() => matches.id, { onDelete: "cascade" }),
-  submittedByUserId: text("submitted_by_user_id")
-    .notNull()
-    .references(() => users.id),
-  submittedByRole: text("submitted_by_role").notNull(), // "mentor" | "mentee"
-  month: integer("month").notNull(),
-  year: integer("year").notNull(),
-  rating: integer("rating").notNull(), // 1-5
-  answers: text("answers"), // JSON-encoded
-  submittedAt: timestamp("submitted_at", { mode: "date" }).notNull().defaultNow(),
-});
+export const monthlyFeedback = pgTable(
+  "monthly_feedback",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    matchId: uuid("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "cascade" }),
+    submittedByUserId: text("submitted_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    submittedByRole: text("submitted_by_role").notNull(), // "mentor" | "mentee"
+    month: integer("month").notNull(),
+    year: integer("year").notNull(),
+    rating: integer("rating").notNull(), // 1-5
+    answers: text("answers"), // JSON-encoded
+    submittedAt: timestamp("submitted_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    // One feedback per (match, user, month, year) — prevents accidental dupes.
+    uniqMonth: uniqueIndex("monthly_feedback_uniq").on(
+      t.matchId,
+      t.submittedByUserId,
+      t.month,
+      t.year
+    ),
+  })
+);
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

@@ -6,6 +6,7 @@ import { OnboardingForm } from "../onboarding/form";
 export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (!user.onboardedAt) redirect("/onboarding");
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
