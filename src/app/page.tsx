@@ -120,44 +120,58 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* What you get */}
+      {/* What you get — photo of a student on the side */}
       <section className="bg-slate-50 px-6 py-20">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="text-center font-display text-3xl font-black text-navy-800 md:text-4xl">
-            What you get
-          </h2>
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {[
-              {
-                title: "Pick the right person",
-                body: "Filter mentors by major, semester level, and career interest. See slots-left so you don't waste a request on someone at capacity.",
-              },
-              {
-                title: "Track every step",
-                body: "Pending, accepted, declined — always know where each request stands. Mentor contact unlocks the moment they accept.",
-              },
-              {
-                title: "Stay accountable",
-                body: "Mentors log every meeting. Both sides answer a short monthly check-in. Admins see aggregate progress.",
-              },
-            ].map((c) => (
-              <div
-                key={c.title}
-                className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-slate-100"
-              >
-                <p className="font-display text-lg font-bold text-navy-800">{c.title}</p>
-                <p className="mt-3 text-sm leading-6 text-slate-700">{c.body}</p>
-              </div>
-            ))}
+        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_1.2fr]">
+          <div className="relative h-80 overflow-hidden rounded-3xl bg-navy-900 lg:h-auto">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/campus-students.jpg"
+              alt="BYU-Idaho student"
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-900/95 to-transparent p-6">
+              <p className="font-display text-lg font-bold text-white">~500 students each semester.</p>
+              <p className="mt-1 text-sm text-white/90">
+                Peer mentorship lifts retention and career outcomes.
+              </p>
+            </div>
+          </div>
+          <div>
+            <h2 className="font-display text-3xl font-black text-navy-800 md:text-4xl">What you get</h2>
+            <div className="mt-6 space-y-4">
+              {[
+                {
+                  title: "Pick the right person",
+                  body: "Filter mentors by major, semester level, and career interest. See slots-left so you don't waste a request on someone at capacity.",
+                },
+                {
+                  title: "Track every step",
+                  body: "Pending, accepted, declined — always know where each request stands. Mentor contact unlocks the moment they accept.",
+                },
+                {
+                  title: "Stay accountable",
+                  body: "Mentors log every meeting. Both sides answer a short monthly check-in. Admins see aggregate progress.",
+                },
+              ].map((c) => (
+                <div
+                  key={c.title}
+                  className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-slate-100"
+                >
+                  <p className="font-display text-lg font-bold text-navy-800">{c.title}</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-700">{c.body}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA banner */}
+      {/* CTA banner — classroom shot */}
       <section className="relative isolate overflow-hidden bg-navy-900 px-6 py-20">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/byui-campus.jpg"
+          src="/campus-library.jpg"
           alt=""
           aria-hidden
           className="absolute inset-0 -z-10 h-full w-full object-cover opacity-50"
