@@ -48,7 +48,6 @@ export async function PATCH(
         isMentor: true,
         mentorCapacity: app.capacity,
         mentorTopics: app.topics,
-        mentorAvailability: app.availability,
       })
       .where(eq(users.id, app.userId));
   }

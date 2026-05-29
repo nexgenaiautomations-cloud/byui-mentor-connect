@@ -29,7 +29,6 @@ export async function GET(req: Request) {
       bio: users.bio,
       careerInterests: users.careerInterests,
       mentorTopics: users.mentorTopics,
-      mentorAvailability: users.mentorAvailability,
       mentorCapacity: users.mentorCapacity,
     })
     .from(users)

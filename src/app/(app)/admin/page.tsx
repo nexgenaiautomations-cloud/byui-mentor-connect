@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { mentorApplications, users, matches, requests } from "@/db/schema";
+import { mentorApplications, users, matches, requests, meetingLogs } from "@/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { StatCard, StatIcon } from "@/components/stat-card";
 import { ApplicationActions } from "./actions";
 
 export default async function AdminPage() {
@@ -18,8 +20,8 @@ export default async function AdminPage() {
       motivation: mentorApplications.motivation,
       topics: mentorApplications.topics,
       capacity: mentorApplications.capacity,
-      availability: mentorApplications.availability,
       applicantName: users.name,
+      applicantImage: users.image,
       applicantEmail: users.email,
       applicantMajor: users.major,
     })
@@ -33,61 +35,163 @@ export default async function AdminPage() {
       mentors: sql<number>`(select count(*)::int from "user" where is_mentor = true)`,
       activeMatches: sql<number>`(select count(*)::int from "match" where status = 'active')`,
       pendingRequests: sql<number>`(select count(*)::int from "request" where status = 'pending')`,
+      meetingLogs: sql<number>`(select count(*)::int from "meeting_log")`,
+      pendingApps: sql<number>`(select count(*)::int from "mentor_application" where status = 'pending')`,
     })
     .from(sql`(select 1) as _t`);
+
+  const recentMatchesRows = await db
+    .select({
+      id: matches.id,
+      startedAt: matches.startedAt,
+      mentorId: matches.mentorId,
+      menteeId: matches.menteeId,
+    })
+    .from(matches)
+    .where(eq(matches.status, "active"))
+    .orderBy(desc(matches.startedAt))
+    .limit(5);
+
+  const recentLogs = await db
+    .select({
+      id: meetingLogs.id,
+      meetingDate: meetingLogs.meetingDate,
+      topicsDiscussed: meetingLogs.topicsDiscussed,
+    })
+    .from(meetingLogs)
+    .orderBy(desc(meetingLogs.createdAt))
+    .limit(5);
+
+  const pendingApps = apps.filter((a) => a.status === "pending");
+  const reviewedApps = apps.filter((a) => a.status !== "pending");
 
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="font-display text-3xl font-bold text-navy-800">Admin</h1>
-        <p className="mt-1 text-slate-600">Program overview and mentor application review.</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Program</p>
+        <h1 className="mt-1 font-display text-3xl font-black text-navy-800">Admin dashboard</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Program overview, mentor application review, recent activity.
+        </p>
       </header>
 
-      <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Stat label="Members" value={counts?.members ?? 0} />
-        <Stat label="Mentors" value={counts?.mentors ?? 0} />
-        <Stat label="Active matches" value={counts?.activeMatches ?? 0} />
-        <Stat label="Pending requests" value={counts?.pendingRequests ?? 0} />
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <StatCard label="Total members" value={counts?.members ?? 0} tint="navy" icon={<StatIcon kind="users" />} hint="All registered users" />
+        <StatCard label="Active mentors" value={counts?.mentors ?? 0} tint="emerald" icon={<StatIcon kind="spark" />} hint="Approved and available" />
+        <StatCard label="Active matches" value={counts?.activeMatches ?? 0} tint="violet" icon={<StatIcon kind="match" />} />
+        <StatCard label="Pending requests" value={counts?.pendingRequests ?? 0} tint="amber" icon={<StatIcon kind="inbox" />} />
+        <StatCard label="Meeting logs" value={counts?.meetingLogs ?? 0} tint="rose" icon={<StatIcon kind="calendar" />} hint="All-time" />
+        <StatCard label="Applications to review" value={counts?.pendingApps ?? 0} tint="amber" icon={<StatIcon kind="chart" />} />
       </section>
 
-      <section>
-        <h2 className="font-display text-xl font-bold text-navy-800">Mentor applications</h2>
-        <div className="mt-4 space-y-3">
-          {apps.length === 0 && <p className="text-sm text-slate-500">No applications yet.</p>}
-          {apps.map((a) => (
-            <div key={a.id} className="card">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="font-display text-lg font-bold text-navy-800">{a.applicantName}</p>
-                  <p className="text-sm text-slate-600">
-                    {a.applicantEmail} · {a.applicantMajor}
-                  </p>
+      <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="card">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg font-bold text-navy-800">
+              Mentor applications · pending
+            </h2>
+            <span className="pill">{pendingApps.length}</span>
+          </div>
+          <div className="mt-4 space-y-3">
+            {pendingApps.length === 0 && (
+              <p className="text-sm text-slate-500">Nothing in the queue. Nice work.</p>
+            )}
+            {pendingApps.map((a) => (
+              <div key={a.id} className="rounded-xl border border-slate-100 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={
+                        a.applicantImage ||
+                        `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(a.applicantName || "")}&backgroundColor=1B3A6B&textColor=ffffff`
+                      }
+                      alt=""
+                      className="h-11 w-11 rounded-full object-cover"
+                    />
+                    <div>
+                      <p className="font-semibold text-navy-800">{a.applicantName}</p>
+                      <p className="text-xs text-slate-500">{a.applicantEmail} · {a.applicantMajor}</p>
+                    </div>
+                  </div>
+                  <span className="pill">capacity {a.capacity}</span>
                 </div>
-                <span className="pill">{a.status}</span>
+                <p className="mt-3 text-sm leading-6 text-slate-700">{a.motivation}</p>
+                {a.topics && a.topics.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {a.topics.map((t) => (
+                      <span key={t} className="pill">{t}</span>
+                    ))}
+                  </div>
+                )}
+                <ApplicationActions id={a.id} />
               </div>
-              <p className="mt-3 text-sm text-slate-700">{a.motivation}</p>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {(a.topics ?? []).map((t) => (
-                  <span key={t} className="pill">{t}</span>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="card">
+            <h2 className="font-display text-lg font-bold text-navy-800">Recent matches</h2>
+            {recentMatchesRows.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">No matches yet.</p>
+            ) : (
+              <ul className="mt-3 space-y-2 text-sm">
+                {recentMatchesRows.map((m) => (
+                  <li key={m.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                    <span className="text-slate-700">Match opened</span>
+                    <span className="text-xs text-slate-500">{new Date(m.startedAt).toLocaleDateString()}</span>
+                  </li>
                 ))}
-              </div>
-              <p className="mt-2 text-xs text-slate-500">
-                Capacity {a.capacity} · {a.availability || "no availability listed"}
-              </p>
-              {a.status === "pending" && <ApplicationActions id={a.id} />}
-            </div>
-          ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="card">
+            <h2 className="font-display text-lg font-bold text-navy-800">Recent meeting logs</h2>
+            {recentLogs.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">No meetings logged yet.</p>
+            ) : (
+              <ul className="mt-3 space-y-2 text-sm">
+                {recentLogs.map((l) => (
+                  <li key={l.id} className="rounded-lg bg-slate-50 px-3 py-2">
+                    <p className="text-xs font-semibold text-navy-800">
+                      {new Date(l.meetingDate).toLocaleDateString()}
+                    </p>
+                    {l.topicsDiscussed && (
+                      <p className="mt-0.5 line-clamp-1 text-xs text-slate-600">{l.topicsDiscussed}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
-    </div>
-  );
-}
 
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="card">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="font-display text-3xl font-bold text-navy-800">{value}</p>
+      {reviewedApps.length > 0 && (
+        <section>
+          <h2 className="font-display text-lg font-bold text-navy-800">Reviewed applications</h2>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {reviewedApps.map((a) => (
+              <div key={a.id} className="card flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-navy-800">{a.applicantName}</p>
+                  <p className="text-xs text-slate-500">{a.applicantEmail}</p>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${a.status === "approved" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+                  {a.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <p className="text-xs text-slate-400">
+        Tip: searchable user lookup, charts, and pagination land in v2.{" "}
+        <Link href="/dashboard" className="text-navy-700 underline">Back to member view</Link>.
+      </p>
     </div>
   );
 }

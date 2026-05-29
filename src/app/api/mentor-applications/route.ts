@@ -8,7 +8,6 @@ import { getCurrentUser, requireAdmin } from "@/lib/session";
 const applicationSchema = z.object({
   motivation: z.string().min(20).max(2000),
   topics: z.array(z.string().min(1).max(80)).min(1).max(10),
-  availability: z.string().max(500).optional().nullable(),
   capacity: z.number().int().min(1).max(10),
 });
 
@@ -48,7 +47,6 @@ export async function POST(req: Request) {
       userId: me.id,
       motivation: parsed.data.motivation,
       topics: parsed.data.topics,
-      availability: parsed.data.availability ?? null,
       capacity: parsed.data.capacity,
     })
     .returning();

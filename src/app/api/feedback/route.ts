@@ -46,5 +46,10 @@ export async function POST(req: Request) {
     })
     .returning();
 
+  await db
+    .update(matches)
+    .set({ lastActivityAt: new Date() })
+    .where(eq(matches.id, match.id));
+
   return NextResponse.json({ feedback: fb }, { status: 201 });
 }

@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { matches, meetingLogs } from "@/db/schema";
 import { eq, or } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { sql } from "drizzle-orm";
 
 const logSchema = z.object({
   matchId: z.string().uuid(),
@@ -61,6 +62,11 @@ export async function POST(req: Request) {
       mentorNotes: parsed.data.mentorNotes ?? null,
     })
     .returning();
+
+  await db
+    .update(matches)
+    .set({ lastActivityAt: new Date() })
+    .where(eq(matches.id, match.id));
 
   return NextResponse.json({ log }, { status: 201 });
 }

@@ -7,8 +7,7 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
   const router = useRouter();
   const [motivation, setMotivation] = useState("");
   const [topicsRaw, setTopicsRaw] = useState("");
-  const [availability, setAvailability] = useState("");
-  const [capacity, setCapacity] = useState(3);
+  const [capacity, setCapacity] = useState(5);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -30,7 +29,7 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
     const res = await fetch("/api/mentor-applications", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ motivation, topics, availability, capacity }),
+      body: JSON.stringify({ motivation, topics, capacity }),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -87,27 +86,17 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
         />
         <p className="mt-1 text-xs text-slate-500">Comma-separated.</p>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="label">Weekly availability</label>
-          <input
-            className="input"
-            placeholder="e.g. Tue/Thu evenings"
-            value={availability}
-            onChange={(e) => setAvailability(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="label">Capacity (max mentees)</label>
-          <input
-            type="number"
-            min={1}
-            max={10}
-            className="input"
-            value={capacity}
-            onChange={(e) => setCapacity(Number(e.target.value))}
-          />
-        </div>
+      <div>
+        <label className="label">Capacity (max mentees)</label>
+        <input
+          type="number"
+          min={1}
+          max={10}
+          className="input max-w-[160px]"
+          value={capacity}
+          onChange={(e) => setCapacity(Number(e.target.value))}
+        />
+        <p className="mt-1 text-xs text-slate-500">Default is 5. You can change this later from your profile.</p>
       </div>
 
       {error && (

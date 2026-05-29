@@ -57,9 +57,8 @@ export const users = pgTable("user", {
 
   // Mentor flag — set true after approved mentor application
   isMentor: boolean("is_mentor").notNull().default(false),
-  mentorCapacity: integer("mentor_capacity").default(3),
+  mentorCapacity: integer("mentor_capacity").default(5),
   mentorTopics: text("mentor_topics").array(),
-  mentorAvailability: text("mentor_availability"),
   mentorAvailable: boolean("mentor_available").notNull().default(true),
 
   isAdmin: boolean("is_admin").notNull().default(false),
@@ -115,8 +114,7 @@ export const mentorApplications = pgTable("mentor_application", {
     .references(() => users.id, { onDelete: "cascade" }),
   motivation: text("motivation").notNull(),
   topics: text("topics").array().notNull(),
-  availability: text("availability"),
-  capacity: integer("capacity").notNull().default(3),
+  capacity: integer("capacity").notNull().default(5),
   status: applicationStatus("status").notNull().default("pending"),
   reviewedBy: text("reviewed_by").references(() => users.id),
   reviewNotes: text("review_notes"),
@@ -152,6 +150,9 @@ export const matches = pgTable("match", {
     .references(() => users.id, { onDelete: "cascade" }),
   requestId: uuid("request_id").references(() => requests.id),
   startedAt: timestamp("started_at", { mode: "date" }).notNull().defaultNow(),
+  // Bumped on every meeting log or check-in. Drives the 30-day reminder and
+  // 6-month auto-disconnect.
+  lastActivityAt: timestamp("last_activity_at", { mode: "date" }).notNull().defaultNow(),
   endedAt: timestamp("ended_at", { mode: "date" }),
   status: matchStatus("status").notNull().default("active"),
 });

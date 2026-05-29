@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { matches, requests } from "@/db/schema";
-import { and, eq, or } from "drizzle-orm";
+import { matches, meetingLogs, monthlyFeedback, requests, users } from "@/db/schema";
+import { and, desc, eq, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { getCurrentUser } from "@/lib/session";
+import { StatCard, StatIcon } from "@/components/stat-card";
 
 export default async function DashboardPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
 
-  const myRequests = await db
+  const allReqs = await db
     .select()
     .from(requests)
     .where(or(eq(requests.menteeId, me.id), eq(requests.mentorId, me.id)));
@@ -25,61 +27,290 @@ export default async function DashboardPage() {
       )
     );
 
-  const pendingForMe = myRequests.filter((r) => r.status === "pending" && r.mentorId === me.id);
-  const sentByMe = myRequests.filter((r) => r.menteeId === me.id);
+  const pendingForMe = allReqs.filter((r) => r.status === "pending" && r.mentorId === me.id);
+  const sentByMe = allReqs.filter((r) => r.menteeId === me.id);
+
+  const mentor = alias(users, "mentor_u");
+  const mentee = alias(users, "mentee_u");
+  const recentMatches = await db
+    .select({
+      id: matches.id,
+      startedAt: matches.startedAt,
+      mentorId: matches.mentorId,
+      menteeId: matches.menteeId,
+      mentorName: mentor.name,
+      mentorImage: mentor.image,
+      menteeName: mentee.name,
+      menteeImage: mentee.image,
+    })
+    .from(matches)
+    .innerJoin(mentor, eq(mentor.id, matches.mentorId))
+    .innerJoin(mentee, eq(mentee.id, matches.menteeId))
+    .where(
+      and(
+        or(eq(matches.mentorId, me.id), eq(matches.menteeId, me.id)),
+        eq(matches.status, "active")
+      )
+    )
+    .orderBy(desc(matches.startedAt))
+    .limit(4);
+
+  const [mentorCount] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(users)
+    .where(and(eq(users.isMentor, true), eq(users.mentorAvailable, true)));
+
+  // Mentor "Your impact" — count of mentees helped (all-time approved matches),
+  // total meetings logged, average rating from mentees.
+  let impact: {
+    menteesHelped: number;
+    activeMentees: number;
+    meetingsLogged: number;
+    totalMinutes: number;
+    avgRating: number | null;
+    recentTopics: { topicsDiscussed: string | null; meetingDate: Date }[];
+  } | null = null;
+
+  if (me.isMentor) {
+    const [counts] = await db
+      .select({
+        menteesHelped: sql<number>`(select count(distinct mentee_id)::int from "match" where mentor_id = ${me.id})`,
+        activeMentees: sql<number>`(select count(*)::int from "match" where mentor_id = ${me.id} and status = 'active')`,
+        meetingsLogged: sql<number>`(select count(*)::int from "meeting_log" where mentor_id = ${me.id})`,
+        totalMinutes: sql<number>`(select coalesce(sum(duration_minutes),0)::int from "meeting_log" where mentor_id = ${me.id})`,
+      })
+      .from(sql`(select 1) as _t`);
+
+    const [ratingRow] = await db
+      .select({
+        avg: sql<number | null>`(select avg(rating)::numeric(10,2) from "monthly_feedback" fb where fb.submitted_by_role = 'mentee' and fb.match_id in (select id from "match" where mentor_id = ${me.id}))`,
+      })
+      .from(sql`(select 1) as _t`);
+
+    const recentTopics = await db
+      .select({
+        topicsDiscussed: meetingLogs.topicsDiscussed,
+        meetingDate: meetingLogs.meetingDate,
+      })
+      .from(meetingLogs)
+      .where(eq(meetingLogs.mentorId, me.id))
+      .orderBy(desc(meetingLogs.createdAt))
+      .limit(3);
+
+    impact = {
+      menteesHelped: counts?.menteesHelped ?? 0,
+      activeMentees: counts?.activeMentees ?? 0,
+      meetingsLogged: counts?.meetingsLogged ?? 0,
+      totalMinutes: counts?.totalMinutes ?? 0,
+      avgRating: ratingRow?.avg ? Number(ratingRow.avg) : null,
+      recentTopics,
+    };
+  }
 
   return (
     <div className="space-y-8">
-      <header className="flex items-end justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-navy-800">
-            Hi {me.firstName || "there"}.
-          </h1>
-          <p className="mt-1 text-slate-600">
-            {me.isMentor
-              ? "You're a member and an active mentor."
-              : "You're a member. Want to mentor too?"}
-          </p>
-        </div>
-        {!me.isMentor && (
-          <Link href="/apply-mentor" className="btn-primary">
-            Apply to mentor
+      <section className="rounded-2xl bg-gradient-to-r from-navy-700 to-navy-800 p-6 text-white shadow-lift md:p-8">
+        <p className="text-sm font-semibold uppercase tracking-wider text-navy-200">
+          {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+        </p>
+        <h1 className="mt-1 font-display text-3xl font-black tracking-tight md:text-4xl">
+          Welcome back, {me.firstName || "friend"}.
+        </h1>
+        <p className="mt-2 max-w-xl text-sm text-navy-100">
+          {me.isMentor
+            ? "You're an approved mentor. Review pending requests, log meetings, and check in monthly."
+            : `${mentorCount?.count ?? 0} mentors are accepting requests right now.`}
+        </p>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Link href="/mentors" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-navy-800 hover:bg-navy-50 cursor-pointer">
+            Find a mentor →
           </Link>
-        )}
-      </header>
-
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Stat title="Active matches" value={activeMatches.length} href="/matches" />
-        <Stat title="Requests sent" value={sentByMe.length} href="/requests" />
-        {me.isMentor ? (
-          <Stat title="Pending requests" value={pendingForMe.length} href="/requests" />
-        ) : (
-          <Stat title="Mentors available" value="Browse" href="/mentors" />
-        )}
+          {!me.isMentor && (
+            <Link href="/apply-mentor" className="rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/30 hover:bg-white/20 cursor-pointer">
+              Apply to mentor
+            </Link>
+          )}
+        </div>
       </section>
 
-      <section className="card">
-        <h2 className="font-display text-lg font-bold text-navy-800">Quick actions</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <Link href="/mentors" className="rounded-xl border border-slate-200 p-4 transition hover:border-navy-300 hover:bg-navy-50/40 cursor-pointer">
-            <p className="font-semibold text-navy-800">Find a mentor</p>
-            <p className="mt-1 text-sm text-slate-600">Filter by major, semester, and career interest.</p>
-          </Link>
-          <Link href="/requests" className="rounded-xl border border-slate-200 p-4 transition hover:border-navy-300 hover:bg-navy-50/40 cursor-pointer">
-            <p className="font-semibold text-navy-800">Review requests</p>
-            <p className="mt-1 text-sm text-slate-600">See requests you&apos;ve sent or received.</p>
-          </Link>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Active matches"
+          value={activeMatches.length}
+          hint={activeMatches.length ? "View contact info" : "Send your first request"}
+          href="/matches"
+          tint="emerald"
+          icon={<StatIcon kind="match" />}
+        />
+        <StatCard
+          label="Requests sent"
+          value={sentByMe.length}
+          hint={`${sentByMe.filter((r) => r.status === "pending").length} pending`}
+          href="/requests"
+          tint="navy"
+          icon={<StatIcon kind="inbox" />}
+        />
+        {me.isMentor ? (
+          <StatCard
+            label="Pending for me"
+            value={pendingForMe.length}
+            hint="Review and accept or decline"
+            href="/requests"
+            tint="amber"
+            icon={<StatIcon kind="spark" />}
+          />
+        ) : (
+          <StatCard
+            label="Mentors available"
+            value={mentorCount?.count ?? 0}
+            hint="Filter by major and interest"
+            href="/mentors"
+            tint="violet"
+            icon={<StatIcon kind="users" />}
+          />
+        )}
+        <StatCard
+          label="Monthly check-in"
+          value="Open"
+          hint="Both sides answer once a month"
+          href="/check-in"
+          tint="rose"
+          icon={<StatIcon kind="calendar" />}
+        />
+      </section>
+
+      {impact && (
+        <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-emerald-100 md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Your impact</p>
+              <h2 className="mt-1 font-display text-2xl font-black text-navy-800">
+                {impact.menteesHelped === 0
+                  ? "Ready for your first mentee?"
+                  : impact.menteesHelped === 1
+                  ? "You've helped 1 mentee so far."
+                  : `You've helped ${impact.menteesHelped} mentees so far.`}
+              </h2>
+              <p className="mt-1 max-w-prose text-sm text-slate-600">
+                {impact.meetingsLogged > 0
+                  ? `${impact.meetingsLogged} meeting${impact.meetingsLogged === 1 ? "" : "s"} logged · ${impact.totalMinutes} minutes invested. The kind of compounding that changes someone's career trajectory.`
+                  : "Once you log your first meeting, your impact will show up here. Keep it up — peers helping peers is the whole point."}
+              </p>
+            </div>
+            {impact.avgRating !== null && (
+              <div className="rounded-2xl bg-emerald-50 px-5 py-4 text-center ring-1 ring-emerald-100">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">Avg rating</p>
+                <p className="mt-1 font-display text-3xl font-black text-emerald-700">{impact.avgRating.toFixed(1)}</p>
+                <p className="text-[10px] text-emerald-600">from mentee check-ins</p>
+              </div>
+            )}
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-slate-100 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Active mentees</p>
+              <p className="mt-1 font-display text-2xl font-bold text-navy-800">
+                {impact.activeMentees}{" "}
+                <span className="text-sm font-medium text-slate-400">of {me.mentorCapacity ?? 5}</span>
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-100 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Meetings logged</p>
+              <p className="mt-1 font-display text-2xl font-bold text-navy-800">{impact.meetingsLogged}</p>
+            </div>
+            <div className="rounded-xl border border-slate-100 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Time invested</p>
+              <p className="mt-1 font-display text-2xl font-bold text-navy-800">
+                {Math.round(impact.totalMinutes / 60)}h{" "}
+                <span className="text-sm font-medium text-slate-400">{impact.totalMinutes % 60}m</span>
+              </p>
+            </div>
+          </div>
+          {impact.recentTopics.length > 0 && (
+            <div className="mt-5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                Recent meeting highlights
+              </p>
+              <ul className="mt-2 space-y-1.5 text-sm">
+                {impact.recentTopics
+                  .filter((t) => t.topicsDiscussed)
+                  .map((t, i) => (
+                    <li key={i} className="flex gap-2 text-slate-700">
+                      <span className="text-emerald-600">✓</span>
+                      <span className="line-clamp-1">{t.topicsDiscussed}</span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
+
+      <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="card">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg font-bold text-navy-800">Your matches</h2>
+            <Link href="/matches" className="text-xs font-semibold text-navy-700 hover:underline">
+              View all →
+            </Link>
+          </div>
+          {recentMatches.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-500">
+              No active matches yet. Browse mentors and send a request.
+            </p>
+          ) : (
+            <ul className="mt-4 divide-y divide-slate-100">
+              {recentMatches.map((m) => {
+                const iAmMentor = m.mentorId === me.id;
+                const other = iAmMentor
+                  ? { name: m.menteeName, image: m.menteeImage }
+                  : { name: m.mentorName, image: m.mentorImage };
+                return (
+                  <li key={m.id} className="flex items-center gap-3 py-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={other.image || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(other.name || "")}&backgroundColor=1B3A6B&textColor=ffffff`}
+                      alt=""
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-navy-800">{other.name}</p>
+                      <p className="text-xs text-slate-500">
+                        {iAmMentor ? "Mentee" : "Mentor"} · matched {new Date(m.startedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Link href="/matches" className="text-xs font-semibold text-navy-700 hover:underline">
+                      Open
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="card">
+          <h2 className="font-display text-lg font-bold text-navy-800">Quick actions</h2>
+          <div className="mt-4 space-y-2">
+            {[
+              { href: "/mentors", title: "Find a mentor", body: "Filter, browse, request." },
+              { href: "/requests", title: "Review requests", body: "Sent and received." },
+              me.isMentor
+                ? { href: "/log-meeting", title: "Log a meeting", body: "Track session topics and next steps." }
+                : { href: "/apply-mentor", title: "Apply to mentor", body: "Pay it forward." },
+              { href: "/profile", title: "Update profile", body: "Photo, bio, career interests." },
+            ].map((a) => (
+              <Link
+                key={a.href}
+                href={a.href}
+                className="block rounded-xl border border-slate-100 p-3 transition hover:border-navy-200 hover:bg-navy-50/40 cursor-pointer"
+              >
+                <p className="text-sm font-semibold text-navy-800">{a.title}</p>
+                <p className="mt-0.5 text-xs text-slate-500">{a.body}</p>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
     </div>
-  );
-}
-
-function Stat({ title, value, href }: { title: string; value: number | string; href: string }) {
-  return (
-    <Link href={href} className="card flex flex-col gap-1 transition hover:shadow-lift cursor-pointer">
-      <p className="text-sm font-medium text-slate-500">{title}</p>
-      <p className="font-display text-3xl font-bold text-navy-800">{value}</p>
-    </Link>
   );
 }

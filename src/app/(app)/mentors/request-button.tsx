@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function RequestButton({ mentorId }: { mentorId: string }) {
+export function RequestButton({ mentorId, disabled }: { mentorId: string; disabled?: boolean }) {
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -35,8 +35,8 @@ export function RequestButton({ mentorId }: { mentorId: string }) {
   return (
     <div className="flex items-center gap-3">
       {error && <span className="text-xs text-red-600">{error}</span>}
-      <button onClick={send} disabled={status === "loading"} className="btn-primary">
-        {status === "loading" ? "Sending…" : "Request mentor"}
+      <button onClick={send} disabled={disabled || status === "loading"} className="btn-primary">
+        {status === "loading" ? "Sending…" : disabled ? "At capacity" : "Request mentor"}
       </button>
     </div>
   );
