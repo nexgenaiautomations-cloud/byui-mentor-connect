@@ -2,6 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth, signIn } from "../../../auth";
 import { DemoButtons } from "./demo-buttons";
+import { Logo } from "@/components/logo";
+
+const CAMPUS_LOGIN =
+  "https://images.unsplash.com/photo-1607013251379-e6eecfffe234?auto=format&fit=crop&w=1400&q=80";
 
 export default async function LoginPage({
   searchParams,
@@ -13,13 +17,43 @@ export default async function LoginPage({
   const { error, next } = await searchParams;
 
   return (
-    <main className="grid min-h-screen place-items-center bg-gradient-to-b from-navy-50 via-white to-white px-6">
-      <div className="w-full max-w-md">
-        <Link href="/" className="mb-6 flex items-center justify-center gap-3">
-          <span className="font-display text-xl font-black tracking-tight text-navy-700">BYUI CAN</span>
-          <span className="text-sm font-medium text-slate-500">Mentor Connect</span>
-        </Link>
-        <div className="card">
+    <main className="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
+      {/* Campus photo column — visible on lg+ */}
+      <aside className="relative hidden lg:block">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={CAMPUS_LOGIN} alt="BYU-Idaho campus" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-br from-navy-900/85 via-navy-800/70 to-navy-900/90" />
+        <div className="relative flex h-full flex-col justify-between p-10 text-white">
+          <Link href="/" className="flex items-center gap-3">
+            <Logo size={44} />
+            <div className="leading-tight">
+              <p className="font-display text-sm font-black tracking-tight">BYUI CAN</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
+                Mentor Connect
+              </p>
+            </div>
+          </Link>
+          <div>
+            <p className="font-display text-3xl font-black leading-tight">
+              Find your mentor.
+              <br />
+              <span className="text-sky-200">Skip the luck.</span>
+            </p>
+            <p className="mt-4 max-w-md text-sm text-white/80">
+              Peer mentorship that actually scales — built for BYU-Idaho students by BYU-Idaho students.
+            </p>
+          </div>
+          <p className="text-[11px] text-white/50">© BYU-Idaho Career Advancement Network</p>
+        </div>
+      </aside>
+
+      <div className="grid place-items-center bg-[#F7F8FB] px-6 py-12">
+        <div className="w-full max-w-md">
+          <Link href="/" className="mb-6 flex items-center justify-center gap-3 lg:hidden">
+            <Logo size={36} />
+            <span className="font-display text-base font-black tracking-tight text-navy-800">BYUI CAN</span>
+          </Link>
+          <div className="card">
           <h1 className="font-display text-2xl font-bold text-navy-800">Sign in</h1>
           <p className="mt-1 text-sm text-slate-600">
             Enter your BYU-I email and we&apos;ll send you a magic link.
@@ -69,6 +103,7 @@ export default async function LoginPage({
           </p>
 
           {process.env.DEMO_ENABLED === "true" && <DemoButtons />}
+          </div>
         </div>
       </div>
     </main>
