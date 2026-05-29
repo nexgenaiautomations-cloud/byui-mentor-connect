@@ -20,8 +20,26 @@ const logSchema = z.object({
 export async function GET() {
   const me = await getCurrentUser();
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Mentors see their own notes; mentees never see mentorNotes — project the
+  // field only when the viewer is the mentor on that log.
   const rows = await db
-    .select()
+    .select({
+      id: meetingLogs.id,
+      matchId: meetingLogs.matchId,
+      mentorId: meetingLogs.mentorId,
+      menteeId: meetingLogs.menteeId,
+      meetingDate: meetingLogs.meetingDate,
+      meetingType: meetingLogs.meetingType,
+      durationMinutes: meetingLogs.durationMinutes,
+      topicsDiscussed: meetingLogs.topicsDiscussed,
+      actionItems: meetingLogs.actionItems,
+      nextMeetingDate: meetingLogs.nextMeetingDate,
+      menteeConfirmed: meetingLogs.menteeConfirmed,
+      createdAt: meetingLogs.createdAt,
+      // Conditional projection: NULL when viewer is the mentee.
+      mentorNotes: sql<string | null>`CASE WHEN ${meetingLogs.mentorId} = ${me.id} THEN ${meetingLogs.mentorNotes} ELSE NULL END`,
+    })
     .from(meetingLogs)
     .where(or(eq(meetingLogs.mentorId, me.id), eq(meetingLogs.menteeId, me.id)));
   return NextResponse.json({ logs: rows });

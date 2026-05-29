@@ -5,6 +5,7 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { CAREER_OPTIONS, SEMESTER_LEVELS } from "@/lib/careers";
+import { toSafeMe } from "@/lib/safe-user";
 
 const profileSchema = z.object({
   firstName: z.string().min(1).max(60),
@@ -34,7 +35,7 @@ const profileSchema = z.object({
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ user: null }, { status: 401 });
-  return NextResponse.json({ user });
+  return NextResponse.json({ user: toSafeMe(user) });
 }
 
 export async function PATCH(req: Request) {
@@ -68,5 +69,5 @@ export async function PATCH(req: Request) {
     .where(eq(users.id, user.id))
     .returning();
 
-  return NextResponse.json({ user: updated });
+  return NextResponse.json({ user: toSafeMe(updated) });
 }

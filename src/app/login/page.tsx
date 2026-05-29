@@ -73,10 +73,13 @@ export default async function LoginPage({
               if (!email.endsWith("@byui.edu")) {
                 redirect("/login?error=AccessDenied");
               }
-              await signIn("resend", {
-                email,
-                redirectTo: next || "/dashboard",
-              });
+              // Only accept relative same-origin paths in `next` to prevent
+              // open-redirects (e.g. /login?next=https://evil.com).
+              const safe =
+                next && next.startsWith("/") && !next.startsWith("//")
+                  ? next
+                  : "/dashboard";
+              await signIn("resend", { email, redirectTo: safe });
             }}
             className="mt-5 space-y-4"
           >

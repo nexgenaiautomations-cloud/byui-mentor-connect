@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { mentorApplications, users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { requireAdmin } from "@/lib/session";
 
 const reviewSchema = z.object({
@@ -29,8 +29,17 @@ export async function PATCH(
     .limit(1);
   if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  if (app.status !== "pending") {
+    return NextResponse.json(
+      { error: `Application is already ${app.status}` },
+      { status: 409 }
+    );
+  }
+
   const status = parsed.data.action === "approve" ? "approved" : "rejected";
-  const [updated] = await db
+  // TOCTOU guard: only transition from pending; if a concurrent admin already
+  // reviewed, returning is empty.
+  const updated = await db
     .update(mentorApplications)
     .set({
       status,
@@ -38,8 +47,15 @@ export async function PATCH(
       reviewNotes: parsed.data.notes ?? null,
       reviewedAt: new Date(),
     })
-    .where(eq(mentorApplications.id, id))
+    .where(and(eq(mentorApplications.id, id), eq(mentorApplications.status, "pending")))
     .returning();
+
+  if (updated.length === 0) {
+    return NextResponse.json(
+      { error: "Application is no longer pending" },
+      { status: 409 }
+    );
+  }
 
   if (status === "approved") {
     await db
@@ -52,5 +68,5 @@ export async function PATCH(
       .where(eq(users.id, app.userId));
   }
 
-  return NextResponse.json({ application: updated });
+  return NextResponse.json({ application: updated[0] });
 }

@@ -2,19 +2,17 @@ import { NextResponse } from "next/server";
 import { Buffer } from "node:buffer";
 import { timingSafeEqual } from "node:crypto";
 import { db } from "@/db/client";
-import { matches } from "@/db/schema";
-import { and, eq, lt } from "drizzle-orm";
+import { matches, users } from "@/db/schema";
+import { and, eq, lt, sql } from "drizzle-orm";
 import { INACTIVITY_DISCONNECT_DAYS } from "@/lib/possible-actions";
 
-// Daily job: auto-disconnect matches with no activity for 180+ days.
-// Protected by CRON_SECRET — Vercel adds Authorization: Bearer $CRON_SECRET
-// when triggering scheduled runs (see vercel.json).
+// Daily job: auto-disconnect matches with no activity for 180+ days, and
+// flip mentor.mentorAvailable back to true when capacity opens up again.
+// Protected by CRON_SECRET — Vercel adds Authorization: Bearer $CRON_SECRET.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  // Verify the request came from Vercel Cron (or someone with the secret).
-  // Constant-time compare to avoid leaking the secret via response timing.
   if (!process.env.CRON_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -29,16 +27,40 @@ export async function GET(req: Request) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - INACTIVITY_DISCONNECT_DAYS);
 
-  const result = await db
+  // 1) Auto-disconnect inactive matches. We mark with 'cancelled' since the
+  //    schema has no 'inactive' state — the endedAt timestamp distinguishes
+  //    auto-cancellations from voluntary ones in reporting.
+  const disconnected = await db
     .update(matches)
     .set({ status: "cancelled", endedAt: new Date() })
     .where(and(eq(matches.status, "active"), lt(matches.lastActivityAt, cutoff)))
-    .returning({ id: matches.id });
+    .returning({ id: matches.id, mentorId: matches.mentorId });
+
+  // 2) Self-heal availability: any mentor who's currently flagged as
+  //    unavailable but now has open slots gets flipped back on.
+  let reopenedCount = 0;
+  if (disconnected.length > 0) {
+    const affectedMentorIds = [...new Set(disconnected.map((d) => d.mentorId))];
+    const reopened = await db
+      .update(users)
+      .set({ mentorAvailable: true })
+      .where(
+        and(
+          eq(users.mentorAvailable, false),
+          eq(users.isMentor, true),
+          sql`${users.id} IN (${sql.join(affectedMentorIds.map((id) => sql`${id}`), sql.raw(","))})`,
+          sql`(SELECT count(*)::int FROM "match" WHERE mentor_id = ${users.id} AND status = 'active') < ${users.mentorCapacity}`
+        )
+      )
+      .returning({ id: users.id });
+    reopenedCount = reopened.length;
+  }
 
   return NextResponse.json({
     ok: true,
     cutoff: cutoff.toISOString(),
-    disconnectedCount: result.length,
-    disconnected: result.map((r) => r.id),
+    disconnectedCount: disconnected.length,
+    disconnected: disconnected.map((d) => d.id),
+    reopenedMentors: reopenedCount,
   });
 }

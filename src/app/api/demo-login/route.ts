@@ -32,7 +32,9 @@ export async function POST(req: Request) {
   }
 
   const token = crypto.randomUUID() + crypto.randomUUID().replace(/-/g, "");
-  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+  // Short-lived (1h) — demo sessions shouldn't be persistent. Reduces the
+  // blast radius if DEMO_ENABLED leaks into a prod-like environment.
+  const expires = new Date(Date.now() + 1000 * 60 * 60);
 
   await db.insert(sessions).values({
     sessionToken: token,
