@@ -4,6 +4,7 @@ import { mentorApplications, users } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { ApplicationActions } from "../actions";
+import { EmptyState } from "@/components/empty-state";
 
 export default async function AdminApplicationsPage() {
   const me = await getCurrentUser();
@@ -45,7 +46,11 @@ export default async function AdminApplicationsPage() {
         <h2 className="font-display text-lg font-bold text-navy-800">Pending</h2>
         <div className="mt-4 space-y-3">
           {pending.length === 0 && (
-            <p className="text-sm text-slate-500">Nothing in the queue. Nice work.</p>
+            <EmptyState
+              kind="application"
+              title="No pending applications"
+              message="Inbox zero. New mentor applications will show up here for your review."
+            />
           )}
           {pending.map((a) => (
             <div key={a.id} className="card">

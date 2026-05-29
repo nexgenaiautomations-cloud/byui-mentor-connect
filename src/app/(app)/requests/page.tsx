@@ -5,6 +5,7 @@ import { desc, eq, or } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { StatTile } from "@/components/stat-card";
 import { RequestRow } from "./request-row";
+import { EmptyState } from "@/components/empty-state";
 
 export default async function RequestsPage() {
   const me = await getCurrentUser();
@@ -72,7 +73,12 @@ export default async function RequestsPage() {
       <section className="space-y-3">
         <h2 className="font-display text-lg font-bold text-navy-800">Outgoing</h2>
         {outgoing.length === 0 ? (
-          <p className="text-sm text-slate-500">You haven&apos;t sent any requests yet.</p>
+          <EmptyState
+            kind="request"
+            title="No requests sent yet"
+            message="Browse mentors and send your first. A short, specific note doubles your accept rate."
+            cta={{ label: "Find a mentor", href: "/mentors" }}
+          />
         ) : (
           outgoing.map((r) => (
             <RequestRow key={r.id} request={r} viewerRole="mentee" />

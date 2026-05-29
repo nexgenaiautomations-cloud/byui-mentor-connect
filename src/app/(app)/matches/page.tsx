@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { matches, users } from "@/db/schema";
+import { matches, meetingLogs, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
-import { and, eq, or } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { POSSIBLE_ACTIONS, INACTIVITY_WARN_DAYS } from "@/lib/possible-actions";
+import { EmptyState } from "@/components/empty-state";
 
 function daysSince(d: Date) {
   return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
@@ -27,6 +28,7 @@ export default async function MatchesPage() {
       lastActivityAt: matches.lastActivityAt,
       mentorId: matches.mentorId,
       menteeId: matches.menteeId,
+      meetingCount: sql<number>`(select count(*)::int from "meeting_log" where match_id = "match".id)`,
       mentorName: mentor.name,
       mentorImage: mentor.image,
       mentorEmail: mentor.email,
@@ -52,6 +54,12 @@ export default async function MatchesPage() {
       )
     );
 
+  // Celebration moment: any match started in the last 7 days with no
+  // meetings logged yet → call it out at the top.
+  const fresh = rows.filter(
+    (r) => daysSince(r.startedAt) <= 7 && r.meetingCount === 0
+  );
+
   return (
     <div className="space-y-6">
       <header>
@@ -61,11 +69,29 @@ export default async function MatchesPage() {
         </p>
       </header>
 
-      {rows.length === 0 ? (
-        <div className="card text-slate-600">
-          No active matches yet.{" "}
-          <Link href="/mentors" className="text-navy-700 underline">Browse mentors</Link> and send a request.
+      {fresh.length > 0 && (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gold-500 to-gold-400 p-5 text-navy-900 ring-4 ring-gold-200">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-navy-800">
+            ✨ Fresh match
+          </p>
+          <p className="mt-1 font-display text-xl font-black">
+            {fresh.length === 1
+              ? "You just matched. Now what?"
+              : `${fresh.length} new matches. Pick one to start.`}
+          </p>
+          <p className="mt-1 max-w-xl text-sm text-navy-900/85">
+            Send the first email today. A short note (<em>&ldquo;great to be matched, here&rsquo;s what I&rsquo;m hoping to work on&rdquo;</em>) gets things moving.
+          </p>
         </div>
+      )}
+
+      {rows.length === 0 ? (
+        <EmptyState
+          kind="match"
+          title="No active matches yet"
+          message="Browse mentors and send your first request. Most accept within 48 hours."
+          cta={{ label: "Find a mentor", href: "/mentors" }}
+        />
       ) : (
         <div className="space-y-6">
           {rows.map((m) => {

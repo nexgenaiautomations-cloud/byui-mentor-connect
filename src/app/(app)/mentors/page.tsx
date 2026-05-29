@@ -1,14 +1,29 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { and, eq, ne, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { RequestButton } from "./request-button";
+import { EmptyState } from "@/components/empty-state";
+import { SEMESTER_LEVELS } from "@/lib/careers";
 
-export default async function MentorsPage() {
+export default async function MentorsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ major?: string; semester?: string; mine?: string }>;
+}) {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
+
+  const params = await searchParams;
+  const filterMyMajor = params.mine === "1";
+  const filterSemester = params.semester;
+
+  const conditions = [eq(users.isMentor, true), eq(users.mentorAvailable, true), ne(users.id, me.id)];
+  if (filterMyMajor && me.major) conditions.push(eq(users.major, me.major));
+  if (filterSemester) conditions.push(eq(users.semesterLevel, filterSemester));
 
   const mentors = await db
     .select({
@@ -26,12 +41,11 @@ export default async function MentorsPage() {
       activeCount: sql<number>`(select count(*)::int from "match" where mentor_id = "user".id and status = 'active')`,
     })
     .from(users)
-    .where(and(eq(users.isMentor, true), eq(users.mentorAvailable, true), ne(users.id, me.id)));
+    .where(and(...conditions));
 
   const myInterests = new Set(me.careerInterests ?? []);
   const myMajor = me.major?.toLowerCase().trim() ?? "";
 
-  // Score each mentor and sort by relevance.
   const scored = mentors
     .map((m) => {
       const overlap = (m.careerInterests ?? []).filter((c) => myInterests.has(c)).length;
@@ -42,8 +56,10 @@ export default async function MentorsPage() {
     })
     .sort((a, b) => b.score - a.score || (b.slotsLeft - a.slotsLeft));
 
-  const recommended = scored.filter((m) => m.score >= 3);
-  const others = scored.filter((m) => m.score < 3);
+  // Don't show "Recommended" if any filter is active (user is being intentional)
+  const isFiltering = filterMyMajor || !!filterSemester;
+  const recommended = isFiltering ? [] : scored.filter((m) => m.score >= 3);
+  const others = isFiltering ? scored : scored.filter((m) => m.score < 3);
 
   return (
     <div className="space-y-8">
@@ -54,40 +70,88 @@ export default async function MentorsPage() {
         </p>
       </header>
 
-      {recommended.length > 0 && (
-        <section>
-          <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="font-display text-lg font-bold text-navy-800">Recommended for you</h2>
-            <span className="text-xs text-slate-500">based on your major and career interests</span>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {recommended.map((m) => (
-              <MentorCard key={m.id} mentor={m} highlight />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Filter chips — real URL-param filters */}
+      <div className="flex flex-wrap gap-2">
+        <FilterChip label="All majors" href="/mentors" active={!filterMyMajor && !filterSemester} />
+        {me.major && (
+          <FilterChip
+            label={`My major: ${me.major}`}
+            href="/mentors?mine=1"
+            active={filterMyMajor}
+          />
+        )}
+        {SEMESTER_LEVELS.map((s) => (
+          <FilterChip
+            key={s}
+            label={s}
+            href={`/mentors?semester=${encodeURIComponent(s)}`}
+            active={filterSemester === s}
+          />
+        ))}
+      </div>
 
-      {others.length > 0 && (
-        <section>
-          <h2 className="mb-3 font-display text-lg font-bold text-navy-800">
-            {recommended.length > 0 ? "All other mentors" : "All mentors"}
-          </h2>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {others.map((m) => (
-              <MentorCard key={m.id} mentor={m} />
-            ))}
-          </div>
-        </section>
-      )}
+      {mentors.length === 0 ? (
+        <EmptyState
+          kind="mentor"
+          title="No mentors match that filter"
+          message="Try widening your search or be the first to apply to mentor in this slice."
+          cta={{ label: "Clear filters", href: "/mentors" }}
+        />
+      ) : (
+        <>
+          {recommended.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-baseline justify-between">
+                <h2 className="font-display text-lg font-bold text-navy-800">Recommended for you</h2>
+                <span className="text-xs text-slate-500">based on major and career interests</span>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {recommended.map((m) => (
+                  <MentorCard key={m.id} mentor={m} highlight />
+                ))}
+              </div>
+            </section>
+          )}
 
-      {mentors.length === 0 && (
-        <div className="card text-center text-slate-600">
-          No mentors available right now.{" "}
-          <a href="/apply-mentor" className="text-navy-700 underline">Apply to be the first</a>.
-        </div>
+          {others.length > 0 && (
+            <section>
+              <h2 className="mb-3 font-display text-lg font-bold text-navy-800">
+                {recommended.length > 0 ? "All other mentors" : "All mentors"}
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {others.map((m) => (
+                  <MentorCard key={m.id} mentor={m} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </div>
+  );
+}
+
+function FilterChip({
+  label,
+  href,
+  active,
+}: {
+  label: string;
+  href: string;
+  active?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={
+        "inline-flex select-none items-center rounded-full border px-3 py-1 text-xs font-semibold transition cursor-pointer " +
+        (active
+          ? "border-navy-700 bg-navy-700 text-white"
+          : "border-slate-200 bg-white text-slate-600 hover:border-navy-300 hover:text-navy-700")
+      }
+    >
+      {label}
+    </Link>
   );
 }
 
