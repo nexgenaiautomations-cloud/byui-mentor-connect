@@ -8,17 +8,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   return (
-    <div className="relative flex min-h-screen">
-      {/* Fixed campus background — sits behind everything */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/byui-campus.jpg"
-        alt=""
-        aria-hidden
-        className="fixed inset-0 -z-20 h-full w-full object-cover"
-      />
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-navy-900/85 via-navy-900/80 to-navy-900/90" />
-
+    <div className="flex min-h-screen bg-slate-50">
       {user.isMentor && <PendingRequestBanner userId={user.id} />}
       <Sidebar user={user} />
       <div className="flex min-w-0 flex-1 flex-col">

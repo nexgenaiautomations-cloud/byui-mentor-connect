@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { signOut } from "../../auth";
+import { usePathname } from "next/navigation";
+import { signOutAction } from "@/lib/actions";
 import type { User } from "@/db/schema";
 import { Logo } from "./logo";
 import { InstallButton } from "./install-button";
@@ -21,7 +24,7 @@ function Icon({ children }: { children: React.ReactNode }) {
       strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="h-5 w-5"
+      className="h-[18px] w-[18px]"
     >
       {children}
     </svg>
@@ -73,16 +76,23 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
   return { primary, admin };
 }
 
+function isActive(pathname: string, href: string) {
+  if (href === "/dashboard") return pathname === "/dashboard";
+  if (href === "/admin") return pathname === "/admin";
+  return pathname === href || pathname.startsWith(href + "/");
+}
+
 export function Sidebar({ user }: { user: User }) {
+  const pathname = usePathname() || "/";
   const { primary, admin } = buildNav(user);
 
   return (
-    <aside className="hidden lg:flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white/95 backdrop-blur">
-      <Link href="/dashboard" className="flex items-center gap-2.5 px-5 pt-5 pb-6 cursor-pointer">
+    <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-navy-900 text-white">
+      <Link href="/dashboard" className="flex items-center gap-3 px-5 pt-6 pb-7 cursor-pointer">
         <Logo size={40} />
         <div className="leading-tight">
-          <p className="font-display text-sm font-black tracking-tight text-navy-800">BYUI CAN</p>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+          <p className="font-display text-sm font-black tracking-tight text-white">BYUI CAN</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-navy-200">
             Mentor Connect
           </p>
         </div>
@@ -91,30 +101,30 @@ export function Sidebar({ user }: { user: User }) {
       <nav className="flex-1 px-3">
         <ul className="space-y-0.5">
           {primary.map((item) => (
-            <SidebarLink key={item.href} item={item} />
+            <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
           ))}
         </ul>
 
         {admin.length > 0 && (
           <>
-            <p className="mt-6 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <p className="mt-7 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-navy-300">
               Admin
             </p>
-            <ul className="mt-1 space-y-0.5">
+            <ul className="mt-1.5 space-y-0.5">
               {admin.map((item) => (
-                <SidebarLink key={item.href} item={item} />
+                <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
               ))}
             </ul>
           </>
         )}
       </nav>
 
-      <div className="border-t border-slate-100 px-3 py-4">
+      <div className="border-t border-white/10 px-3 py-4">
         <Link
           href="/profile"
-          className="flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-slate-50 cursor-pointer"
+          className="flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-white/5 cursor-pointer"
         >
-          <div className="h-9 w-9 overflow-hidden rounded-full bg-navy-700 text-white grid place-items-center text-xs font-semibold">
+          <div className="h-10 w-10 overflow-hidden rounded-full bg-white/10 grid place-items-center text-xs font-semibold ring-2 ring-white/20">
             {user.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={user.image} alt="" className="h-full w-full object-cover" />
@@ -123,23 +133,17 @@ export function Sidebar({ user }: { user: User }) {
             )}
           </div>
           <div className="min-w-0 flex-1 leading-tight">
-            <p className="truncate text-sm font-semibold text-navy-800">{user.name || "Member"}</p>
-            <p className="truncate text-[11px] text-slate-500">
+            <p className="truncate text-sm font-semibold text-white">{user.name || "Member"}</p>
+            <p className="truncate text-[11px] font-medium text-navy-200">
               {user.isAdmin ? "Admin" : user.isMentor ? "Mentor" : "Member"}
             </p>
           </div>
         </Link>
         <InstallButton variant="sidebar" />
-        <form
-          action={async () => {
-            "use server";
-            await signOut({ redirectTo: "/" });
-          }}
-          className="mt-2"
-        >
+        <form action={signOutAction} className="mt-1">
           <button
             type="submit"
-            className="w-full rounded-lg px-3 py-1.5 text-left text-xs font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 cursor-pointer"
+            className="w-full rounded-lg px-3 py-1.5 text-left text-xs font-medium text-navy-200 transition hover:bg-white/5 hover:text-white cursor-pointer"
           >
             Sign out
           </button>
@@ -149,14 +153,21 @@ export function Sidebar({ user }: { user: User }) {
   );
 }
 
-function SidebarLink({ item }: { item: NavItem }) {
+function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <li>
       <Link
         href={item.href}
-        className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-navy-50 hover:text-navy-800 cursor-pointer"
+        className={
+          "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition cursor-pointer " +
+          (active
+            ? "bg-white text-navy-800 shadow-soft"
+            : "text-navy-100 hover:bg-white/5 hover:text-white")
+        }
       >
-        <span className="text-slate-400 group-hover:text-navy-700">{item.icon}</span>
+        <span className={active ? "text-navy-700" : "text-navy-300 group-hover:text-white"}>
+          {item.icon}
+        </span>
         <span>{item.label}</span>
       </Link>
     </li>
@@ -164,7 +175,6 @@ function SidebarLink({ item }: { item: NavItem }) {
 }
 
 export function MobileBar({ user }: { user: User }) {
-  // Role-aware mobile bottom bar — 4 most-used destinations per role.
   let items: { href: string; label: string }[];
   if (user.isAdmin && !user.isMentor) {
     items = [
