@@ -73,7 +73,7 @@ export default async function LoginPage({
               if (!email.endsWith("@byui.edu")) {
                 redirect("/login?error=AccessDenied");
               }
-              await signIn("nodemailer", {
+              await signIn("resend", {
                 email,
                 redirectTo: next || "/dashboard",
               });

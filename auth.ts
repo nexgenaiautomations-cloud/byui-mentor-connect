@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import Nodemailer from "next-auth/providers/nodemailer";
+import Resend from "next-auth/providers/resend";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/db/client";
 import { users, accounts, sessions, verificationTokens } from "@/db/schema";
@@ -16,16 +16,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "database" },
   pages: { signIn: "/login", verifyRequest: "/login/check-email" },
   providers: [
-    Nodemailer({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST,
-        port: Number(process.env.EMAIL_SERVER_PORT),
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD,
-        },
-      },
-      from: process.env.EMAIL_FROM,
+    Resend({
+      from: process.env.EMAIL_FROM ?? "BYUI CAN Mentor Connect <no-reply@byui.edu>",
+      // Resend reads AUTH_RESEND_KEY automatically; we name it explicitly here
+      // for clarity.
+      apiKey: process.env.AUTH_RESEND_KEY ?? process.env.RESEND_API_KEY,
     }),
   ],
   callbacks: {
