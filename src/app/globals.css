@@ -17,10 +17,10 @@
 }
 
 @layer components {
-  /* Cards on top of the campus background — opaque white so the UI dominates
-     while the photo bleeds through margins/edges. */
+  /* Cards on top of the campus background — opaque white with a navy
+     hairline to match the gold framing of the outer panel. */
   .card {
-    @apply rounded-2xl bg-white p-6 shadow-soft border border-slate-100;
+    @apply rounded-2xl bg-white p-6 shadow-soft border border-navy-700;
   }
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-lg bg-navy-700 px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-navy-800 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
