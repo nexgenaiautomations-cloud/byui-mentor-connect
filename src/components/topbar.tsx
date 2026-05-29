@@ -9,7 +9,7 @@ function initials(name: string | null | undefined, fallback: string) {
 
 export function TopBar({ user, title }: { user: User; title?: string }) {
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-100 bg-white/95 px-6 backdrop-blur lg:px-8">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-100 bg-white/90 px-6 backdrop-blur lg:px-8">
       <div className="flex items-center gap-3">
         <Link href="/dashboard" className="lg:hidden flex items-center gap-2">
           <Logo size={32} />

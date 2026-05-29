@@ -77,7 +77,7 @@ export function Sidebar({ user }: { user: User }) {
   const { primary, admin } = buildNav(user);
 
   return (
-    <aside className="hidden lg:flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
+    <aside className="hidden lg:flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white/95 backdrop-blur">
       <Link href="/dashboard" className="flex items-center gap-2.5 px-5 pt-5 pb-6 cursor-pointer">
         <Logo size={40} />
         <div className="leading-tight">
