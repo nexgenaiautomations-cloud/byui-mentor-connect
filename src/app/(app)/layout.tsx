@@ -8,9 +8,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   return (
-    <div className="relative flex min-h-screen">
+    <div className="relative min-h-screen">
       {/* Full-viewport clock tower bg. Anchored so the tower lands inside
-          the sidebar column (left) and the navy sky frames the main panel. */}
+          the sidebar column (left). */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/byui-bg.jpg"
@@ -21,17 +21,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       />
 
       {user.isMentor && <PendingRequestBanner userId={user.id} />}
+
+      {/* Sidebar — pinned to viewport so sign out is always reachable */}
       <Sidebar user={user} />
-      <div className="flex min-w-0 flex-1 flex-col">
+
+      {/* Right column — offset for the pinned sidebar on lg+ */}
+      <div className="flex min-h-screen min-w-0 flex-col lg:pl-64">
         <TopBar user={user} />
-        {/* Cards/content panel — opaque cream so dark text reads. Generous
-            margin so navy sky shows around the panel like in the PDF. */}
-        <main className="flex-1 p-4 pb-24 lg:p-8 lg:pb-10">
+        <main className="flex-1 p-4 pb-24 lg:p-10 lg:pb-12">
           <div className="rounded-3xl bg-slate-50 px-5 py-8 shadow-lift lg:px-10 lg:py-10">
             <div className="mx-auto max-w-6xl">{children}</div>
           </div>
         </main>
       </div>
+
       <MobileBar user={user} />
     </div>
   );

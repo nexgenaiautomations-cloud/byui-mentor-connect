@@ -50,7 +50,7 @@ export function Sidebar({ user }: { user: User }) {
   const { primary, admin } = buildNav(user);
 
   return (
-    <aside className="hidden lg:flex w-64 shrink-0 flex-col text-white">
+    <aside className="hidden lg:flex fixed left-0 top-0 z-10 h-screen w-64 flex-col text-white">
       <Link href="/dashboard" className="flex items-center gap-3 px-6 pt-7 pb-8 cursor-pointer">
         <Logo size={44} />
         <div className="leading-tight">
@@ -61,7 +61,7 @@ export function Sidebar({ user }: { user: User }) {
         </div>
       </Link>
 
-      <nav className="flex-1 px-6">
+      <nav className="flex-1 overflow-y-auto px-6">
         <ul className="space-y-1.5">
           {primary.map((item) => (
             <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
