@@ -3,30 +3,24 @@ import { redirect } from "next/navigation";
 import { auth } from "../../auth";
 import { Logo } from "@/components/logo";
 import { CAN_CADENCE } from "@/lib/possible-actions";
-
-// Campus-style hero photo. Snowy collegiate building — mirrors the BYU-I scene
-// shown in the proposal PDF mockups.
-const CAMPUS_HERO =
-  "https://images.unsplash.com/photo-1607013251379-e6eecfffe234?auto=format&fit=crop&w=1800&q=80";
-const CAMPUS_SIDE =
-  "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1200&q=80";
+import { InstallButton } from "@/components/install-button";
 
 export default async function LandingPage() {
   const session = await auth();
   if (session?.user?.id) redirect("/dashboard");
 
   return (
-    <main className="relative min-h-screen bg-[#F4E9D8] text-navy-900">
+    <main className="relative min-h-screen bg-white text-navy-900">
       {/* HERO with full-bleed campus image */}
-      <section className="relative isolate min-h-[640px] overflow-hidden">
+      <section className="relative isolate min-h-[640px] overflow-hidden bg-navy-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={CAMPUS_HERO}
+          src="/campus-hero.jpg"
           alt="BYU-Idaho campus"
-          className="absolute inset-0 -z-10 h-full w-full object-cover"
+          className="absolute inset-0 -z-10 h-full w-full object-cover opacity-90"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-navy-900/85 via-navy-800/70 to-navy-900/95" />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_30%,rgba(244,233,216,0.18),transparent_60%)]" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_30%,rgba(135,180,225,0.18),transparent_60%)]" />
 
         <nav className="relative flex items-center justify-between px-6 py-5 md:px-10">
           <div className="flex items-center gap-3">
@@ -38,12 +32,15 @@ export default async function LandingPage() {
               </p>
             </div>
           </div>
-          <Link
-            href="/login"
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20 cursor-pointer"
-          >
-            Sign in
-          </Link>
+          <div className="flex items-center gap-2">
+            <InstallButton label="Install" />
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20 cursor-pointer"
+            >
+              Sign in
+            </Link>
+          </div>
         </nav>
 
         <div className="relative mx-auto grid max-w-6xl gap-10 px-6 pb-20 pt-8 md:grid-cols-[1.1fr_0.9fr] md:pb-32 md:pt-16">
@@ -133,17 +130,17 @@ export default async function LandingPage() {
       {/* "What you get" + campus side image */}
       <section className="relative mx-auto max-w-6xl px-6 pb-24">
         <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-          <div className="relative h-72 overflow-hidden rounded-3xl lg:h-auto">
+          <div className="relative h-72 overflow-hidden rounded-3xl bg-navy-900 lg:h-auto">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={CAMPUS_SIDE}
+              src="/campus-students.jpg"
               alt="BYU-Idaho students"
               className="h-full w-full object-cover"
             />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-900/90 to-transparent p-6">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-900/95 to-transparent p-6">
               <p className="font-display text-lg font-bold text-white">~500 students each semester.</p>
               <p className="mt-1 text-sm text-white/80">
-                Peer mentorship lifts retention, GPA, and career outcomes.
+                Peer mentorship lifts retention and career outcomes.
               </p>
             </div>
           </div>
@@ -164,7 +161,7 @@ export default async function LandingPage() {
                   body: "Mentors log meetings, both sides answer a short monthly check-in. Admin sees aggregate progress.",
                 },
               ].map((c) => (
-                <div key={c.title} className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-navy-100/60">
+                <div key={c.title} className="rounded-2xl bg-slate-50 p-5 shadow-soft ring-1 ring-slate-100">
                   <p className="font-display text-base font-bold text-navy-800">{c.title}</p>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{c.body}</p>
                 </div>
@@ -174,8 +171,36 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-navy-200/40 bg-[#F4E9D8] py-8 text-center text-xs text-navy-700/70">
-        BYU-Idaho Career Action Network · Student-built peer mentorship
+      {/* Wide campus banner */}
+      <section className="relative h-64 overflow-hidden bg-navy-900 md:h-80">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/campus-library.jpg"
+          alt="BYU-Idaho campus"
+          className="absolute inset-0 h-full w-full object-cover opacity-80"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-navy-900/95 via-navy-900/70 to-navy-900/40" />
+        <div className="relative mx-auto flex h-full max-w-6xl items-center px-6">
+          <div className="max-w-xl text-white">
+            <h3 className="font-display text-3xl font-black md:text-4xl">
+              Built by students.<br />For students.
+            </h3>
+            <p className="mt-3 text-sm text-white/80">
+              BYUI CAN Mentor Connect is the digital backbone for the Career Advancement Network — peer
+              mentorship that scales.
+            </p>
+            <Link
+              href="/login"
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-navy-800 shadow-lift hover:bg-sky-50 cursor-pointer"
+            >
+              Sign in with your BYU-I email →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-slate-100 bg-white py-8 text-center text-xs text-slate-500">
+        BYU-Idaho Career Advancement Network · Student-built peer mentorship
       </footer>
     </main>
   );

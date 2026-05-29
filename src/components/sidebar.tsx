@@ -2,6 +2,7 @@ import Link from "next/link";
 import { signOut } from "../../auth";
 import type { User } from "@/db/schema";
 import { Logo } from "./logo";
+import { InstallButton } from "./install-button";
 
 function initials(name: string | null | undefined, fallback: string) {
   if (!name) return fallback;
@@ -36,29 +37,48 @@ const ICONS = {
   star: <><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.3-5.5-3-5.5 3 1-6.3L3 9.6l6.3-.9z" /></>,
   shield: <><path d="M12 3 4 6v6c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6z" /></>,
   user: <><circle cx={12} cy={8} r={4} /><path d="M4 21c0-4 4-7 8-7s8 3 8 7" /></>,
+  users: <><circle cx={9} cy={8} r={3.5} /><path d="M2 21c0-3.5 3-6 7-6s7 2.5 7 6" /><circle cx={17} cy={9} r={2.5} /><path d="M16 21c0-2.7 2-5 5-5" /></>,
+  chart: <><path d="M4 20V4" /><path d="M20 20H4" /><path d="m7 16 4-5 3 3 6-7" /></>,
 };
 
-export function Sidebar({ user }: { user: User }) {
-  const items: NavItem[] = [
-    { href: "/dashboard", label: "Dashboard", icon: <Icon>{ICONS.home}</Icon> },
-    { href: "/mentors", label: "Find a mentor", icon: <Icon>{ICONS.search}</Icon> },
-    { href: "/requests", label: "Requests", icon: <Icon>{ICONS.inbox}</Icon> },
-    { href: "/matches", label: "Matches", icon: <Icon>{ICONS.link}</Icon> },
-  ];
+function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
+  const isPureAdmin = user.isAdmin && !user.isMentor;
+  const primary: NavItem[] = [{ href: "/dashboard", label: "Dashboard", icon: <Icon>{ICONS.home}</Icon> }];
+
+  if (!isPureAdmin) {
+    primary.push({ href: "/mentors", label: "Find a mentor", icon: <Icon>{ICONS.search}</Icon> });
+  }
+  primary.push(
+    { href: "/requests", label: user.isMentor ? "Requests" : "My requests", icon: <Icon>{ICONS.inbox}</Icon> },
+    { href: "/matches", label: user.isMentor ? "My mentees" : "My matches", icon: <Icon>{ICONS.link}</Icon> }
+  );
   if (user.isMentor) {
-    items.push({ href: "/log-meeting", label: "Log a meeting", icon: <Icon>{ICONS.clipboard}</Icon> });
+    primary.push({ href: "/log-meeting", label: "Log a meeting", icon: <Icon>{ICONS.clipboard}</Icon> });
   }
-  items.push({ href: "/check-in", label: "Monthly check-in", icon: <Icon>{ICONS.star}</Icon> });
-  if (!user.isMentor) {
-    items.push({ href: "/apply-mentor", label: "Apply to mentor", icon: <Icon>{ICONS.user}</Icon> });
+  primary.push({ href: "/check-in", label: "Monthly check-in", icon: <Icon>{ICONS.star}</Icon> });
+  if (!user.isMentor && !user.isAdmin) {
+    primary.push({ href: "/apply-mentor", label: "Apply to mentor", icon: <Icon>{ICONS.user}</Icon> });
   }
+
+  const admin: NavItem[] = [];
   if (user.isAdmin) {
-    items.push({ href: "/admin", label: "Admin", icon: <Icon>{ICONS.shield}</Icon> });
+    admin.push(
+      { href: "/admin", label: "Overview", icon: <Icon>{ICONS.shield}</Icon> },
+      { href: "/admin/members", label: "Members", icon: <Icon>{ICONS.users}</Icon> },
+      { href: "/admin/mentors", label: "Mentors", icon: <Icon>{ICONS.star}</Icon> },
+      { href: "/admin/applications", label: "Applications", icon: <Icon>{ICONS.inbox}</Icon> },
+      { href: "/admin/activity", label: "Activity", icon: <Icon>{ICONS.chart}</Icon> }
+    );
   }
+  return { primary, admin };
+}
+
+export function Sidebar({ user }: { user: User }) {
+  const { primary, admin } = buildNav(user);
 
   return (
     <aside className="hidden lg:flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
-      <Link href="/dashboard" className="flex items-center gap-2.5 px-5 pt-5 pb-6">
+      <Link href="/dashboard" className="flex items-center gap-2.5 px-5 pt-5 pb-6 cursor-pointer">
         <Logo size={40} />
         <div className="leading-tight">
           <p className="font-display text-sm font-black tracking-tight text-navy-800">BYUI CAN</p>
@@ -70,18 +90,23 @@ export function Sidebar({ user }: { user: User }) {
 
       <nav className="flex-1 px-3">
         <ul className="space-y-0.5">
-          {items.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-navy-50 hover:text-navy-800 cursor-pointer"
-              >
-                <span className="text-slate-400 group-hover:text-navy-700">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-            </li>
+          {primary.map((item) => (
+            <SidebarLink key={item.href} item={item} />
           ))}
         </ul>
+
+        {admin.length > 0 && (
+          <>
+            <p className="mt-6 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Admin
+            </p>
+            <ul className="mt-1 space-y-0.5">
+              {admin.map((item) => (
+                <SidebarLink key={item.href} item={item} />
+              ))}
+            </ul>
+          </>
+        )}
       </nav>
 
       <div className="border-t border-slate-100 px-3 py-4">
@@ -104,6 +129,7 @@ export function Sidebar({ user }: { user: User }) {
             </p>
           </div>
         </Link>
+        <InstallButton variant="sidebar" />
         <form
           action={async () => {
             "use server";
@@ -123,14 +149,47 @@ export function Sidebar({ user }: { user: User }) {
   );
 }
 
+function SidebarLink({ item }: { item: NavItem }) {
+  return (
+    <li>
+      <Link
+        href={item.href}
+        className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-navy-50 hover:text-navy-800 cursor-pointer"
+      >
+        <span className="text-slate-400 group-hover:text-navy-700">{item.icon}</span>
+        <span>{item.label}</span>
+      </Link>
+    </li>
+  );
+}
+
 export function MobileBar({ user }: { user: User }) {
-  const items = [
-    { href: "/dashboard", label: "Home" },
-    { href: "/mentors", label: "Mentors" },
-    { href: "/requests", label: "Requests" },
-    { href: "/matches", label: "Matches" },
-    { href: "/profile", label: "Profile" },
-  ];
+  // Role-aware mobile bottom bar — 4 most-used destinations per role.
+  let items: { href: string; label: string }[];
+  if (user.isAdmin && !user.isMentor) {
+    items = [
+      { href: "/admin", label: "Overview" },
+      { href: "/admin/members", label: "Members" },
+      { href: "/admin/applications", label: "Apps" },
+      { href: "/profile", label: "Profile" },
+    ];
+  } else if (user.isMentor) {
+    items = [
+      { href: "/dashboard", label: "Home" },
+      { href: "/requests", label: "Requests" },
+      { href: "/matches", label: "Mentees" },
+      { href: "/log-meeting", label: "Log" },
+      { href: "/profile", label: "Me" },
+    ];
+  } else {
+    items = [
+      { href: "/dashboard", label: "Home" },
+      { href: "/mentors", label: "Mentors" },
+      { href: "/requests", label: "Requests" },
+      { href: "/matches", label: "Matches" },
+      { href: "/profile", label: "Me" },
+    ];
+  }
   return (
     <nav className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex border-t border-slate-200 bg-white">
       {items.map((it) => (

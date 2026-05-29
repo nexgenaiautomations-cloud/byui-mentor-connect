@@ -4,8 +4,7 @@ import { auth, signIn } from "../../../auth";
 import { DemoButtons } from "./demo-buttons";
 import { Logo } from "@/components/logo";
 
-const CAMPUS_LOGIN =
-  "https://images.unsplash.com/photo-1607013251379-e6eecfffe234?auto=format&fit=crop&w=1400&q=80";
+const CAMPUS_LOGIN = "/campus-hero.jpg";
 
 export default async function LoginPage({
   searchParams,
