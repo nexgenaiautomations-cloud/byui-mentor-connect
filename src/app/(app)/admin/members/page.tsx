@@ -37,10 +37,10 @@ export default async function AdminMembersPage() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Directory</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Directory</p>
         <h1 className="mt-1 font-display text-3xl font-black text-navy-800">Members</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Everyone who has registered. {counts.mentors} approved mentors · {counts.admins} admins · {counts.onboarded} onboarded.
+          {counts.total} registered · {counts.mentors} mentors · {counts.admins} admins · {counts.onboarded} onboarded
         </p>
       </header>
 

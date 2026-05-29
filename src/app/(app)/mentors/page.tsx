@@ -47,11 +47,10 @@ export default async function MentorsPage() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Browse</p>
-        <h1 className="mt-1 font-display text-3xl font-black text-navy-800">Find a mentor</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          {mentors.length} mentor{mentors.length === 1 ? "" : "s"} accepting requests. Sorted by overlap with your major and career interests.
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <h1 className="font-display text-4xl font-black text-navy-800">Find a mentor.</h1>
+        <p className="text-sm font-medium text-slate-600">
+          {mentors.length} accepting requests · sorted by overlap with your major and interests
         </p>
       </header>
 
