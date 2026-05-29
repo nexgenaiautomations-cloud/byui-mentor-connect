@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "../../auth";
 import { Logo } from "@/components/logo";
-import { CAN_CADENCE } from "@/lib/possible-actions";
 import { InstallButton } from "@/components/install-button";
 
 export default async function LandingPage() {
@@ -106,32 +105,18 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* CAN cadence band — uses the FULL crest with 1-2-3 columns (they
-          mean something in this context) */}
+      {/* CAN crest band — the crest itself contains the 1-2-3 columns, so we
+          let it speak for itself at hero size. No duplicate bubbles below. */}
       <section id="how" className="relative bg-white px-6 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col items-center text-center">
-            <Logo size={120} variant="full" />
-            <h2 className="mt-6 font-display text-3xl font-black text-navy-800 md:text-4xl">
-              The BYUI CAN rhythm
-            </h2>
-            <p className="mt-2 max-w-xl text-base text-slate-600">
-              Three commitments that build a career-ready habit. Mentor Connect is the digital
-              backbone of this rhythm.
-            </p>
-          </div>
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
-            {CAN_CADENCE.map((c) => (
-              <div
-                key={c.n}
-                className="rounded-2xl bg-navy-700 p-6 text-white shadow-soft"
-              >
-                <p className="font-display text-5xl font-black text-sky-200">{c.n}</p>
-                <p className="mt-3 font-display text-lg font-bold">{c.label}</p>
-                <p className="mt-1 text-xs font-bold uppercase tracking-wider text-sky-200">{c.cadence}</p>
-              </div>
-            ))}
-          </div>
+        <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
+          <Logo size={380} variant="large" />
+          <h2 className="mt-8 font-display text-3xl font-black text-navy-800 md:text-4xl">
+            The BYUI CAN rhythm
+          </h2>
+          <p className="mt-3 max-w-2xl text-base text-slate-600">
+            One Career Task each week, two industry experiences before senior year, three Career
+            Chats every month. Mentor Connect is the digital backbone for this rhythm.
+          </p>
         </div>
       </section>
 
