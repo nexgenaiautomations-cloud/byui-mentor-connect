@@ -44,7 +44,46 @@ export default async function AdminMembersPage() {
         </p>
       </header>
 
-      <div className="card overflow-hidden p-0">
+      {/* Mobile: card per row */}
+      <div className="space-y-3 md:hidden">
+        {rows.map((u) => (
+          <div key={u.id} className="card !p-4">
+            <div className="flex items-start gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={u.image || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(u.name || u.email)}&backgroundColor=1B3A6B&textColor=ffffff`}
+                alt=""
+                className="h-11 w-11 rounded-full object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold text-navy-800">{u.name || "—"}</p>
+                <p className="truncate text-xs text-slate-500">{u.email}</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {u.isAdmin && <span className="pill bg-rose-50 text-rose-700 border-rose-100">Admin</span>}
+                  {u.isMentor && <span className="pill bg-emerald-50 text-emerald-700 border-emerald-100">Mentor</span>}
+                  {!u.isMentor && !u.isAdmin && <span className="pill">Member</span>}
+                </div>
+              </div>
+              <span className="text-xs font-semibold text-slate-500">{u.activeMatches} active</span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 text-xs">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Major</p>
+                <p className="text-slate-700">{u.major || "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Semester · Grad</p>
+                <p className="text-slate-700">
+                  {u.semesterLevel || "—"}{u.expectedGraduation ? ` · ${u.expectedGraduation}` : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="card hidden overflow-hidden p-0 md:block">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-100 text-sm">
             <thead className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
@@ -54,7 +93,7 @@ export default async function AdminMembersPage() {
                 <th className="px-3 py-3">Semester</th>
                 <th className="px-3 py-3">Expected grad</th>
                 <th className="px-3 py-3">Role</th>
-                <th className="px-3 py-3">Active matches</th>
+                <th className="px-3 py-3">Active</th>
                 <th className="px-5 py-3">Joined</th>
               </tr>
             </thead>
@@ -65,10 +104,7 @@ export default async function AdminMembersPage() {
                     <div className="flex items-center gap-3">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={
-                          u.image ||
-                          `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(u.name || u.email)}&backgroundColor=1B3A6B&textColor=ffffff`
-                        }
+                        src={u.image || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(u.name || u.email)}&backgroundColor=1B3A6B&textColor=ffffff`}
                         alt=""
                         className="h-9 w-9 rounded-full object-cover"
                       />

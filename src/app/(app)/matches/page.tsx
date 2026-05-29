@@ -118,10 +118,14 @@ export default async function MatchesPage() {
                     {other.major && <p className="mt-1 text-sm text-slate-600">{other.major}</p>}
                     {other.bio && <p className="mt-2 max-w-prose text-sm text-slate-600">{other.bio}</p>}
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <a href={`mailto:${other.email}`} className="btn-primary">Email</a>
-                    {other.phone && <a href={`tel:${other.phone}`} className="btn-outline">Call</a>}
-                    <a href={teamsUrl} target="_blank" rel="noopener noreferrer" className="btn-outline">Teams</a>
+                  <div className="grid w-full grid-cols-3 gap-2 sm:w-auto">
+                    <a href={`mailto:${other.email}`} className="btn-primary !px-3">Email</a>
+                    {other.phone ? (
+                      <a href={`tel:${other.phone}`} className="btn-outline !px-3">Call</a>
+                    ) : (
+                      <span className="btn-outline pointer-events-none opacity-40 !px-3">Call</span>
+                    )}
+                    <a href={teamsUrl} target="_blank" rel="noopener noreferrer" className="btn-outline !px-3">Teams</a>
                   </div>
                 </div>
 

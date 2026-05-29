@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { User } from "@/db/schema";
 import { Logo } from "./logo";
+import { MobileMenu } from "./mobile-menu";
 
 function initials(name: string | null | undefined, fallback: string) {
   if (!name) return fallback;
@@ -9,8 +10,9 @@ function initials(name: string | null | undefined, fallback: string) {
 
 export function TopBar({ user, title }: { user: User; title?: string }) {
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-white/15 bg-transparent px-6 lg:px-10">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-white/15 bg-transparent px-4 lg:px-10">
+      <div className="flex items-center gap-2">
+        <MobileMenu user={user} />
         <Link href="/dashboard" className="lg:hidden flex items-center gap-2">
           <Logo size={32} />
           <span className="font-display text-sm font-black tracking-tight text-white">
