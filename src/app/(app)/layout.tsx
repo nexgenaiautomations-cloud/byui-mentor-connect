@@ -9,23 +9,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user) redirect("/login");
   return (
     <div className="relative flex min-h-screen">
-      {/* Full-viewport clock tower bg — its own navy sky is the contrast */}
+      {/* Full-viewport clock tower bg. Anchored so the tower lands inside
+          the sidebar column (left) and the navy sky frames the main panel. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/byui-bg.jpg"
         alt=""
         aria-hidden
         className="fixed inset-0 -z-10 h-full w-full object-cover"
+        style={{ objectPosition: "12% center" }}
       />
 
       {user.isMentor && <PendingRequestBanner userId={user.id} />}
       <Sidebar user={user} />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar user={user} />
-        {/* Cards/content panel — opaque so dark text stays readable. Photo
-            shows around the panel and around the transparent sidebar. */}
-        <main className="flex-1 p-3 pb-24 lg:p-5 lg:pb-6">
-          <div className="rounded-3xl bg-slate-50 px-5 py-8 shadow-lift lg:px-8 lg:py-10">
+        {/* Cards/content panel — opaque cream so dark text reads. Generous
+            margin so navy sky shows around the panel like in the PDF. */}
+        <main className="flex-1 p-4 pb-24 lg:p-8 lg:pb-10">
+          <div className="rounded-3xl bg-slate-50 px-5 py-8 shadow-lift lg:px-10 lg:py-10">
             <div className="mx-auto max-w-6xl">{children}</div>
           </div>
         </main>
