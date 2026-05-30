@@ -64,7 +64,7 @@ export default async function MentorsPage({
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-display text-4xl font-black text-navy-800">Find a mentor.</h1>
+        <h1 className="font-display text-2xl font-black text-navy-800 sm:text-3xl lg:text-4xl">Find a mentor.</h1>
         <p className="text-sm font-medium text-slate-600">
           {mentors.length} accepting requests · sorted by overlap with your major and interests
         </p>

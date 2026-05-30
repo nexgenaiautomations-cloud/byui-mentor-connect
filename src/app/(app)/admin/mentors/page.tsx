@@ -32,7 +32,7 @@ export default async function AdminMentorsPage() {
     <div className="space-y-6">
       <header>
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Directory</p>
-        <h1 className="mt-1 font-display text-3xl font-black text-navy-800">Mentors</h1>
+        <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">Mentors</h1>
         <p className="mt-1 text-sm text-slate-600">
           {rows.length} approved · {rows.filter((r) => r.mentorAvailable).length} accepting requests right now
         </p>

@@ -28,8 +28,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Right column — offset for the pinned sidebar on lg+ */}
       <div className="flex min-h-screen min-w-0 flex-col lg:pl-64">
         <TopBar user={user} />
-        <main className="flex-1 p-4 pb-24 lg:p-10 lg:pb-12">
-          <div className="rounded-3xl bg-slate-50 px-5 py-8 ring-4 ring-gold-400 lg:px-10 lg:py-10">
+        <main className="flex-1 p-2 pb-20 lg:p-8 lg:pb-10">
+          <div className="rounded-2xl bg-slate-50 px-4 py-5 ring-2 ring-gold-400 lg:rounded-3xl lg:px-10 lg:py-10 lg:ring-4">
             <div className="mx-auto max-w-6xl">{children}</div>
           </div>
         </main>

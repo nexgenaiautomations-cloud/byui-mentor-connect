@@ -43,7 +43,7 @@ export default async function RequestsPage() {
   return (
     <div className="space-y-10">
       <header>
-        <h1 className="font-display text-4xl font-black text-navy-800">Requests.</h1>
+        <h1 className="font-display text-2xl font-black text-navy-800 sm:text-3xl lg:text-4xl">Requests.</h1>
         <p className="mt-1 text-sm text-slate-600">
           {me.isMentor ? "Incoming requests and the ones you've sent." : "Where you stand with every mentor you've reached out to."}
         </p>

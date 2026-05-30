@@ -69,7 +69,7 @@ export default async function AdminPage() {
     <div className="space-y-8">
       <header>
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Program</p>
-        <h1 className="mt-1 font-display text-3xl font-black text-navy-800">Admin dashboard</h1>
+        <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">Admin dashboard</h1>
         <p className="mt-1 text-sm text-slate-600">
           Program overview, mentor application review, recent activity.
         </p>

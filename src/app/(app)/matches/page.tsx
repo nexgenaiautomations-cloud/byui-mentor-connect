@@ -63,7 +63,7 @@ export default async function MatchesPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-4xl font-black text-navy-800">Your matches.</h1>
+        <h1 className="font-display text-2xl font-black text-navy-800 sm:text-3xl lg:text-4xl">Your matches.</h1>
         <p className="mt-1 text-sm text-slate-600">
           Contact info is unlocked. Email, call, or jump into Teams directly.
         </p>

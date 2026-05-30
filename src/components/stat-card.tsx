@@ -31,7 +31,7 @@ export function StatTile({
   const inner = (
     <div className={`relative overflow-hidden rounded-2xl p-5 text-white ${t.bg} shadow-soft`}>
       <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${t.label}`}>{label}</p>
-      <p className="mt-1 font-display text-4xl font-black leading-none">{value}</p>
+      <p className="mt-1 font-display text-3xl font-black leading-none sm:text-4xl">{value}</p>
       {hint && <p className={`mt-2 text-[11px] font-medium ${t.hint}`}>{hint}</p>}
     </div>
   );

@@ -21,7 +21,7 @@ export default async function ApplyMentorPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <header>
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-700">Pay it forward</p>
-        <h1 className="mt-1 font-display text-4xl font-black text-navy-800">Apply to mentor.</h1>
+        <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl lg:text-4xl">Apply to mentor.</h1>
         <p className="mt-2 text-slate-600">
           Every member is welcome. Admin reviews land in days, not weeks.
         </p>
