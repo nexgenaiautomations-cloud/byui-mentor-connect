@@ -103,10 +103,10 @@ export function Sidebar({ user }: { user: User }) {
           </div>
         </Link>
         <InstallButton variant="sidebar" />
-        <form action={signOutAction} className="mt-2">
+        <form action={signOutAction} className="mt-3">
           <button
             type="submit"
-            className="text-left text-xs font-medium text-white/60 transition hover:text-white cursor-pointer"
+            className="w-full rounded-lg bg-gold-500 px-3 py-2 text-center text-xs font-bold text-navy-900 transition hover:bg-gold-400 cursor-pointer"
           >
             Sign out →
           </button>
@@ -136,21 +136,23 @@ function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
 
 export function MobileBar({ user }: { user: User }) {
   const pathname = usePathname() || "/";
+  // 4 destinations per role. "Profile" lives in the topbar avatar — duplicating
+  // it here would crowd the bar. Sign out lives in the hamburger drawer and
+  // on the profile page.
   let items: { href: string; label: string }[];
   if (user.isAdmin && !user.isMentor) {
     items = [
       { href: "/admin", label: "Overview" },
       { href: "/admin/members", label: "Members" },
-      { href: "/admin/applications", label: "Apps" },
-      { href: "/profile", label: "Profile" },
+      { href: "/admin/applications", label: "Review" },
+      { href: "/admin/activity", label: "Activity" },
     ];
   } else if (user.isMentor) {
     items = [
       { href: "/dashboard", label: "Home" },
       { href: "/requests", label: "Requests" },
       { href: "/matches", label: "Mentees" },
-      { href: "/log-meeting", label: "Log" },
-      { href: "/profile", label: "Me" },
+      { href: "/log-meeting", label: "Meetings" },
     ];
   } else {
     items = [
@@ -158,7 +160,6 @@ export function MobileBar({ user }: { user: User }) {
       { href: "/mentors", label: "Mentors" },
       { href: "/requests", label: "Requests" },
       { href: "/matches", label: "Matches" },
-      { href: "/profile", label: "Me" },
     ];
   }
   return (
@@ -173,7 +174,7 @@ export function MobileBar({ user }: { user: User }) {
               "flex-1 px-2 py-3 text-center text-[11px] font-bold uppercase tracking-wider transition cursor-pointer " +
               (active
                 ? "text-gold-300 border-y border-gold-400"
-                : "text-white/70 hover:text-white")
+                : "text-white/80 hover:text-white")
             }
           >
             {it.label}

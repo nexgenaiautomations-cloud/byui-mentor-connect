@@ -68,9 +68,9 @@ export function MobileMenu({ user }: { user: User }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
-        className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg text-white hover:bg-white/10 cursor-pointer"
+        className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 text-white ring-1 ring-white/30 hover:bg-white/25 cursor-pointer"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
              strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
           <path d="M3 6h18M3 12h18M3 18h18" />
         </svg>
@@ -137,7 +137,7 @@ export function MobileMenu({ user }: { user: User }) {
               <form action={signOutAction} className="mt-3">
                 <button
                   type="submit"
-                  className="text-left text-xs font-medium text-white/60 transition hover:text-white cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-gold-500 px-4 py-2 text-sm font-bold text-navy-900 hover:bg-gold-400 cursor-pointer"
                 >
                   Sign out →
                 </button>
