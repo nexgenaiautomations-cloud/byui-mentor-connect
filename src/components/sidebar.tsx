@@ -15,16 +15,29 @@ function initials(name: string | null | undefined, fallback: string) {
 type NavItem = { href: string; label: string };
 
 function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
-  const isPureAdmin = user.isAdmin && !user.isMentor;
-  const primary: NavItem[] = [{ href: "/dashboard", label: "Dashboard" }];
-  if (!isPureAdmin) primary.push({ href: "/mentors", label: "Find a mentor" });
-  primary.push(
-    { href: "/requests", label: user.isMentor ? "Requests" : "My requests" },
-    { href: "/matches", label: user.isMentor ? "My mentees" : "My matches" }
-  );
-  if (user.isMentor) primary.push({ href: "/log-meeting", label: "Log a meeting" });
-  primary.push({ href: "/check-in", label: "Monthly check-in" });
-  if (!user.isMentor && !user.isAdmin) primary.push({ href: "/apply-mentor", label: "Apply to mentor" });
+  const primary: NavItem[] = [];
+
+  // Mentors don't browse for a mentor — their nav is focused on managing
+  // mentees. Members get the browse + apply flow.
+  if (user.isMentor) {
+    primary.push(
+      { href: "/dashboard", label: "Dashboard" },
+      { href: "/requests", label: "Requests" },
+      { href: "/matches", label: "My mentees" },
+      { href: "/log-meeting", label: "Log a meeting" },
+      { href: "/check-in", label: "Monthly check-in" }
+    );
+  } else if (!user.isAdmin) {
+    primary.push(
+      { href: "/dashboard", label: "Dashboard" },
+      { href: "/mentors", label: "Find a mentor" },
+      { href: "/requests", label: "My requests" },
+      { href: "/matches", label: "My matches" },
+      { href: "/check-in", label: "Monthly check-in" },
+      { href: "/apply-mentor", label: "Apply to mentor" }
+    );
+  }
+  // Pure admins skip the member/mentor primary nav entirely.
 
   const admin: NavItem[] = [];
   if (user.isAdmin) {
@@ -33,7 +46,9 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
       { href: "/admin/members", label: "Members" },
       { href: "/admin/mentors", label: "Mentors" },
       { href: "/admin/applications", label: "Applications" },
-      { href: "/admin/activity", label: "Activity" }
+      { href: "/admin/matches", label: "Matches" },
+      { href: "/admin/meetings", label: "Meetings" },
+      { href: "/admin/feedback", label: "Feedback" }
     );
   }
   return { primary, admin };
@@ -145,7 +160,7 @@ export function MobileBar({ user }: { user: User }) {
       { href: "/admin", label: "Overview" },
       { href: "/admin/members", label: "Members" },
       { href: "/admin/applications", label: "Review" },
-      { href: "/admin/activity", label: "Activity" },
+      { href: "/admin/matches", label: "Matches" },
     ];
   } else if (user.isMentor) {
     items = [
