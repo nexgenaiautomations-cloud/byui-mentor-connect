@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth, signIn } from "../../../auth";
 import { DemoButtons } from "./demo-buttons";
 import { Logo } from "@/components/logo";
+import { limitMagicLink } from "@/lib/rate-limit";
 
 const CAMPUS_LOGIN = "/byui-campus.jpg";
 
@@ -62,6 +64,8 @@ export default async function LoginPage({
             <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error === "AccessDenied"
                 ? "Only @byui.edu addresses are allowed."
+                : error === "RateLimited"
+                ? "Too many sign-in attempts. Please wait an hour and try again."
                 : "Sign-in failed. Please try again."}
             </div>
           )}
@@ -73,6 +77,19 @@ export default async function LoginPage({
               if (!email.endsWith("@byui.edu")) {
                 redirect("/login?error=AccessDenied");
               }
+
+              // Rate limit: 3 sends per email per hour, 10 per IP per hour.
+              // Silently no-ops if Upstash isn't configured.
+              const h = await headers();
+              const ip =
+                h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+                h.get("x-real-ip") ??
+                null;
+              const limit = await limitMagicLink(email, ip);
+              if (!limit.ok) {
+                redirect("/login?error=RateLimited");
+              }
+
               // Only accept relative same-origin paths in `next` to prevent
               // open-redirects (e.g. /login?next=https://evil.com).
               const safe =
