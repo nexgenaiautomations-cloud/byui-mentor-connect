@@ -84,8 +84,8 @@ export default async function MatchesPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-2xl font-black text-navy-800 sm:text-3xl lg:text-4xl">
-          {isMember ? "My Mentors." : "Your matches."}
+        <h1 className="font-display text-2xl font-black text-byui-blue-dark sm:text-3xl lg:text-4xl">
+          {isMember ? "My Mentors." : "My Mentees."}
         </h1>
         <p className="mt-1 text-sm text-slate-600">
           {isMember
@@ -104,9 +104,34 @@ export default async function MatchesPage() {
               ? "You just matched. Now what?"
               : `${fresh.length} new matches. Pick one to start.`}
           </p>
-          <p className="mt-1 max-w-xl text-sm text-white/90">
-            Send the first email today. A short note (<em>&ldquo;great to be matched, here&rsquo;s what I&rsquo;m hoping to work on&rdquo;</em>) gets things moving.
-          </p>
+          <div className="mt-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-byui-blue-light">
+              Quick start
+            </p>
+            <ol className="mt-2 space-y-1.5 text-sm text-white/95">
+              <li className="flex items-start gap-2">
+                <span aria-hidden className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-black text-byui-blue-dark">
+                  1
+                </span>
+                <span><strong>Call or text.</strong></span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span aria-hidden className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-black text-byui-blue-dark">
+                  2
+                </span>
+                <span>
+                  <strong>Get to know them.</strong>{" "}
+                  <span className="text-white/80">Go to the Crossroads, go to a society meeting together, or go have some fun.</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span aria-hidden className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-black text-byui-blue-dark">
+                  3
+                </span>
+                <span><strong>Do a career accomplishment together.</strong></span>
+              </li>
+            </ol>
+          </div>
         </div>
       )}
 
@@ -273,11 +298,6 @@ export default async function MatchesPage() {
                   </div>
                 )}
 
-                <div className="border-t border-slate-100 pt-3">
-                  <Link href="/check-in" className="text-xs font-semibold text-byui-blue-dark hover:underline">
-                    Monthly check-in →
-                  </Link>
-                </div>
               </article>
             );
           })}

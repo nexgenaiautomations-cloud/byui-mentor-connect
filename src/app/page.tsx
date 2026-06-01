@@ -114,7 +114,7 @@ export default async function LandingPage() {
                 {[
                   { n: 1, title: "Register as a member", body: "Major, expected graduation, career interests." },
                   { n: 2, title: "Browse and request", body: "Filter by major, semester, and career interest." },
-                  { n: 3, title: "Meet and grow", body: "Contact unlocks on accept. Log meetings, monthly check-in." },
+                  { n: 3, title: "Meet and grow", body: "Contact unlocks on accept. Log every meeting." },
                 ].map((s) => (
                   <li key={s.n} className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
                     <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-byui-blue text-xs font-black text-white">
@@ -272,7 +272,7 @@ export default async function LandingPage() {
               },
               {
                 title: "Stay accountable",
-                body: "Mentors log every meeting. Both sides answer a short monthly check-in. Admins see aggregate progress.",
+                body: "Mentors log every meeting. Admins see aggregate progress on the analytics dashboard.",
               },
             ].map((c) => (
               <div

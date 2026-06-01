@@ -23,16 +23,14 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/requests", label: "Requests" },
-      { href: "/matches", label: "My mentees" },
-      { href: "/log-meeting", label: "Log a meeting" },
-      { href: "/check-in", label: "Monthly check-in" }
+      { href: "/matches", label: "My Mentees" },
+      { href: "/log-meeting", label: "Log a meeting" }
     );
   } else if (!user.isAdmin) {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/mentors", label: "Find a mentor" },
       { href: "/matches", label: "My Mentors" },
-      { href: "/check-in", label: "Monthly check-in" },
       { href: "/apply-mentor", label: "Apply to mentor" }
     );
   }

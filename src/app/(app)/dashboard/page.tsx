@@ -141,7 +141,7 @@ export default async function DashboardPage() {
         </p>
       </section>
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
         <StatTile
           label={me.isMentor ? "Active matches" : "My mentors"}
           value={activeMatches.length}
@@ -189,13 +189,6 @@ export default async function DashboardPage() {
             tone="gold"
           />
         )}
-        <StatTile
-          label="Monthly check-in"
-          value="Open"
-          hint="Both sides answer once a month"
-          href="/check-in"
-          tone="violet"
-        />
       </section>
 
       {impact && (
@@ -220,7 +213,7 @@ export default async function DashboardPage() {
               <div className="rounded-2xl bg-emerald-50 px-5 py-4 text-center ring-1 ring-emerald-100">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">Avg rating</p>
                 <p className="mt-1 font-display text-3xl font-black text-emerald-700">{impact.avgRating.toFixed(1)}</p>
-                <p className="text-[10px] text-emerald-600">from mentee check-ins</p>
+                <p className="text-[10px] text-emerald-600">from mentee feedback</p>
               </div>
             )}
           </div>
