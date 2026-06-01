@@ -32,17 +32,18 @@ export function Logo({
   );
 }
 
-// Larger hero variant of the plain crest — same image as Logo, just sized up
-// for the landing "rhythm" section.
+// Full 1-2-3 crest with the BYUI CAN wordmark — used only as the centerpiece
+// of the landing "rhythm" section so the program rhythm is visible at hero
+// size. Logo (header/sidebar/login) stays the plain handshake.
 export function FullCrest({ size = 380 }: { size?: number }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/byuican-icon.png"
-      alt="BYUI CAN — Career Advancement Network"
+      src="/byuican-crest.png"
+      alt="BYUI CAN — 1 Career Task weekly, 2 Internships before senior year, 3 Career Chats monthly"
       width={size}
-      height={size}
-      style={{ width: size, height: size }}
+      height={(size * 1536) / 1024}
+      style={{ width: size, height: (size * 1536) / 1024 }}
       className="select-none"
     />
   );

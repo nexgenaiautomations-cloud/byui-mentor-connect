@@ -105,10 +105,11 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* CAN crest band — plain handshake mark at hero size. */}
+      {/* CAN crest band — the 1-2-3 crest itself shows the rhythm, so we let
+          it speak for itself at hero size. */}
       <section id="how" className="relative bg-white px-6 py-20">
         <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
-          <FullCrest size={260} />
+          <FullCrest size={380} />
           <h2 className="mt-8 font-display text-3xl font-black text-navy-800 md:text-4xl">
             The BYUI CAN rhythm
           </h2>
