@@ -108,32 +108,34 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-2xl bg-gradient-to-r from-navy-700 to-navy-800 p-6 text-white shadow-lift md:p-8">
-        <p className="text-sm font-semibold uppercase tracking-wider text-navy-200">
+    <div className="space-y-5 md:space-y-6">
+      <section className="rounded-2xl bg-gradient-to-r from-navy-700 to-navy-800 p-5 text-white shadow-lift md:p-6">
+        <p className="text-xs font-semibold uppercase tracking-wider text-navy-200">
           {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
         </p>
-        <h1 className="mt-1 font-display text-3xl font-black tracking-tight md:text-4xl">
-          Welcome back, {me.firstName || "friend"}.
-        </h1>
-        <p className="mt-2 max-w-xl text-sm text-navy-100">
+        <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
+          <h1 className="font-display text-2xl font-black tracking-tight md:text-3xl">
+            Welcome back, {me.firstName || "friend"}.
+          </h1>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/mentors" className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-navy-800 hover:bg-navy-50 cursor-pointer">
+              Find a mentor →
+            </Link>
+            {!me.isMentor && (
+              <Link href="/apply-mentor" className="inline-flex items-center justify-center rounded-lg bg-gold-500 px-3 py-1.5 text-xs font-bold text-navy-900 transition hover:bg-gold-400 cursor-pointer">
+                Apply to mentor →
+              </Link>
+            )}
+          </div>
+        </div>
+        <p className="mt-2 max-w-xl text-xs text-navy-100">
           {me.isMentor
             ? "You're an approved mentor. Review pending requests, log meetings, and check in monthly."
             : `${mentorCount?.count ?? 0} mentors are accepting requests right now.`}
         </p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Link href="/mentors" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-navy-800 hover:bg-navy-50 cursor-pointer">
-            Find a mentor →
-          </Link>
-          {!me.isMentor && (
-            <Link href="/apply-mentor" className="btn-gold">
-              Apply to mentor →
-            </Link>
-          )}
-        </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <StatTile
           label="Active matches"
           value={activeMatches.length}
@@ -175,7 +177,7 @@ export default async function DashboardPage() {
       </section>
 
       {impact && (
-        <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-emerald-100 md:p-8">
+        <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-emerald-100 md:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Your impact</p>
@@ -240,7 +242,7 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <div className="card">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-bold text-navy-800">Your matches</h2>

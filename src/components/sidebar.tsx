@@ -149,49 +149,117 @@ function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
   );
 }
 
+type BarKey =
+  | "home"
+  | "users"
+  | "review"
+  | "matches"
+  | "mentors"
+  | "requests"
+  | "mentees"
+  | "meetings";
+
+function BarIcon({ name }: { name: BarKey }) {
+  // 22px outlined glyphs matching the proposal's mobile mock (p13/p14):
+  // labeled tabs with a single line icon stacked above the text.
+  const cls = "h-[22px] w-[22px]";
+  const stroke = { fill: "none" as const, stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  switch (name) {
+    case "home":
+      return (
+        <svg viewBox="0 0 24 24" className={cls} {...stroke}>
+          <path d="M3 11.5 12 4l9 7.5" />
+          <path d="M5 10v10h14V10" />
+        </svg>
+      );
+    case "users":
+      return (
+        <svg viewBox="0 0 24 24" className={cls} {...stroke}>
+          <circle cx="9" cy="9" r="3.2" />
+          <circle cx="17" cy="10" r="2.4" />
+          <path d="M3.5 19c.6-3 3-4.8 5.5-4.8s4.9 1.8 5.5 4.8" />
+          <path d="M14.5 19c.4-2 1.9-3.4 3.5-3.4s3.1 1.4 3.5 3.4" />
+        </svg>
+      );
+    case "mentors":
+    case "mentees":
+      return (
+        <svg viewBox="0 0 24 24" className={cls} {...stroke}>
+          <circle cx="12" cy="8" r="3.4" />
+          <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
+        </svg>
+      );
+    case "meetings":
+      return (
+        <svg viewBox="0 0 24 24" className={cls} {...stroke}>
+          <rect x="3.5" y="5.5" width="17" height="14" rx="2" />
+          <path d="M3.5 10h17M8 3.5v4M16 3.5v4" />
+        </svg>
+      );
+    case "requests":
+    case "review":
+      return (
+        <svg viewBox="0 0 24 24" className={cls} {...stroke}>
+          <path d="M5 5.5h14v9H8.5L5 18z" />
+          <path d="M9 9.5h6M9 12h4" />
+        </svg>
+      );
+    case "matches":
+      return (
+        <svg viewBox="0 0 24 24" className={cls} {...stroke}>
+          <path d="M12 20.5s-7-4.4-7-10A4.5 4.5 0 0 1 12 6.5 4.5 4.5 0 0 1 19 10.5c0 5.6-7 10-7 10z" />
+        </svg>
+      );
+  }
+}
+
 export function MobileBar({ user }: { user: User }) {
   const pathname = usePathname() || "/";
-  // 4 destinations per role. "Profile" lives in the topbar avatar — duplicating
-  // it here would crowd the bar. Sign out lives in the hamburger drawer and
-  // on the profile page.
-  let items: { href: string; label: string }[];
+  // 4 destinations per role. Profile lives in the topbar avatar (per spec),
+  // and the hamburger surfaces secondary items + sign out.
+  let items: { href: string; label: string; icon: BarKey }[];
   if (user.isAdmin && !user.isMentor) {
     items = [
-      { href: "/admin", label: "Overview" },
-      { href: "/admin/members", label: "Members" },
-      { href: "/admin/applications", label: "Review" },
-      { href: "/admin/matches", label: "Matches" },
+      { href: "/admin", label: "Overview", icon: "home" },
+      { href: "/admin/members", label: "Members", icon: "users" },
+      { href: "/admin/applications", label: "Review", icon: "review" },
+      { href: "/admin/matches", label: "Matches", icon: "matches" },
     ];
   } else if (user.isMentor) {
     items = [
-      { href: "/dashboard", label: "Home" },
-      { href: "/requests", label: "Requests" },
-      { href: "/matches", label: "Mentees" },
-      { href: "/log-meeting", label: "Meetings" },
+      { href: "/dashboard", label: "Home", icon: "home" },
+      { href: "/requests", label: "Requests", icon: "requests" },
+      { href: "/matches", label: "Mentees", icon: "mentees" },
+      { href: "/log-meeting", label: "Meetings", icon: "meetings" },
     ];
   } else {
     items = [
-      { href: "/dashboard", label: "Home" },
-      { href: "/mentors", label: "Mentors" },
-      { href: "/requests", label: "Requests" },
-      { href: "/matches", label: "Matches" },
+      { href: "/dashboard", label: "Home", icon: "home" },
+      { href: "/mentors", label: "Mentors", icon: "mentors" },
+      { href: "/requests", label: "Requests", icon: "requests" },
+      { href: "/matches", label: "Matches", icon: "matches" },
     ];
   }
   return (
-    <nav className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex bg-navy-900/95 backdrop-blur border-t border-white/10">
+    <nav
+      className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex border-t border-white/10 bg-navy-900/95 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] backdrop-blur"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       {items.map((it) => {
         const active = isActive(pathname, it.href);
         return (
           <Link
             key={it.href}
             href={it.href}
+            aria-current={active ? "page" : undefined}
             className={
-              "flex-1 px-2 py-3 text-center text-[11px] font-bold uppercase tracking-wider transition cursor-pointer " +
+              "flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 px-2 py-2 text-center text-[11px] font-semibold tracking-wide transition cursor-pointer " +
               (active
-                ? "text-gold-300 border-y border-gold-400"
+                ? "text-gold-300"
                 : "text-white/80 hover:text-white")
             }
           >
+            <BarIcon name={it.icon} />
             {it.label}
           </Link>
         );

@@ -29,10 +29,10 @@ export function StatTile({
 }) {
   const t = TONES[tone];
   const inner = (
-    <div className={`relative overflow-hidden rounded-2xl p-5 text-white ${t.bg} shadow-soft`}>
+    <div className={`relative overflow-hidden rounded-2xl p-4 text-white ${t.bg} shadow-soft sm:p-5`}>
       <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${t.label}`}>{label}</p>
-      <p className="mt-1 font-display text-3xl font-black leading-none sm:text-4xl">{value}</p>
-      {hint && <p className={`mt-2 text-[11px] font-medium ${t.hint}`}>{hint}</p>}
+      <p className="mt-1 font-display text-2xl font-black leading-none sm:text-3xl">{value}</p>
+      {hint && <p className={`mt-1.5 text-[11px] font-medium ${t.hint}`}>{hint}</p>}
     </div>
   );
   if (href) {

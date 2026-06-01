@@ -105,11 +105,10 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* CAN crest band — the crest itself contains the 1-2-3 columns, so we
-          let it speak for itself at hero size. No duplicate bubbles below. */}
+      {/* CAN crest band — plain handshake mark at hero size. */}
       <section id="how" className="relative bg-white px-6 py-20">
         <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
-          <FullCrest size={380} />
+          <FullCrest size={260} />
           <h2 className="mt-8 font-display text-3xl font-black text-navy-800 md:text-4xl">
             The BYUI CAN rhythm
           </h2>

@@ -95,8 +95,8 @@ export function MobileMenu({ user }: { user: User }) {
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-navy-900/70 backdrop-blur-sm"
           />
-          {/* Drawer */}
-          <aside className="absolute left-0 top-0 flex h-full w-72 flex-col bg-navy-900 text-white shadow-2xl">
+          {/* Drawer — slides in from the right to match the trigger button */}
+          <aside className="absolute right-0 top-0 flex h-full w-72 flex-col bg-navy-900 text-white shadow-2xl">
             <div className="flex items-center justify-between px-6 pt-6 pb-5">
               <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
                 <Logo size={36} />

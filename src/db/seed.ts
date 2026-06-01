@@ -326,7 +326,7 @@ function daysAgo(n: number) {
   return d;
 }
 
-async function main() {
+export async function seedDemo() {
   await clearActivity();
 
   const ids: Record<string, string> = {};
@@ -537,7 +537,11 @@ async function main() {
   console.log(`  pending for mentor.demo: ${pendingForMorgan?.id ? "yes" : "no"}`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+// Run as a CLI only when invoked directly (npm run db:seed). Importing this
+// file from an API route should not re-run the seed on import.
+if (process.argv[1] && process.argv[1].includes("seed.ts")) {
+  seedDemo().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

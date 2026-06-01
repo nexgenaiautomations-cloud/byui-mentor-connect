@@ -11,7 +11,6 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "json-summary"],
-      all: true,
       // Pure-logic files. Server actions / session helpers / Drizzle schema
       // need integration-style coverage (mocked auth + DB) and are excluded
       // here so unit-test coverage is meaningful instead of inflated.
