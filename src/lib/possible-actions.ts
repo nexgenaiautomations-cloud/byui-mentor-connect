@@ -1,18 +1,19 @@
 // "Possible Actions" — concrete things a mentor + mentee can do together.
-// Surfaces on the match-confirmed screen so they have immediate first steps.
+// Surfaces on each mentee card so the mentor has a menu of obvious next steps.
 // Source: BYUI CAN program.
 export const POSSIBLE_ACTIONS = [
   "Explore Careers, Companies, Industries",
+  "Share professional connections and relationships",
+  "Help with Informational Interview preparation",
+  "Go to a Career Fair or other Career Event together",
+  "Go to a Society Meeting together",
+  "Go do something else awesome together",
   "Help with LinkedIn or Other Platforms",
   "Work on Resumes",
   "Work on Cover Letters",
-  "Work on Interviewing Skills / Practice Interviewing questions",
+  "Work on Interviewing Skills",
+  "Role Play Interviewing",
   "Work on Elevator Pitch",
-  "Practice Interviewing",
-  "Go to a Society Meeting together",
-  "Go to a Career Fair or other Career Event together",
-  "Help with Informational Interview preparation",
-  "Share professional connections and relationships",
   "Help apply to an internship or job",
   "Help with Grad School Preparation/Application",
 ];

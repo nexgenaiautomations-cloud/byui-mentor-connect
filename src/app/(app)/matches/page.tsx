@@ -5,7 +5,7 @@ import { matches, requests, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 import { and, desc, eq, or, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
-import { INACTIVITY_WARN_DAYS } from "@/lib/possible-actions";
+import { INACTIVITY_WARN_DAYS, POSSIBLE_ACTIONS } from "@/lib/possible-actions";
 import { EmptyState } from "@/components/empty-state";
 import { CancelRequestButton } from "./cancel-request-button";
 
@@ -122,7 +122,13 @@ export default async function MatchesPage() {
           cta={{ label: "Find a mentor", href: "/mentors" }}
         />
       ) : (
-        <div className="space-y-6">
+        <div
+          className={
+            isMember
+              ? "space-y-6"
+              : "grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+          }
+        >
           {rows.map((m) => {
             const iAmMentor = m.mentorId === me.id;
             const other = iAmMentor
@@ -149,52 +155,65 @@ export default async function MatchesPage() {
             const showInactivityWarn = inactivityDays >= INACTIVITY_WARN_DAYS;
 
             return (
-              <article key={m.id} className="card space-y-5">
-                <div className="flex flex-wrap items-start gap-4">
+              <article
+                key={m.id}
+                className="card flex flex-col gap-4"
+              >
+                {/* Header — photo + name + role */}
+                <div className="flex items-start gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={
                       other.image ||
-                      `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(other.name || "")}&backgroundColor=1B3A6B&textColor=ffffff`
+                      `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(other.name || "")}&backgroundColor=006EB6&textColor=ffffff`
                     }
                     alt=""
-                    className="h-16 w-16 rounded-full border border-slate-200 object-cover"
+                    className="h-14 w-14 shrink-0 rounded-full border border-byui-blue-light/40 object-cover"
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-display text-xl font-black text-navy-800">{other.name}</p>
-                      <span className="pill">{other.role}</span>
-                      <span className="pill bg-emerald-50 text-emerald-700 border-emerald-100">
-                        Active since {new Date(m.startedAt).toLocaleDateString()}
+                    <p className="truncate font-display text-lg font-black text-byui-blue-dark">
+                      {other.name}
+                    </p>
+                    {other.major && (
+                      <p className="truncate text-xs font-medium text-slate-600">{other.major}</p>
+                    )}
+                    <div className="mt-1 flex flex-wrap items-center gap-1">
+                      <span className="inline-flex items-center rounded-full bg-byui-blue-light/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-byui-blue-dark">
+                        {other.role}
+                      </span>
+                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-200">
+                        Since {new Date(m.startedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                       </span>
                     </div>
-                    {other.major && <p className="mt-1 text-sm text-slate-600">{other.major}</p>}
-                    {other.bio && <p className="mt-2 max-w-prose text-sm text-slate-600">{other.bio}</p>}
                   </div>
-                  <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
-                    {iAmMentor && (
-                      <Link
-                        href={`/log-meeting?matchId=${m.id}`}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white shadow-soft transition hover:bg-byui-blue-dark active:scale-[0.98] cursor-pointer"
-                      >
-                        Log a Meeting
-                      </Link>
-                    )}
+                </div>
+
+                {/* Primary action + 3 contact buttons */}
+                <div className="flex flex-col gap-2">
+                  {iAmMentor && (
+                    <Link
+                      href={`/log-meeting?matchId=${m.id}`}
+                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white shadow-soft transition hover:bg-byui-blue-dark active:scale-[0.98] cursor-pointer"
+                    >
+                      Log a Meeting
+                    </Link>
+                  )}
+                  <div className="grid grid-cols-3 gap-2">
                     <a
                       href={`mailto:${other.email}`}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-byui-blue-light bg-white px-3 py-2 text-sm font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                      className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
                     >
                       Email
                     </a>
                     {other.phone ? (
                       <a
                         href={`tel:${other.phone}`}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-byui-blue-light bg-white px-3 py-2 text-sm font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                        className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
                       >
                         Call
                       </a>
                     ) : (
-                      <span className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-300 pointer-events-none">
+                      <span className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold text-slate-300 pointer-events-none">
                         Call
                       </span>
                     )}
@@ -202,55 +221,62 @@ export default async function MatchesPage() {
                       href={teamsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-byui-blue-light bg-white px-3 py-2 text-sm font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                      className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
                     >
                       Teams
                     </a>
                   </div>
                 </div>
 
-                <div className="grid gap-3 rounded-xl bg-slate-50 p-4 sm:grid-cols-2">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Email</p>
-                    <a href={`mailto:${other.email}`} className="text-sm font-medium text-byui-blue-dark hover:underline">
-                      {other.email}
-                    </a>
+                {/* Contact info */}
+                <dl className="grid gap-2 rounded-xl bg-slate-50 p-3 text-xs">
+                  <div className="min-w-0">
+                    <dt className="font-semibold uppercase tracking-wider text-slate-500">Email</dt>
+                    <dd className="mt-0.5">
+                      <a href={`mailto:${other.email}`} className="truncate text-byui-blue-dark hover:underline block">
+                        {other.email}
+                      </a>
+                    </dd>
                   </div>
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Phone</p>
-                    <p className="text-sm font-medium text-slate-700">{other.phone || "—"}</p>
+                  <div className="min-w-0">
+                    <dt className="font-semibold uppercase tracking-wider text-slate-500">Phone</dt>
+                    <dd className="mt-0.5 text-slate-700">{other.phone || "—"}</dd>
                   </div>
-                </div>
+                </dl>
 
                 {showInactivityWarn && (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
                     <p className="font-semibold">No activity in {inactivityDays} days.</p>
-                    <p className="mt-1 text-amber-800">
-                      If nothing happens by 30 days from the last meeting, the mentoring relationship will be
-                      discontinued — feel free to re-connect later. After 6 months of inactivity it ends
-                      automatically.
+                    <p className="mt-1 text-[11px] text-amber-800">
+                      Inactive {INACTIVITY_WARN_DAYS}+ days. After 6 months of inactivity it auto-ends.
                     </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <a
-                        href={`mailto:${other.email}`}
-                        className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-3 py-1.5 text-xs font-bold text-white hover:bg-byui-blue-dark cursor-pointer"
-                      >
-                        Send a quick check-in
-                      </a>
-                      {iAmMentor && (
-                        <Link
-                          href={`/log-meeting?matchId=${m.id}`}
-                          className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-3 py-1.5 text-xs font-semibold text-byui-blue-dark hover:bg-byui-blue-light/20 cursor-pointer"
-                        >
-                          Log a meeting
-                        </Link>
-                      )}
-                    </div>
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
-                  <Link href="/check-in" className="btn-ghost text-xs">Monthly check-in →</Link>
+                {/* Possible actions together — only on mentor cards, where the
+                    mentor needs a menu of obvious next steps. */}
+                {iAmMentor && (
+                  <div className="mt-auto">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-byui-blue">
+                      Things you can do together
+                    </p>
+                    <ul className="mt-2 space-y-1">
+                      {POSSIBLE_ACTIONS.map((a) => (
+                        <li key={a} className="flex items-start gap-1.5 text-xs leading-snug text-slate-700">
+                          <span aria-hidden className="mt-0.5 inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-byui-blue text-[9px] font-black text-white">
+                            ✓
+                          </span>
+                          <span>{a}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="border-t border-slate-100 pt-3">
+                  <Link href="/check-in" className="text-xs font-semibold text-byui-blue-dark hover:underline">
+                    Monthly check-in →
+                  </Link>
                 </div>
               </article>
             );
