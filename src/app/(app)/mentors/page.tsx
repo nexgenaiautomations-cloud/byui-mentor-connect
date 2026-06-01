@@ -16,6 +16,9 @@ export default async function MentorsPage({
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
+  // Mentors don't request mentors — bounce them back to their dashboard if
+  // they navigate here directly.
+  if (me.isMentor) redirect("/dashboard");
 
   const params = await searchParams;
   const filterMyMajor = params.mine === "1";

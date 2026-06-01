@@ -9,6 +9,8 @@ export default async function ApplyMentorPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
+  // Already an approved mentor — no need to apply again.
+  if (me.isMentor) redirect("/dashboard");
 
   const recent = await db
     .select()

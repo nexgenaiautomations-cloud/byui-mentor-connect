@@ -373,22 +373,25 @@ export async function seedDemo() {
   const sarah = ids["sarah.patel@byui.edu"];
   const david = ids["david.kim@byui.edu"];
 
+  // Mia is the headline demo example — surfaces first in the mentor popup
+  // because it's the most recent pending request.
   const [pendingForMorgan] = await db
     .insert(requests)
     .values({
       mentorId: morgan,
-      menteeId: james,
+      menteeId: mia,
       message:
-        "Hey Morgan — picked up SQL last semester but I'm stuck picking a portfolio project that isn't yet another COVID-data dashboard. Would love your take.",
+        "Hi Morgan — junior Marketing, leaning agency over in-house. Saw you did brand at P&G and would love a real opinion before I start applying to summer creative-strategist roles.",
       status: "pending",
-      requestedAt: daysAgo(1),
+      requestedAt: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
     })
     .returning();
 
   await db.insert(requests).values({
     mentorId: morgan,
-    menteeId: mia,
-    message: "Saw you did brand at P&G — I'm trying to figure out agency vs in-house and could use a real opinion.",
+    menteeId: james,
+    message:
+      "Hey Morgan — picked up SQL last semester but I'm stuck picking a portfolio project that isn't yet another COVID-data dashboard. Would love your take.",
     status: "pending",
     requestedAt: daysAgo(2),
   });

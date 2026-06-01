@@ -118,13 +118,19 @@ export default async function DashboardPage() {
             Welcome back, {me.firstName || "friend"}.
           </h1>
           <div className="flex flex-wrap gap-2">
-            <Link href="/mentors" className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-navy-800 hover:bg-navy-50 cursor-pointer">
-              Find a mentor →
-            </Link>
-            {!me.isMentor && (
-              <Link href="/apply-mentor" className="inline-flex items-center justify-center rounded-lg bg-gold-500 px-3 py-1.5 text-xs font-bold text-navy-900 transition hover:bg-gold-400 cursor-pointer">
-                Apply to mentor →
+            {me.isMentor ? (
+              <Link href="/requests" className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-navy-800 hover:bg-navy-50 cursor-pointer">
+                Review requests →
               </Link>
+            ) : (
+              <>
+                <Link href="/mentors" className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-navy-800 hover:bg-navy-50 cursor-pointer">
+                  Find a mentor →
+                </Link>
+                <Link href="/apply-mentor" className="inline-flex items-center justify-center rounded-lg bg-gold-500 px-3 py-1.5 text-xs font-bold text-navy-900 transition hover:bg-gold-400 cursor-pointer">
+                  Apply to mentor →
+                </Link>
+              </>
             )}
           </div>
         </div>
@@ -288,14 +294,20 @@ export default async function DashboardPage() {
         <div className="card">
           <h2 className="font-display text-lg font-bold text-navy-800">Quick actions</h2>
           <div className="mt-4 space-y-2">
-            {[
-              { href: "/mentors", title: "Find a mentor", body: "Filter, browse, request." },
-              { href: "/requests", title: "Review requests", body: "Sent and received." },
-              me.isMentor
-                ? { href: "/log-meeting", title: "Log a meeting", body: "Track session topics and next steps." }
-                : { href: "/apply-mentor", title: "Apply to mentor", body: "Pay it forward." },
-              { href: "/profile", title: "Update profile", body: "Photo, bio, career interests." },
-            ].map((a) => (
+            {(me.isMentor
+              ? [
+                  { href: "/requests", title: "Review requests", body: "Accept or decline pending mentees." },
+                  { href: "/matches", title: "Your mentees", body: "Contact info and meeting history." },
+                  { href: "/log-meeting", title: "Log a meeting", body: "Track session topics and next steps." },
+                  { href: "/profile", title: "Update profile", body: "Photo, bio, career interests." },
+                ]
+              : [
+                  { href: "/mentors", title: "Find a mentor", body: "Filter, browse, request." },
+                  { href: "/requests", title: "My requests", body: "Sent and pending." },
+                  { href: "/apply-mentor", title: "Apply to mentor", body: "Pay it forward." },
+                  { href: "/profile", title: "Update profile", body: "Photo, bio, career interests." },
+                ]
+            ).map((a) => (
               <Link
                 key={a.href}
                 href={a.href}

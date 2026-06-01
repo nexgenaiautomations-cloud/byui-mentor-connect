@@ -24,6 +24,10 @@ export async function GET() {
 export async function POST(req: Request) {
   const me = await getCurrentUser();
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Mentors don't request other mentors.
+  if (me.isMentor) {
+    return NextResponse.json({ error: "Mentors cannot request mentors" }, { status: 403 });
+  }
 
   const body = await req.json();
   const parsed = requestSchema.safeParse(body);
