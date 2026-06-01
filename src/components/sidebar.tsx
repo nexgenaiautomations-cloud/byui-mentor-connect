@@ -43,6 +43,7 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
   if (user.isAdmin) {
     admin.push(
       { href: "/admin", label: "Overview" },
+      { href: "/admin/analytics", label: "Analytics" },
       { href: "/admin/members", label: "Members" },
       { href: "/admin/mentors", label: "Mentors" },
       { href: "/admin/applications", label: "Applications" },

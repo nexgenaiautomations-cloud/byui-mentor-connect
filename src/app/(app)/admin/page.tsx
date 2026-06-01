@@ -67,12 +67,17 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Program</p>
-        <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">Admin dashboard</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Program overview, mentor application review, recent activity.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Program</p>
+          <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">Admin dashboard</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Program overview, mentor application review, recent activity.
+          </p>
+        </div>
+        <Link href="/admin/analytics" className="btn-gold">
+          Full analytics →
+        </Link>
       </header>
 
       <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
