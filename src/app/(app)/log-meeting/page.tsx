@@ -41,9 +41,9 @@ export default async function LogMeetingPage({
     <div className="space-y-8">
       <header>
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Mentor tools</p>
-        <h1 className="mt-1 font-display text-3xl font-black text-navy-800">Log a meeting</h1>
+        <h1 className="mt-1 font-display text-3xl font-black text-byui-blue-dark">Log an activity</h1>
         <p className="mt-1 text-sm text-slate-600">
-          After every session, capture what happened. Logs flow to the admin dashboard — your private notes stay private.
+          After every meeting, call, or career event together, capture what happened. Logs flow to the admin dashboard — your private notes stay private.
         </p>
       </header>
 
@@ -51,7 +51,7 @@ export default async function LogMeetingPage({
         <div className="card">
           {myMatches.length === 0 ? (
             <p className="text-sm text-slate-500">
-              You don&apos;t have any active matches yet. Once a mentee&apos;s request is accepted, log meetings here.
+              You don&apos;t have any active mentees yet. Once a mentee&apos;s request is accepted, log activities here.
             </p>
           ) : (
             <LogMeetingForm matches={myMatches} initialMatchId={preselectMatchId} />
@@ -59,9 +59,9 @@ export default async function LogMeetingPage({
         </div>
 
         <div className="card">
-          <h2 className="font-display text-lg font-bold text-navy-800">Recent logs</h2>
+          <h2 className="font-display text-lg font-bold text-navy-800">Recent activity</h2>
           {recent.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">No meetings logged yet.</p>
+            <p className="mt-3 text-sm text-slate-500">No activities logged yet.</p>
           ) : (
             <ul className="mt-3 space-y-3">
               {recent.map((l) => (

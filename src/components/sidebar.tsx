@@ -24,7 +24,7 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
       { href: "/dashboard", label: "Dashboard" },
       { href: "/requests", label: "Requests" },
       { href: "/matches", label: "My Mentees" },
-      { href: "/log-meeting", label: "Log a meeting" }
+      { href: "/log-meeting", label: "Log an activity" }
     );
   } else if (!user.isAdmin) {
     primary.push(
@@ -228,7 +228,7 @@ export function MobileBar({ user }: { user: User }) {
       { href: "/dashboard", label: "Home", icon: "home" },
       { href: "/requests", label: "Requests", icon: "requests" },
       { href: "/matches", label: "Mentees", icon: "mentees" },
-      { href: "/log-meeting", label: "Meetings", icon: "meetings" },
+      { href: "/log-meeting", label: "Activity", icon: "meetings" },
     ];
   } else {
     items = [

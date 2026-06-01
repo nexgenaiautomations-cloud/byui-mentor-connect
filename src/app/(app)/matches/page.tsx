@@ -220,7 +220,7 @@ export default async function MatchesPage() {
                       href={`/log-meeting?matchId=${m.id}`}
                       className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white shadow-soft transition hover:bg-byui-blue-dark active:scale-[0.98] cursor-pointer"
                     >
-                      Log a Meeting
+                      Log an Activity
                     </Link>
                   )}
                   <div className="grid grid-cols-3 gap-2">

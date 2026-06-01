@@ -93,7 +93,7 @@ export function LogMeetingForm({
 
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="label">Meeting date</label>
+          <label className="label">Activity date</label>
           <input type="date" className="input" value={date} onChange={(e) => setDate(e.target.value)} required />
         </div>
         <div>
@@ -121,7 +121,7 @@ export function LogMeetingForm({
       <fieldset>
         <legend className="label">Accomplishments</legend>
         <p className="mt-0.5 text-xs text-slate-500">
-          Check anything you covered in this meeting.
+          Check anything you covered in this activity.
         </p>
         <div className="mt-2 grid gap-1 rounded-xl border border-byui-blue-light/40 bg-slate-50 p-2 sm:grid-cols-2">
           {POSSIBLE_ACTIONS.map((a) => {
@@ -187,7 +187,7 @@ export function LogMeetingForm({
 
       <div className="flex items-center justify-end">
         <button type="submit" disabled={submitting} className="btn-primary">
-          {submitting ? "Saving…" : "Log meeting"}
+          {submitting ? "Saving…" : "Log activity"}
         </button>
       </div>
     </form>

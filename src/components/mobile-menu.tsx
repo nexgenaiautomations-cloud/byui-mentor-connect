@@ -17,7 +17,7 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
       { href: "/dashboard", label: "Dashboard" },
       { href: "/requests", label: "Requests" },
       { href: "/matches", label: "My Mentees" },
-      { href: "/log-meeting", label: "Log a meeting" }
+      { href: "/log-meeting", label: "Log an activity" }
     );
   } else if (!user.isAdmin) {
     primary.push(

@@ -307,7 +307,7 @@ export default async function DashboardPage() {
               ? [
                   { href: "/requests", title: "Review requests", body: "Accept or decline pending mentees." },
                   { href: "/matches", title: "Your mentees", body: "Contact info and meeting history." },
-                  { href: "/log-meeting", title: "Log a meeting", body: "Track session topics and next steps." },
+                  { href: "/log-meeting", title: "Log an activity", body: "Track what you did together and next steps." },
                   { href: "/profile", title: "Update profile", body: "Photo, bio, career interests." },
                 ]
               : [
