@@ -9,9 +9,19 @@ type Match = {
   menteeImage: string | null;
 };
 
-export function LogMeetingForm({ matches }: { matches: Match[] }) {
+export function LogMeetingForm({
+  matches,
+  initialMatchId,
+}: {
+  matches: Match[];
+  initialMatchId?: string;
+}) {
   const router = useRouter();
-  const [matchId, setMatchId] = useState(matches[0]?.id ?? "");
+  const preselect =
+    initialMatchId && matches.some((m) => m.id === initialMatchId)
+      ? initialMatchId
+      : matches[0]?.id ?? "";
+  const [matchId, setMatchId] = useState(preselect);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [meetingType, setMeetingType] = useState("video");
   const [duration, setDuration] = useState(30);

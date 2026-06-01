@@ -6,11 +6,16 @@ import { and, desc, eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { LogMeetingForm } from "./form";
 
-export default async function LogMeetingPage() {
+export default async function LogMeetingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ matchId?: string }>;
+}) {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
   if (!me.isMentor) redirect("/dashboard");
+  const { matchId: preselectMatchId } = await searchParams;
 
   const mentee = alias(users, "mentee_u");
   const myMatches = await db
@@ -49,7 +54,7 @@ export default async function LogMeetingPage() {
               You don&apos;t have any active matches yet. Once a mentee&apos;s request is accepted, log meetings here.
             </p>
           ) : (
-            <LogMeetingForm matches={myMatches} />
+            <LogMeetingForm matches={myMatches} initialMatchId={preselectMatchId} />
           )}
         </div>
 

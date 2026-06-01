@@ -143,13 +143,13 @@ export function MobileMenu({ user }: { user: User }) {
 
             <div className="border-t border-white/15 px-6 py-5">
               <p className="truncate text-sm font-semibold text-white">{user.name || "Member"}</p>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-gold-300">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-byui-blue-light">
                 {user.isAdmin ? "Admin" : user.isMentor ? "Mentor" : "Member"}
               </p>
               <form action={signOutAction} className="mt-3">
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-gold-500 px-4 py-2 text-sm font-bold text-navy-900 hover:bg-gold-400 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white hover:bg-byui-blue-dark cursor-pointer"
                 >
                   Sign out →
                 </button>
@@ -170,7 +170,7 @@ function DrawerLink({ item, active }: { item: NavItem; active: boolean }) {
         className={
           "block py-2 text-[15px] font-semibold tracking-tight transition cursor-pointer " +
           (active
-            ? "text-gold-300 border-y border-gold-400"
+            ? "text-byui-blue-light border-y border-byui-blue"
             : "text-white/85 hover:text-white")
         }
       >

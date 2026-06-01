@@ -119,7 +119,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
         role="dialog"
         aria-modal="true"
         aria-labelledby="pending-popup-title"
-        className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-gold-400 sm:p-6"
+        className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-byui-blue sm:p-6"
       >
         <button
           type="button"
@@ -161,7 +161,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
         </div>
 
         {current.message && (
-          <blockquote className="mt-3 rounded-xl border-l-4 border-gold-400 bg-gold-50 px-3 py-2 text-sm italic text-navy-800">
+          <blockquote className="mt-3 rounded-xl border-l-4 border-byui-blue bg-byui-blue-light/15 px-3 py-2 text-sm italic text-byui-blue-dark">
             &ldquo;{current.message}&rdquo;
           </blockquote>
         )}
@@ -173,7 +173,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
             </div>
             <Link
               href="/matches"
-              className="inline-flex items-center justify-center rounded-lg bg-gold-500 px-4 py-2 text-sm font-bold text-navy-900 hover:bg-gold-400 cursor-pointer"
+              className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white hover:bg-byui-blue-dark cursor-pointer"
             >
               Open match →
             </Link>
@@ -199,7 +199,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
               type="button"
               onClick={() => act("accept")}
               disabled={busy}
-              className="inline-flex items-center justify-center rounded-lg bg-gold-500 px-5 py-2 text-sm font-bold text-navy-900 transition hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-5 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
               {busy ? "…" : "Accept"}
             </button>

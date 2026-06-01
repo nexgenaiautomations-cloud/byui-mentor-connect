@@ -5,7 +5,7 @@ import { matches, requests, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 import { and, desc, eq, or, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
-import { POSSIBLE_ACTIONS, INACTIVITY_WARN_DAYS } from "@/lib/possible-actions";
+import { INACTIVITY_WARN_DAYS } from "@/lib/possible-actions";
 import { EmptyState } from "@/components/empty-state";
 import { CancelRequestButton } from "./cancel-request-button";
 
@@ -34,14 +34,12 @@ export default async function MatchesPage() {
       mentorImage: mentor.image,
       mentorEmail: mentor.email,
       mentorPhone: mentor.phone,
-      mentorContact: mentor.preferredContactMethod,
       mentorMajor: mentor.major,
       mentorBio: mentor.bio,
       menteeName: mentee.name,
       menteeImage: mentee.image,
       menteeEmail: mentee.email,
       menteePhone: mentee.phone,
-      menteeContact: mentee.preferredContactMethod,
       menteeMajor: mentee.major,
       menteeBio: mentee.bio,
     })
@@ -97,8 +95,8 @@ export default async function MatchesPage() {
       </header>
 
       {fresh.length > 0 && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gold-500 to-gold-400 p-5 text-navy-900 ring-4 ring-gold-200">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-navy-800">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-byui-blue-dark to-byui-blue p-5 text-white ring-4 ring-byui-blue-light/60">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-byui-blue-light">
             ✨ Fresh match
           </p>
           <p className="mt-1 font-display text-xl font-black">
@@ -106,7 +104,7 @@ export default async function MatchesPage() {
               ? "You just matched. Now what?"
               : `${fresh.length} new matches. Pick one to start.`}
           </p>
-          <p className="mt-1 max-w-xl text-sm text-navy-900/85">
+          <p className="mt-1 max-w-xl text-sm text-white/90">
             Send the first email today. A short note (<em>&ldquo;great to be matched, here&rsquo;s what I&rsquo;m hoping to work on&rdquo;</em>) gets things moving.
           </p>
         </div>
@@ -133,7 +131,6 @@ export default async function MatchesPage() {
                   image: m.menteeImage,
                   email: m.menteeEmail,
                   phone: m.menteePhone,
-                  contact: m.menteeContact,
                   major: m.menteeMajor,
                   bio: m.menteeBio,
                   role: "Mentee",
@@ -143,7 +140,6 @@ export default async function MatchesPage() {
                   image: m.mentorImage,
                   email: m.mentorEmail,
                   phone: m.mentorPhone,
-                  contact: m.mentorContact,
                   major: m.mentorMajor,
                   bio: m.mentorBio,
                   role: "Mentor",
@@ -175,31 +171,54 @@ export default async function MatchesPage() {
                     {other.major && <p className="mt-1 text-sm text-slate-600">{other.major}</p>}
                     {other.bio && <p className="mt-2 max-w-prose text-sm text-slate-600">{other.bio}</p>}
                   </div>
-                  <div className="grid w-full grid-cols-3 gap-2 sm:w-auto">
-                    <a href={`mailto:${other.email}`} className="btn-primary !px-3">Email</a>
-                    {other.phone ? (
-                      <a href={`tel:${other.phone}`} className="btn-outline !px-3">Call</a>
-                    ) : (
-                      <span className="btn-outline pointer-events-none opacity-40 !px-3">Call</span>
+                  <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
+                    {iAmMentor && (
+                      <Link
+                        href={`/log-meeting?matchId=${m.id}`}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white shadow-soft transition hover:bg-byui-blue-dark active:scale-[0.98] cursor-pointer"
+                      >
+                        Log a Meeting
+                      </Link>
                     )}
-                    <a href={teamsUrl} target="_blank" rel="noopener noreferrer" className="btn-outline !px-3">Teams</a>
+                    <a
+                      href={`mailto:${other.email}`}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-byui-blue-light bg-white px-3 py-2 text-sm font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                    >
+                      Email
+                    </a>
+                    {other.phone ? (
+                      <a
+                        href={`tel:${other.phone}`}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-byui-blue-light bg-white px-3 py-2 text-sm font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                      >
+                        Call
+                      </a>
+                    ) : (
+                      <span className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-300 pointer-events-none">
+                        Call
+                      </span>
+                    )}
+                    <a
+                      href={teamsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-byui-blue-light bg-white px-3 py-2 text-sm font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                    >
+                      Teams
+                    </a>
                   </div>
                 </div>
 
-                <div className="grid gap-3 rounded-xl bg-slate-50 p-4 sm:grid-cols-3">
+                <div className="grid gap-3 rounded-xl bg-slate-50 p-4 sm:grid-cols-2">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Email</p>
-                    <a href={`mailto:${other.email}`} className="text-sm font-medium text-navy-700 hover:underline">
+                    <a href={`mailto:${other.email}`} className="text-sm font-medium text-byui-blue-dark hover:underline">
                       {other.email}
                     </a>
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Phone</p>
                     <p className="text-sm font-medium text-slate-700">{other.phone || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Prefers</p>
-                    <p className="text-sm font-medium text-slate-700 capitalize">{other.contact || "—"}</p>
                   </div>
                 </div>
 
@@ -212,35 +231,25 @@ export default async function MatchesPage() {
                       automatically.
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <a href={`mailto:${other.email}`} className="btn-primary text-xs">Send a quick check-in</a>
+                      <a
+                        href={`mailto:${other.email}`}
+                        className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-3 py-1.5 text-xs font-bold text-white hover:bg-byui-blue-dark cursor-pointer"
+                      >
+                        Send a quick check-in
+                      </a>
                       {iAmMentor && (
-                        <Link href="/log-meeting" className="btn-outline text-xs">Log a meeting</Link>
+                        <Link
+                          href={`/log-meeting?matchId=${m.id}`}
+                          className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-3 py-1.5 text-xs font-semibold text-byui-blue-dark hover:bg-byui-blue-light/20 cursor-pointer"
+                        >
+                          Log a meeting
+                        </Link>
                       )}
                     </div>
                   </div>
                 )}
 
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Possible actions together
-                  </p>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                    {POSSIBLE_ACTIONS.map((a) => (
-                      <div
-                        key={a}
-                        className="flex items-start gap-2 rounded-xl border border-slate-100 bg-white p-3"
-                      >
-                        <span className="mt-0.5 text-emerald-600">✓</span>
-                        <p className="text-sm text-navy-800">{a}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
                 <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
-                  {iAmMentor && (
-                    <Link href="/log-meeting" className="btn-ghost text-xs">Log a meeting →</Link>
-                  )}
                   <Link href="/check-in" className="btn-ghost text-xs">Monthly check-in →</Link>
                 </div>
               </article>

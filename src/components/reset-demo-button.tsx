@@ -47,7 +47,7 @@ export function ResetDemoButton() {
         onClick={reset}
         disabled={busy}
         title="Wipe activity and re-seed the demo dataset"
-        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-gold-400/60 bg-gold-500/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-gold-100 transition hover:bg-gold-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-byui-blue-light/60 bg-byui-blue/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-byui-blue-light transition hover:bg-byui-blue/25 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {busy ? "Resetting…" : "Reset demo"}
       </button>

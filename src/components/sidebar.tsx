@@ -112,7 +112,7 @@ export function Sidebar({ user }: { user: User }) {
           </div>
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-sm font-semibold text-white">{user.name || "Member"}</p>
-            <p className="truncate text-[11px] font-medium uppercase tracking-wider text-gold-300">
+            <p className="truncate text-[11px] font-medium uppercase tracking-wider text-byui-blue-light">
               {user.isAdmin ? "Admin" : user.isMentor ? "Mentor" : "Member"}
             </p>
           </div>
@@ -121,7 +121,7 @@ export function Sidebar({ user }: { user: User }) {
         <form action={signOutAction} className="mt-3">
           <button
             type="submit"
-            className="w-full rounded-lg bg-gold-500 px-3 py-2 text-center text-xs font-bold text-navy-900 transition hover:bg-gold-400 cursor-pointer"
+            className="w-full rounded-lg bg-byui-blue px-3 py-2 text-center text-xs font-bold text-white transition hover:bg-byui-blue-dark cursor-pointer"
           >
             Sign out →
           </button>
@@ -139,7 +139,7 @@ function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
         className={
           "block py-1.5 text-[15px] font-semibold tracking-tight transition cursor-pointer " +
           (active
-            ? "text-gold-300 border-y border-gold-400"
+            ? "text-byui-blue-light border-y border-byui-blue"
             : "text-white/85 hover:text-white")
         }
       >
@@ -255,7 +255,7 @@ export function MobileBar({ user }: { user: User }) {
             className={
               "flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 px-2 py-2 text-center text-[11px] font-semibold tracking-wide transition cursor-pointer " +
               (active
-                ? "text-gold-300"
+                ? "text-byui-blue-light"
                 : "text-white/80 hover:text-white")
             }
           >

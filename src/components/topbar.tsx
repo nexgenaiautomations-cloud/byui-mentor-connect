@@ -25,7 +25,7 @@ export function TopBar({ user, title }: { user: User; title?: string }) {
       </div>
       <div className="flex items-center gap-2 sm:gap-3">
         {process.env.DEMO_ENABLED === "true" && <ResetDemoButton />}
-        <span className="hidden sm:inline-flex items-center rounded-full bg-gold-500/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-gold-200 ring-1 ring-gold-400/40">
+        <span className="hidden sm:inline-flex items-center rounded-full bg-byui-blue/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-byui-blue-light ring-1 ring-byui-blue/40">
           {user.isAdmin ? "Admin" : user.isMentor ? "Mentor" : "Member"}
         </span>
         <Link
