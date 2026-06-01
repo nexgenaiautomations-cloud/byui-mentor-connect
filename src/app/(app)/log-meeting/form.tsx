@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { POSSIBLE_ACTIONS } from "@/lib/possible-actions";
 
 type Match = {
   id: string;
@@ -23,9 +24,9 @@ export function LogMeetingForm({
       : matches[0]?.id ?? "";
   const [matchId, setMatchId] = useState(preselect);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [meetingType, setMeetingType] = useState("video");
+  const [meetingType, setMeetingType] = useState("in_person");
   const [duration, setDuration] = useState(30);
-  const [topics, setTopics] = useState("");
+  const [accomplishments, setAccomplishments] = useState<Set<string>>(new Set());
   const [actions, setActions] = useState("");
   const [next, setNext] = useState("");
   const [notes, setNotes] = useState("");
@@ -33,10 +34,22 @@ export function LogMeetingForm({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  function toggle(action: string) {
+    setAccomplishments((prev) => {
+      const next = new Set(prev);
+      if (next.has(action)) next.delete(action);
+      else next.add(action);
+      return next;
+    });
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    // Send the selected accomplishments as a single newline-joined string in
+    // topicsDiscussed so existing analytics + admin views keep working.
+    const topics = [...accomplishments].join(" · ");
     const res = await fetch("/api/meeting-logs", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -59,7 +72,7 @@ export function LogMeetingForm({
     }
     setSaved(true);
     setSubmitting(false);
-    setTopics("");
+    setAccomplishments(new Set());
     setActions("");
     setNext("");
     setNotes("");
@@ -86,8 +99,8 @@ export function LogMeetingForm({
         <div>
           <label className="label">Type</label>
           <select className="input" value={meetingType} onChange={(e) => setMeetingType(e.target.value)}>
-            <option value="video">Video</option>
             <option value="in_person">In person</option>
+            <option value="video">Video</option>
             <option value="phone">Phone</option>
             <option value="other">Other</option>
           </select>
@@ -105,16 +118,36 @@ export function LogMeetingForm({
         </div>
       </div>
 
-      <div>
-        <label className="label">Topics discussed</label>
-        <textarea
-          rows={3}
-          className="input"
-          placeholder="What did you cover?"
-          value={topics}
-          onChange={(e) => setTopics(e.target.value)}
-        />
-      </div>
+      <fieldset>
+        <legend className="label">Accomplishments</legend>
+        <p className="mt-0.5 text-xs text-slate-500">
+          Check anything you covered in this meeting.
+        </p>
+        <div className="mt-2 grid gap-1 rounded-xl border border-byui-blue-light/40 bg-slate-50 p-2 sm:grid-cols-2">
+          {POSSIBLE_ACTIONS.map((a) => {
+            const checked = accomplishments.has(a);
+            return (
+              <label
+                key={a}
+                className={
+                  "flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs leading-snug transition " +
+                  (checked
+                    ? "bg-byui-blue/10 text-byui-blue-dark ring-1 ring-byui-blue/40"
+                    : "text-slate-700 hover:bg-white")
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggle(a)}
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer accent-byui-blue"
+                />
+                <span>{a}</span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
 
       <div>
         <label className="label">Action items</label>
