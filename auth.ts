@@ -23,7 +23,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/login", verifyRequest: "/login/check-email" },
   providers: [
     Resend({
-      from: process.env.EMAIL_FROM ?? "BYUI CAN Mentor Connect <onboarding@resend.dev>",
+      // Sender uses the verified byuican.com domain in Resend. Override per
+      // environment by setting EMAIL_FROM in Vercel.
+      from: process.env.EMAIL_FROM ?? "BYUI CAN Mentor Connect <noreply@byuican.com>",
       apiKey: RESEND_KEY,
     }),
   ],

@@ -47,12 +47,10 @@ DATABASE_URL=postgresql://...neon.tech/neondb?sslmode=require
 AUTH_SECRET=  # generate with: openssl rand -base64 32
 AUTH_URL=http://localhost:3000
 
-# Email for magic links — Gmail App Password, SendGrid SMTP, Resend, etc.
-EMAIL_SERVER_HOST=smtp.gmail.com
-EMAIL_SERVER_PORT=587
-EMAIL_SERVER_USER=your-email@gmail.com
-EMAIL_SERVER_PASSWORD=app-password
-EMAIL_FROM="BYU-I Mentor Connect <no-reply@byui.edu>"
+# Email for magic links — Resend (https://resend.com).
+# Verify byuican.com in Resend → Domains before going live.
+AUTH_RESEND_KEY=re_xxx
+EMAIL_FROM="BYUI CAN Mentor Connect <noreply@byuican.com>"
 ```
 
 ### 4. Push schema to Neon
@@ -88,12 +86,9 @@ npm run dev
 vercel link
 vercel env add DATABASE_URL
 vercel env add AUTH_SECRET
-vercel env add AUTH_URL          # set this to your production URL, e.g. https://byui-mentor-connect.vercel.app
-vercel env add EMAIL_SERVER_HOST
-vercel env add EMAIL_SERVER_PORT
-vercel env add EMAIL_SERVER_USER
-vercel env add EMAIL_SERVER_PASSWORD
-vercel env add EMAIL_FROM
+vercel env add AUTH_URL          # production URL, e.g. https://byuican.com
+vercel env add AUTH_RESEND_KEY
+vercel env add EMAIL_FROM        # "BYUI CAN Mentor Connect <noreply@byuican.com>"
 vercel --prod
 ```
 
