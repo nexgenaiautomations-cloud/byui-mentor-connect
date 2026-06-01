@@ -4,31 +4,63 @@ import { auth } from "../../auth";
 import { Logo, FullCrest } from "@/components/logo";
 import { InstallButton } from "@/components/install-button";
 
+const FEATURED_STATS = [
+  {
+    headline: "85%",
+    title: "of jobs are filled through networking",
+    body: "The biggest career advantage isn't the resume — it's the relationships.",
+    tag: "Networking",
+  },
+  {
+    headline: "96%",
+    title: "job placement in peer-led, mentored career tracks",
+    body: "When students have an upperclassman guiding them, outcomes change.",
+    tag: "Peer mentorship",
+  },
+  {
+    headline: "700%",
+    title: "more juniors engaging in meaningful professional relationships",
+    body: "Structured peer mentorship multiplies real-world connections.",
+    tag: "Peer mentorship",
+  },
+] as const;
+
 export default async function LandingPage() {
   const session = await auth();
   if (session?.user?.id) redirect("/dashboard");
 
   return (
-    <main className="relative min-h-screen bg-white text-navy-900">
-      {/* HERO with campus image */}
-      <section className="relative isolate overflow-hidden bg-navy-900">
+    <main className="relative min-h-screen bg-white text-slate-900">
+      {/* ────────────────────────────── HERO ────────────────────────────── */}
+      <section className="relative isolate overflow-hidden bg-byui-blue-dark">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/byui-campus.jpg"
           alt="BYU-Idaho campus"
           className="absolute inset-0 -z-10 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy-900/95 via-navy-900/85 to-navy-900/75" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-byui-blue-dark/95 via-byui-blue-dark/85 to-byui-blue/70" />
 
         <nav className="relative flex items-center justify-between px-6 py-5 md:px-10">
           <div className="flex items-center gap-3">
             <Logo size={44} />
             <div className="leading-tight">
               <p className="font-display text-sm font-black tracking-tight text-white">BYUI CAN</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-navy-200">
-                Mentor Connect
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/75">
+                Career Advancement Network
               </p>
             </div>
+          </div>
+          <div className="hidden items-center gap-6 md:flex">
+            <a href="#why" className="text-sm font-semibold text-white/85 hover:text-white">
+              Why BYUI CAN
+            </a>
+            <a href="#standards" className="text-sm font-semibold text-white/85 hover:text-white">
+              Standards
+            </a>
+            <a href="#what" className="text-sm font-semibold text-white/85 hover:text-white">
+              What you get
+            </a>
           </div>
           <div className="flex items-center gap-2">
             <InstallButton label="Install" />
@@ -44,12 +76,13 @@ export default async function LandingPage() {
         <div className="relative mx-auto grid max-w-6xl gap-10 px-6 pb-24 pt-10 md:grid-cols-[1.1fr_0.9fr] md:pb-32 md:pt-20">
           <div className="text-white">
             <span className="inline-flex items-center rounded-full border border-white/40 bg-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur">
-              BYUI Career Advancement Network · Peer mentorship
+              Peer-to-Peer Career Mentorship
             </span>
-            <h1 className="mt-6 font-display text-5xl font-black leading-[1.05] tracking-tight md:text-6xl">
-              Mentor Connect.
-              <br />
-              <span className="text-sky-200">For every BYU·I student.</span>
+            <h1 className="mt-6 font-display text-4xl font-black leading-[1.05] tracking-tight md:text-6xl">
+              BYUI CAN
+              <span className="mt-2 block text-xl font-bold tracking-tight text-byui-blue-light md:text-2xl">
+                (Career Advancement Network)
+              </span>
             </h1>
             <p className="mt-6 max-w-md text-lg font-medium text-white">
               Find your mentor. Skip the luck. Sign up as a member, browse upperclassmen
@@ -58,24 +91,24 @@ export default async function LandingPage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-bold text-navy-800 shadow-lift hover:bg-sky-50 active:scale-[0.98] cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-bold text-byui-blue-dark shadow-lift hover:bg-byui-blue-light/30 active:scale-[0.98] cursor-pointer"
               >
-                Get Started →
+                Get started →
               </Link>
-              <Link
-                href="#how"
+              <a
+                href="#why"
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/50 bg-white/15 px-6 py-3 text-base font-semibold text-white backdrop-blur hover:bg-white/25 cursor-pointer"
               >
-                How it works
-              </Link>
+                Why BYUI CAN
+              </a>
             </div>
             <p className="mt-4 text-xs font-medium text-white/80">Only @byui.edu addresses can register.</p>
           </div>
 
           <div className="relative">
             <div className="rounded-3xl bg-white p-6 shadow-lift">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Welcome to</p>
-              <p className="mt-1 font-display text-2xl font-black text-navy-800">BYUI CAN Mentor Connect</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-byui-gray">Welcome to</p>
+              <p className="mt-1 font-display text-2xl font-black text-byui-blue-dark">BYUI CAN Mentor Connect</p>
               <p className="mt-2 text-sm text-slate-600">Three quick steps to your first mentor match.</p>
               <ul className="mt-5 space-y-3">
                 {[
@@ -84,19 +117,19 @@ export default async function LandingPage() {
                   { n: 3, title: "Meet and grow", body: "Contact unlocks on accept. Log meetings, monthly check-in." },
                 ].map((s) => (
                   <li key={s.n} className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy-700 text-xs font-black text-white">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-byui-blue text-xs font-black text-white">
                       {s.n}
                     </span>
                     <div>
-                      <p className="text-sm font-bold text-navy-800">{s.title}</p>
+                      <p className="text-sm font-bold text-byui-blue-dark">{s.title}</p>
                       <p className="text-xs text-slate-600">{s.body}</p>
                     </div>
                   </li>
                 ))}
               </ul>
-              <div className="mt-5 rounded-xl bg-navy-700 px-4 py-3 text-sm text-white">
+              <div className="mt-5 rounded-xl bg-byui-blue px-4 py-3 text-sm text-white">
                 <p className="font-bold">Want to mentor?</p>
-                <p className="mt-0.5 text-xs text-white">
+                <p className="mt-0.5 text-xs text-white/90">
                   Every member can apply. Admin approves in days, not weeks.
                 </p>
               </div>
@@ -105,96 +138,201 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* CAN crest band — the 1-2-3 crest itself shows the rhythm, so we let
-          it speak for itself at hero size. */}
-      <section id="how" className="relative bg-white px-6 py-20">
-        <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
-          <FullCrest size={380} />
-          <h2 className="mt-8 font-display text-3xl font-black text-navy-800 md:text-4xl">
-            The BYUI CAN rhythm
-          </h2>
-          <p className="mt-3 max-w-2xl text-base text-slate-600">
-            One Career Task each week, two industry experiences before senior year, three Career
-            Chats every month. Mentor Connect is the digital backbone for this rhythm.
+      {/* ───────────────────────── WHY BYUI CAN ──────────────────────── */}
+      <section id="why" className="relative bg-white px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <header className="text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-byui-blue">
+              Why BYUI CAN
+            </p>
+            <h2 className="mt-2 font-display text-3xl font-black text-byui-blue-dark md:text-4xl">
+              Why Peer-to-Peer Career Mentoring Matters
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600">
+              The biggest career advantage isn't the resume — it's the relationships behind it.
+              BYUI CAN makes those relationships intentional.
+            </p>
+          </header>
+
+          <div className="mt-12 grid items-stretch gap-8 lg:grid-cols-[1.05fr_1fr]">
+            {/* Mentoring image */}
+            <div className="relative overflow-hidden rounded-3xl shadow-lift ring-1 ring-byui-blue-light/40">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/campus-students.jpg"
+                alt="BYU-Idaho students mentoring and encouraging each other"
+                className="h-full min-h-[360px] w-full object-cover"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-byui-blue-dark/95 via-byui-blue-dark/40 to-transparent p-6">
+                <p className="font-display text-lg font-bold text-white">
+                  Students helping students.
+                </p>
+                <p className="mt-1 text-sm text-white/90">
+                  Peer mentorship turns a four-year degree into a four-year network.
+                </p>
+              </div>
+            </div>
+
+            {/* Stat cards */}
+            <ul className="grid gap-4">
+              {FEATURED_STATS.map((s) => (
+                <li
+                  key={s.headline}
+                  className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-byui-blue-light/50 transition hover:ring-byui-blue"
+                >
+                  <div className="flex items-baseline gap-3">
+                    <p className="font-display text-4xl font-black leading-none text-byui-blue md:text-5xl">
+                      {s.headline}
+                    </p>
+                    <span className="rounded-full bg-byui-blue-light/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-byui-blue-dark">
+                      {s.tag}
+                    </span>
+                  </div>
+                  <p className="mt-2 font-display text-base font-bold text-byui-blue-dark">
+                    {s.title}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">{s.body}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <p className="mx-auto mt-10 max-w-3xl text-center text-sm text-byui-gray">
+            At major universities, career peer mentoring achieved results like a 96% job
+            placement rate and a 700% increase in meaningful professional relationships.
+            BYUI CAN brings the same model to BYU-Idaho.
           </p>
         </div>
       </section>
 
-      {/* What you get — photo of a student on the side */}
-      <section className="bg-slate-50 px-6 py-20">
-        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_1.2fr]">
-          <div className="relative h-80 overflow-hidden rounded-3xl bg-navy-900 lg:h-auto">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/campus-students.jpg"
-              alt="BYU-Idaho student"
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-900/95 to-transparent p-6">
-              <p className="font-display text-lg font-bold text-white">~500 students each semester.</p>
-              <p className="mt-1 text-sm text-white/90">
-                Peer mentorship lifts retention and career outcomes.
-              </p>
-            </div>
-          </div>
-          <div>
-            <h2 className="font-display text-3xl font-black text-navy-800 md:text-4xl">What you get</h2>
-            <div className="mt-6 space-y-4">
-              {[
-                {
-                  title: "Pick the right person",
-                  body: "Filter mentors by major, semester level, and career interest. See slots-left so you don't waste a request on someone at capacity.",
-                },
-                {
-                  title: "Track every step",
-                  body: "Pending, accepted, declined — always know where each request stands. Mentor contact unlocks the moment they accept.",
-                },
-                {
-                  title: "Stay accountable",
-                  body: "Mentors log every meeting. Both sides answer a short monthly check-in. Admins see aggregate progress.",
-                },
-              ].map((c) => (
-                <div
-                  key={c.title}
-                  className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-slate-100"
-                >
-                  <p className="font-display text-lg font-bold text-navy-800">{c.title}</p>
-                  <p className="mt-3 text-sm leading-6 text-slate-700">{c.body}</p>
-                </div>
-              ))}
-            </div>
+      {/* ───────────────────── THE BYUI CAN STANDARDS ─────────────────── */}
+      <section id="standards" className="bg-slate-50 px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <header className="text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-byui-blue">
+              The Standards
+            </p>
+            <h2 className="mt-2 font-display text-3xl font-black text-byui-blue-dark md:text-4xl">
+              The BYUI CAN Standards
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600">
+              One Career Task each week, two industry experiences before senior year, three Career
+              Chats every month. Mentor Connect is the digital backbone for these standards.
+            </p>
+          </header>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {[
+              {
+                n: 1,
+                title: "Career Task — weekly",
+                body: "One focused action every week: resume edit, alumni outreach, internship app, mock interview.",
+              },
+              {
+                n: 2,
+                title: "Industry Experiences — before senior year",
+                body: "Two real-world experiences (internships, shadowing, projects) before senior year so the resume tells a story.",
+              },
+              {
+                n: 3,
+                title: "Career Chats — monthly",
+                body: "Three Career Chats a month with mentors, alumni, or peers. Networking that compounds.",
+              },
+            ].map((s) => (
+              <div
+                key={s.n}
+                className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-byui-blue-light/40"
+              >
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-byui-blue text-2xl font-black text-white shadow-soft">
+                  {s.n}
+                </span>
+                <p className="mt-4 font-display text-lg font-bold text-byui-blue-dark">{s.title}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">{s.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA banner — classroom shot */}
-      <section className="relative isolate overflow-hidden bg-navy-900 px-6 py-20">
+      {/* ──────────────────────── WHAT YOU GET ────────────────────────── */}
+      <section id="what" className="bg-white px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <header className="text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-byui-blue">
+              What you get
+            </p>
+            <h2 className="mt-2 font-display text-3xl font-black text-byui-blue-dark md:text-4xl">
+              Built around the work, not the form.
+            </h2>
+          </header>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                title: "Pick the right person",
+                body: "Filter mentors by major, semester level, and career interest. See slots-left so you don't waste a request on someone at capacity.",
+              },
+              {
+                title: "Track every step",
+                body: "Pending, accepted, declined — always know where each request stands. Mentor contact unlocks the moment they accept.",
+              },
+              {
+                title: "Stay accountable",
+                body: "Mentors log every meeting. Both sides answer a short monthly check-in. Admins see aggregate progress.",
+              },
+            ].map((c) => (
+              <div
+                key={c.title}
+                className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-slate-100"
+              >
+                <p className="font-display text-lg font-bold text-byui-blue-dark">{c.title}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-700">{c.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────── CTA BAND ─────────────────────────── */}
+      <section className="relative isolate overflow-hidden bg-byui-blue-dark px-6 py-20">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/campus-library.jpg"
           alt=""
           aria-hidden
-          className="absolute inset-0 -z-10 h-full w-full object-cover opacity-50"
+          className="absolute inset-0 -z-10 h-full w-full object-cover opacity-40"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-900 via-navy-900/85 to-navy-900/60" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-byui-blue-dark via-byui-blue-dark/90 to-byui-blue/70" />
         <div className="relative mx-auto max-w-4xl text-center">
           <h3 className="font-display text-3xl font-black text-white md:text-4xl">
             Built by students. For students.
           </h3>
-          <p className="mt-3 text-base text-white">
-            BYUI CAN Mentor Connect is the digital backbone for the Career Advancement Network — peer mentorship that scales.
+          <p className="mt-3 text-base text-white/90">
+            BYUI CAN Mentor Connect is the digital backbone for the Career Advancement Network —
+            peer mentorship that scales.
           </p>
           <Link
             href="/login"
-            className="mt-7 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-bold text-navy-800 shadow-lift hover:bg-sky-50 cursor-pointer"
+            className="mt-7 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-bold text-byui-blue-dark shadow-lift hover:bg-byui-blue-light/30 cursor-pointer"
           >
             Sign in with your BYU-I email →
           </Link>
         </div>
       </section>
 
-      <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs font-medium text-slate-500">
-        BYU-Idaho Career Advancement Network · Student-built peer mentorship
+      {/* ──────────────────────── CLOSING CREST ──────────────────────── */}
+      <section className="bg-white px-6 py-16">
+        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+          <FullCrest size={260} />
+          <p className="mt-6 max-w-xl text-sm leading-6 text-slate-600">
+            BYUI CAN is the career rhythm: one Career Task weekly, two industry experiences
+            before senior year, three Career Chats every month.
+          </p>
+        </div>
+      </section>
+
+      <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs font-medium text-byui-gray">
+        BYUI CAN (Career Advancement Network) — Student-built peer mentorship
       </footer>
     </main>
   );

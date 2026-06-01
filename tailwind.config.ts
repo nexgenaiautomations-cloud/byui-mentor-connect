@@ -31,6 +31,15 @@ export default {
           800: "#4d3e0e",
           900: "#332907",
         },
+        // BYU-Idaho brand palette. Primary = #006EB6. Accents used sparingly.
+        // Gray is the official #949598.
+        byui: {
+          blue: "#006EB6",
+          "blue-dark": "#214491",
+          "blue-mid": "#4F9ACF",
+          "blue-light": "#A0D4ED",
+          gray: "#949598",
+        },
       },
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
