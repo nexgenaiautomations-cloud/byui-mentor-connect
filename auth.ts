@@ -35,9 +35,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Branded HTML + plain-text body. Replaces the auth.js default plain
       // template so the email looks like part of BYUI CAN, not a debug dump.
       async sendVerificationRequest({ identifier: email, url, provider }) {
-        const { host } = new URL(url);
+        // Rewrite the magic link to a confirmation page so Outlook/Defender
+        // Safe Links and Gmail link-preview can scan the URL without burning
+        // the one-time verification token. The actual /api/auth/callback/resend
+        // GET only fires when the user clicks the button on /login/verify.
+        const original = new URL(url);
+        const verifyUrl = new URL(`${original.origin}/login/verify`);
+        for (const [k, v] of original.searchParams) verifyUrl.searchParams.set(k, v);
+        const linkUrl = verifyUrl.toString();
+        const { host } = original;
         const { subject, html, text } = buildMagicLinkEmail({
-          url,
+          url: linkUrl,
           email,
           host,
           expiresMinutes: MAGIC_LINK_TTL_MIN,
