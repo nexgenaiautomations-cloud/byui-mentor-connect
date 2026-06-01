@@ -373,8 +373,11 @@ export async function seedDemo() {
   const sarah = ids["sarah.patel@byui.edu"];
   const david = ids["david.kim@byui.edu"];
 
-  // Mia is the headline demo example — surfaces first in the mentor popup
-  // because it's the most recent pending request.
+  // Mia is the one headline pending example for the demo. We intentionally
+  // seed exactly ONE pending request for mentor.demo so the dashboard shows
+  // "1 pending" cleanly and the Accept/Decline popup has a single, focused
+  // story. James's pending was moved to Jordan below as a second-mentor
+  // story so the admin overview still has activity to show.
   const [pendingForMorgan] = await db
     .insert(requests)
     .values({
@@ -387,11 +390,13 @@ export async function seedDemo() {
     })
     .returning();
 
+  // Pending for Jordan (a different mentor) — keeps the admin activity feed
+  // honest without polluting mentor.demo's headline.
   await db.insert(requests).values({
-    mentorId: morgan,
+    mentorId: jordan,
     menteeId: james,
     message:
-      "Hey Morgan — picked up SQL last semester but I'm stuck picking a portfolio project that isn't yet another COVID-data dashboard. Would love your take.",
+      "Hey Jordan — picked up SQL last semester but I'm stuck picking a portfolio project that isn't yet another COVID-data dashboard. Would love your take.",
     status: "pending",
     requestedAt: daysAgo(2),
   });

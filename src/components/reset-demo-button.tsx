@@ -17,11 +17,24 @@ export function ResetDemoButton() {
     setBusy(true);
     setErr(null);
     const res = await fetch("/api/demo-reset", { method: "POST" });
+    const body = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
       setErr(body?.error || "Reset failed");
       setBusy(false);
       return;
+    }
+    // Clear popup dismissals so the freshly-seeded pending request actually
+    // surfaces again on this same browser session.
+    try {
+      sessionStorage.removeItem("pending-popup-dismissed-ids");
+    } catch {
+      // ignore
+    }
+    if (body?.mentorDemo) {
+      const m = body.mentorDemo;
+      console.info(
+        `[demo-reset] mentor.demo → ${m.activeMatches} active, ${m.pendingRequests} pending`
+      );
     }
     router.refresh();
     setBusy(false);
