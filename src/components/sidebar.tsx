@@ -31,8 +31,7 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/mentors", label: "Find a mentor" },
-      { href: "/requests", label: "My requests" },
-      { href: "/matches", label: "My matches" },
+      { href: "/matches", label: "My Mentors" },
       { href: "/check-in", label: "Monthly check-in" },
       { href: "/apply-mentor", label: "Apply to mentor" }
     );
@@ -236,9 +235,9 @@ export function MobileBar({ user }: { user: User }) {
   } else {
     items = [
       { href: "/dashboard", label: "Home", icon: "home" },
-      { href: "/mentors", label: "Mentors", icon: "mentors" },
-      { href: "/requests", label: "Requests", icon: "requests" },
-      { href: "/matches", label: "Matches", icon: "matches" },
+      { href: "/mentors", label: "Find", icon: "mentors" },
+      { href: "/matches", label: "My Mentors", icon: "mentees" },
+      { href: "/apply-mentor", label: "Apply", icon: "review" },
     ];
   }
   return (

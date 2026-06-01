@@ -18,7 +18,8 @@ export default async function AdminPage() {
       status: mentorApplications.status,
       submittedAt: mentorApplications.submittedAt,
       motivation: mentorApplications.motivation,
-      topics: mentorApplications.topics,
+      informationalInterviews: mentorApplications.informationalInterviews,
+      internshipsCount: mentorApplications.internshipsCount,
       capacity: mentorApplications.capacity,
       applicantName: users.name,
       applicantImage: users.image,
@@ -122,13 +123,14 @@ export default async function AdminPage() {
                   <span className="pill">capacity {a.capacity}</span>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-slate-700">{a.motivation}</p>
-                {a.topics && a.topics.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {a.topics.map((t) => (
-                      <span key={t} className="pill">{t}</span>
-                    ))}
-                  </div>
-                )}
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {a.informationalInterviews && (
+                    <span className="pill">Career chats: {a.informationalInterviews}</span>
+                  )}
+                  {a.internshipsCount && (
+                    <span className="pill">Internships: {a.internshipsCount}</span>
+                  )}
+                </div>
                 <ApplicationActions id={a.id} />
               </div>
             ))}

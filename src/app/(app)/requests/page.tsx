@@ -14,6 +14,9 @@ export default async function RequestsPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
+  // Members manage their outgoing requests from the "My Mentors" page now —
+  // there's no standalone /requests for them anymore.
+  if (!me.isMentor && !me.isAdmin) redirect("/matches");
 
   const mentor = alias(users, "mentor_u");
   const mentee = alias(users, "mentee_u");

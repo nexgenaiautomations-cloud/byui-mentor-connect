@@ -115,7 +115,13 @@ export const mentorApplications = pgTable("mentor_application", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   motivation: text("motivation").notNull(),
-  topics: text("topics").array().notNull(),
+  // Legacy field kept for old rows; new applications leave it null. The
+  // application form no longer asks for it.
+  topics: text("topics").array(),
+  // Bucketed self-report: 1-10 / 11-25 / 26-50 / 51-100 / 100+
+  informationalInterviews: text("informational_interviews"),
+  // Bucketed self-report: None / 1 / 2 / 3 or more
+  internshipsCount: text("internships_count"),
   capacity: integer("capacity").notNull().default(5),
   status: applicationStatus("status").notNull().default("pending"),
   reviewedBy: text("reviewed_by").references(() => users.id),

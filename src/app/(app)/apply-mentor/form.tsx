@@ -3,10 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+const INTERVIEW_BUCKETS = ["1-10", "11-25", "26-50", "51-100", "100+"] as const;
+const INTERNSHIP_BUCKETS = ["None", "1", "2", "3 or more"] as const;
+
 export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean }) {
   const router = useRouter();
   const [motivation, setMotivation] = useState("");
-  const [topicsRaw, setTopicsRaw] = useState("");
+  const [informationalInterviews, setInformationalInterviews] = useState<string>("");
+  const [internshipsCount, setInternshipsCount] = useState<string>("");
   const [capacity, setCapacity] = useState(5);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,12 +20,14 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-    const topics = topicsRaw
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
-    if (topics.length === 0) {
-      setError("Add at least one topic you can mentor on");
+
+    if (!informationalInterviews) {
+      setError("Pick a range for informational interviews");
+      setSubmitting(false);
+      return;
+    }
+    if (!internshipsCount) {
+      setError("Pick a count for internships");
       setSubmitting(false);
       return;
     }
@@ -29,7 +35,12 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
     const res = await fetch("/api/mentor-applications", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ motivation, topics, capacity }),
+      body: JSON.stringify({
+        motivation,
+        informationalInterviews,
+        internshipsCount,
+        capacity,
+      }),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -75,17 +86,45 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
           placeholder="What can you offer? What experience can you share?"
         />
       </div>
+
       <div>
-        <label className="label">Topics you can mentor on</label>
-        <input
+        <label className="label" htmlFor="info-interviews">
+          How many informational interviews (career chats) have you done?
+        </label>
+        <select
+          id="info-interviews"
           required
           className="input"
-          placeholder="e.g. Resume reviews, internship prep, accounting basics"
-          value={topicsRaw}
-          onChange={(e) => setTopicsRaw(e.target.value)}
-        />
-        <p className="mt-1 text-xs text-slate-500">Comma-separated.</p>
+          value={informationalInterviews}
+          onChange={(e) => setInformationalInterviews(e.target.value)}
+        >
+          <option value="" disabled>Select a range…</option>
+          {INTERVIEW_BUCKETS.map((b) => (
+            <option key={b} value={b}>{b}</option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-slate-500">More details — a rough count is fine.</p>
       </div>
+
+      <div>
+        <label className="label" htmlFor="internships-count">
+          How many internships or career-related work experiences have you had?
+        </label>
+        <select
+          id="internships-count"
+          required
+          className="input"
+          value={internshipsCount}
+          onChange={(e) => setInternshipsCount(e.target.value)}
+        >
+          <option value="" disabled>Select a count…</option>
+          {INTERNSHIP_BUCKETS.map((b) => (
+            <option key={b} value={b}>{b}</option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-slate-500">More details — count paid and unpaid roles.</p>
+      </div>
+
       <div>
         <label className="label">Capacity (max mentees)</label>
         <input
@@ -103,7 +142,7 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
       )}
 
-      <button type="submit" disabled={submitting} className="btn-gold w-full">
+      <button type="submit" disabled={submitting} className="btn-primary w-full">
         {submitting ? "Submitting…" : "Submit application →"}
       </button>
     </form>

@@ -6,12 +6,12 @@ import { and, eq, ne, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { RequestButton } from "./request-button";
 import { EmptyState } from "@/components/empty-state";
-import { SEMESTER_LEVELS } from "@/lib/careers";
+import { MajorFilter } from "./major-filter";
 
 export default async function MentorsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ major?: string; semester?: string; mine?: string }>;
+  searchParams: Promise<{ major?: string; mine?: string }>;
 }) {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
@@ -22,11 +22,22 @@ export default async function MentorsPage({
 
   const params = await searchParams;
   const filterMyMajor = params.mine === "1";
-  const filterSemester = params.semester;
+  const filterMajor = params.major?.trim() || "";
+
+  // Populate the Major dropdown from majors that any available mentor actually
+  // has — keeps the dropdown clean instead of listing every catalog entry.
+  const majorRows = await db
+    .selectDistinct({ major: users.major })
+    .from(users)
+    .where(and(eq(users.isMentor, true), eq(users.mentorAvailable, true)));
+  const mentorMajors = majorRows
+    .map((r) => r.major)
+    .filter((m): m is string => !!m && m.trim().length > 0)
+    .sort((a, b) => a.localeCompare(b));
 
   const conditions = [eq(users.isMentor, true), eq(users.mentorAvailable, true), ne(users.id, me.id)];
-  if (filterMyMajor && me.major) conditions.push(eq(users.major, me.major));
-  if (filterSemester) conditions.push(eq(users.semesterLevel, filterSemester));
+  if (filterMajor) conditions.push(eq(users.major, filterMajor));
+  else if (filterMyMajor && me.major) conditions.push(eq(users.major, me.major));
 
   const mentors = await db
     .select({
@@ -60,7 +71,7 @@ export default async function MentorsPage({
     .sort((a, b) => b.score - a.score || (b.slotsLeft - a.slotsLeft));
 
   // Don't show "Recommended" if any filter is active (user is being intentional)
-  const isFiltering = filterMyMajor || !!filterSemester;
+  const isFiltering = filterMyMajor || !!filterMajor;
   const recommended = isFiltering ? [] : scored.filter((m) => m.score >= 3);
   const others = isFiltering ? scored : scored.filter((m) => m.score < 3);
 
@@ -73,24 +84,19 @@ export default async function MentorsPage({
         </p>
       </header>
 
-      {/* Filter chips — real URL-param filters */}
-      <div className="flex flex-wrap gap-2">
-        <FilterChip label="All majors" href="/mentors" active={!filterMyMajor && !filterSemester} />
-        {me.major && (
+      {/* Filters — Major dropdown + an optional "My major" shortcut */}
+      <div className="flex flex-wrap items-center gap-3">
+        <MajorFilter majors={mentorMajors} selected={filterMajor} />
+        {me.major && !filterMajor && (
           <FilterChip
             label={`My major: ${me.major}`}
             href="/mentors?mine=1"
             active={filterMyMajor}
           />
         )}
-        {SEMESTER_LEVELS.map((s) => (
-          <FilterChip
-            key={s}
-            label={s}
-            href={`/mentors?semester=${encodeURIComponent(s)}`}
-            active={filterSemester === s}
-          />
-        ))}
+        {(filterMyMajor || filterMajor) && (
+          <FilterChip label="Clear filters" href="/mentors" active={false} />
+        )}
       </div>
 
       {mentors.length === 0 ? (

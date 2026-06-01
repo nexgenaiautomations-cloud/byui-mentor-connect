@@ -24,8 +24,7 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/mentors", label: "Find a mentor" },
-      { href: "/requests", label: "My requests" },
-      { href: "/matches", label: "My matches" },
+      { href: "/matches", label: "My Mentors" },
       { href: "/check-in", label: "Monthly check-in" },
       { href: "/apply-mentor", label: "Apply to mentor" }
     );

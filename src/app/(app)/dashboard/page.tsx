@@ -143,19 +143,35 @@ export default async function DashboardPage() {
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <StatTile
-          label="Active matches"
+          label={me.isMentor ? "Active matches" : "My mentors"}
           value={activeMatches.length}
-          hint={activeMatches.length ? "View contact info" : "Send your first request"}
+          hint={
+            activeMatches.length
+              ? "View contact info"
+              : me.isMentor
+              ? "Accept your first request"
+              : "Find your first mentor"
+          }
           href="/matches"
           tone="emerald"
         />
-        <StatTile
-          label="Requests sent"
-          value={sentByMe.length}
-          hint={`${sentByMe.filter((r) => r.status === "pending").length} pending`}
-          href="/requests"
-          tone="navy"
-        />
+        {me.isMentor ? (
+          <StatTile
+            label="Requests sent"
+            value={sentByMe.length}
+            hint={`${sentByMe.filter((r) => r.status === "pending").length} pending`}
+            href="/requests"
+            tone="navy"
+          />
+        ) : (
+          <StatTile
+            label="Pending requests"
+            value={sentByMe.filter((r) => r.status === "pending").length}
+            hint="See where each request stands"
+            href="/matches"
+            tone="navy"
+          />
+        )}
         {me.isMentor ? (
           <StatTile
             label="Pending for me"
@@ -303,7 +319,7 @@ export default async function DashboardPage() {
                 ]
               : [
                   { href: "/mentors", title: "Find a mentor", body: "Filter, browse, request." },
-                  { href: "/requests", title: "My requests", body: "Sent and pending." },
+                  { href: "/matches", title: "My Mentors", body: "Active mentors and pending requests." },
                   { href: "/apply-mentor", title: "Apply to mentor", body: "Pay it forward." },
                   { href: "/profile", title: "Update profile", body: "Photo, bio, career interests." },
                 ]

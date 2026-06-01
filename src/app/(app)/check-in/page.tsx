@@ -53,7 +53,7 @@ export default async function CheckInPage() {
       <div className="card">
         {myMatches.length === 0 ? (
           <p className="text-sm text-slate-500">
-            You don&apos;t have any active matches yet. Check-ins appear here once you do.
+            You don&apos;t have a mentor yet. Check-ins appear here once you do.
           </p>
         ) : (
           <CheckInForm matches={myMatches} />

@@ -59,11 +59,11 @@ export function CheckInForm({ matches }: { matches: MatchOpt[] }) {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <div>
-        <label className="label">Match</label>
+        <label className="label">My mentor</label>
         <select className="input" value={matchId} onChange={(e) => setMatchId(e.target.value)} required>
           {matches.map((m) => (
             <option key={m.id} value={m.id}>
-              {m.counterpart} · you are the {m.role}
+              {m.counterpart} · {m.role === "mentor" ? "you mentor them" : "they mentor you"}
             </option>
           ))}
         </select>

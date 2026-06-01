@@ -5,9 +5,13 @@ import { mentorApplications } from "@/db/schema";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 
+const INTERVIEW_BUCKETS = ["1-10", "11-25", "26-50", "51-100", "100+"] as const;
+const INTERNSHIP_BUCKETS = ["None", "1", "2", "3 or more"] as const;
+
 const applicationSchema = z.object({
   motivation: z.string().min(20).max(2000),
-  topics: z.array(z.string().min(1).max(80)).min(1).max(10),
+  informationalInterviews: z.enum(INTERVIEW_BUCKETS),
+  internshipsCount: z.enum(INTERNSHIP_BUCKETS),
   capacity: z.number().int().min(1).max(10),
 });
 
@@ -64,7 +68,8 @@ export async function POST(req: Request) {
     .values({
       userId: me.id,
       motivation: parsed.data.motivation,
-      topics: parsed.data.topics,
+      informationalInterviews: parsed.data.informationalInterviews,
+      internshipsCount: parsed.data.internshipsCount,
       capacity: parsed.data.capacity,
     })
     .returning();

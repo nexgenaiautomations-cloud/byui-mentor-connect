@@ -127,12 +127,6 @@ export default async function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-5 rounded-xl bg-byui-blue px-4 py-3 text-sm text-white">
-                <p className="font-bold">Want to mentor?</p>
-                <p className="mt-0.5 text-xs text-white/90">
-                  Every member can apply. Admin approves in days, not weeks.
-                </p>
-              </div>
             </div>
           </div>
         </div>

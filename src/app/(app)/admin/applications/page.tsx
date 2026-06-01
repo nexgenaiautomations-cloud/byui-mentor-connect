@@ -18,7 +18,8 @@ export default async function AdminApplicationsPage() {
       submittedAt: mentorApplications.submittedAt,
       reviewedAt: mentorApplications.reviewedAt,
       motivation: mentorApplications.motivation,
-      topics: mentorApplications.topics,
+      informationalInterviews: mentorApplications.informationalInterviews,
+      internshipsCount: mentorApplications.internshipsCount,
       capacity: mentorApplications.capacity,
       applicantName: users.name,
       applicantImage: users.image,
@@ -73,13 +74,24 @@ export default async function AdminApplicationsPage() {
                 <span className="pill">capacity {a.capacity}</span>
               </div>
               <p className="mt-3 text-sm leading-6 text-slate-700">{a.motivation}</p>
-              {a.topics && a.topics.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {a.topics.map((t) => (
-                    <span key={t} className="pill">{t}</span>
-                  ))}
+              <dl className="mt-3 grid gap-3 rounded-xl bg-slate-50 p-3 sm:grid-cols-2">
+                <div>
+                  <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Informational interviews
+                  </dt>
+                  <dd className="mt-0.5 text-sm font-semibold text-navy-800">
+                    {a.informationalInterviews ?? "—"}
+                  </dd>
                 </div>
-              )}
+                <div>
+                  <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Internships / career work
+                  </dt>
+                  <dd className="mt-0.5 text-sm font-semibold text-navy-800">
+                    {a.internshipsCount ?? "—"}
+                  </dd>
+                </div>
+              </dl>
               <ApplicationActions id={a.id} />
             </div>
           ))}

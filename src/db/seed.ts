@@ -340,7 +340,8 @@ export async function seedDemo() {
       userId: ids["sophia.martinez@byui.edu"],
       motivation:
         "I went through Big-Four recruiting twice — once as a sophomore where I bombed every behavioral, and again this fall where I got to second rounds at 3 of the 4. The difference was mostly knowing what to expect. I want to spare freshmen and sophomores the first version of that experience.",
-      topics: ["Resume reviews", "Behavioral interviews", "Big Four recruiting timeline"],
+      informationalInterviews: "11-25",
+      internshipsCount: "2",
       capacity: 4,
       status: "pending",
       submittedAt: daysAgo(3),
@@ -349,7 +350,8 @@ export async function seedDemo() {
       userId: ids["ethan.garcia@byui.edu"],
       motivation:
         "Just wrapped my first dev internship at a small Boise startup. It wasn't FAANG but I learned more in 10 weeks than my first two semesters of CS. Happy to help freshmen pick their first language and build a starter project that doesn't look like a tutorial.",
-      topics: ["Web dev basics", "First portfolio projects", "Picking a language"],
+      informationalInterviews: "1-10",
+      internshipsCount: "1",
       capacity: 3,
       status: "pending",
       submittedAt: daysAgo(1),

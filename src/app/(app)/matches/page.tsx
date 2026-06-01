@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { matches, meetingLogs, users } from "@/db/schema";
+import { matches, requests, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, desc, eq, or, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { POSSIBLE_ACTIONS, INACTIVITY_WARN_DAYS } from "@/lib/possible-actions";
 import { EmptyState } from "@/components/empty-state";
+import { CancelRequestButton } from "./cancel-request-button";
 
 function daysSince(d: Date) {
   return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
@@ -54,18 +55,44 @@ export default async function MatchesPage() {
       )
     );
 
+  // Pending outgoing requests are only relevant for members on this page —
+  // mentors review pending requests on /requests, and admins don't use it.
+  const pendingMentorAlias = alias(users, "pending_mentor_u");
+  const pendingOutgoing = me.isMentor || me.isAdmin
+    ? []
+    : await db
+        .select({
+          id: requests.id,
+          requestedAt: requests.requestedAt,
+          message: requests.message,
+          mentorId: requests.mentorId,
+          mentorName: pendingMentorAlias.name,
+          mentorImage: pendingMentorAlias.image,
+          mentorMajor: pendingMentorAlias.major,
+        })
+        .from(requests)
+        .innerJoin(pendingMentorAlias, eq(pendingMentorAlias.id, requests.mentorId))
+        .where(and(eq(requests.menteeId, me.id), eq(requests.status, "pending")))
+        .orderBy(desc(requests.requestedAt));
+
   // Celebration moment: any match started in the last 7 days with no
   // meetings logged yet → call it out at the top.
   const fresh = rows.filter(
     (r) => daysSince(r.startedAt) <= 7 && r.meetingCount === 0
   );
 
+  const isMember = !me.isMentor && !me.isAdmin;
+
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-2xl font-black text-navy-800 sm:text-3xl lg:text-4xl">Your matches.</h1>
+        <h1 className="font-display text-2xl font-black text-navy-800 sm:text-3xl lg:text-4xl">
+          {isMember ? "My Mentors." : "Your matches."}
+        </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Contact info is unlocked. Email, call, or jump into Teams directly.
+          {isMember
+            ? "Your active mentors are here. Pending requests are at the bottom."
+            : "Contact info is unlocked. Email, call, or jump into Teams directly."}
         </p>
       </header>
 
@@ -88,8 +115,12 @@ export default async function MatchesPage() {
       {rows.length === 0 ? (
         <EmptyState
           kind="match"
-          title="No active matches yet"
-          message="Browse mentors and send your first request. Most accept within 48 hours."
+          title={isMember ? "No mentors yet" : "No active matches yet"}
+          message={
+            isMember
+              ? "Browse mentors and send your first request. Most accept within 48 hours."
+              : "Browse mentors and send your first request. Most accept within 48 hours."
+          }
           cta={{ label: "Find a mentor", href: "/mentors" }}
         />
       ) : (
@@ -216,6 +247,56 @@ export default async function MatchesPage() {
             );
           })}
         </div>
+      )}
+
+      {isMember && pendingOutgoing.length > 0 && (
+        <section className="space-y-3 pt-4">
+          <header>
+            <h2 className="font-display text-lg font-bold text-navy-800">Pending Requests</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Waiting on the mentor to accept or decline. You can cancel any time.
+            </p>
+          </header>
+          <ul className="space-y-3">
+            {pendingOutgoing.map((p) => (
+              <li
+                key={p.id}
+                className="card flex flex-wrap items-center justify-between gap-4"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={
+                      p.mentorImage ||
+                      `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(p.mentorName || "")}&backgroundColor=1B3A6B&textColor=ffffff`
+                    }
+                    alt=""
+                    className="h-11 w-11 shrink-0 rounded-full object-cover"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-navy-800">
+                      {p.mentorName || "Mentor"}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {p.mentorMajor}
+                      {" · sent "}
+                      {new Date(p.requestedAt).toLocaleDateString()}
+                    </p>
+                    {p.message && (
+                      <p className="mt-1 line-clamp-1 text-xs italic text-slate-600">
+                        &ldquo;{p.message}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="pill-pending">Pending</span>
+                  <CancelRequestButton requestId={p.id} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );
