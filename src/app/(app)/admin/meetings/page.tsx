@@ -46,7 +46,7 @@ export default async function AdminMeetingsPage() {
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Program logs</p>
         <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">Meetings</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Every meeting logged across the program. Mentor's private notes are not shown.
+          Every meeting logged across the program.
         </p>
       </header>
 
@@ -56,7 +56,7 @@ export default async function AdminMeetingsPage() {
         <StatTile
           label="Total minutes"
           value={(totals?.totalMinutes ?? 0).toLocaleString()}
-          tone="violet"
+          tone="sky"
         />
       </section>
 

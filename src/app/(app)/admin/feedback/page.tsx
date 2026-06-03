@@ -59,9 +59,9 @@ export default async function AdminFeedbackPage() {
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatTile label="Avg rating" value={avg !== null ? avg.toFixed(1) : "—"} tone="emerald" />
-        <StatTile label="5-star %" value={`${stats?.fivesPct ?? 0}%`} tone="gold" />
+        <StatTile label="5-star %" value={`${stats?.fivesPct ?? 0}%`} tone="emerald" />
         <StatTile label="Total responses" value={stats?.n ?? 0} tone="navy" />
-        <StatTile label="Last 30 days" value={stats?.thisMonth ?? 0} tone="violet" />
+        <StatTile label="Last 30 days" value={stats?.thisMonth ?? 0} tone="sky" />
       </section>
 
       <section>
@@ -94,7 +94,7 @@ export default async function AdminFeedbackPage() {
                     {Array.from({ length: 5 }).map((_, i) => (
                       <span
                         key={i}
-                        className={i < f.rating ? "text-gold-500" : "text-slate-200"}
+                        className={i < f.rating ? "text-amber-500" : "text-slate-200"}
                       >
                         ★
                       </span>

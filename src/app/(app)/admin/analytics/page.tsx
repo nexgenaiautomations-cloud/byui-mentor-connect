@@ -288,10 +288,10 @@ export default async function AnalyticsPage() {
       <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <StatTile label="Members"      value={headline?.members ?? 0}        tone="navy"    hint="Registered" />
         <StatTile label="Mentors"      value={headline?.mentors ?? 0}        tone="emerald" hint="Approved" />
-        <StatTile label="Active matches" value={headline?.activeMatches ?? 0} tone="violet" hint="Right now" />
-        <StatTile label="Pending"      value={headline?.pendingRequests ?? 0} tone="amber"  hint="Requests" />
-        <StatTile label="To review"    value={headline?.pendingApps ?? 0}    tone="gold"    hint="Applications" />
-        <StatTile label="Avg rating"   value={ratingThis ? ratingThis.toFixed(2) : "—"} tone="sky" hint="This month" />
+        <StatTile label="Active matches" value={headline?.activeMatches ?? 0} tone="sky"   hint="Right now" />
+        <StatTile label="Pending"      value={headline?.pendingRequests ?? 0} tone="navy"   hint="Requests" />
+        <StatTile label="To review"    value={headline?.pendingApps ?? 0}    tone="amber"   hint="Applications" />
+        <StatTile label="Avg rating"   value={ratingThis ? ratingThis.toFixed(2) : "—"} tone="emerald" hint="This month" />
       </section>
 
       {/* Month-over-month deltas */}
@@ -314,7 +314,7 @@ export default async function AnalyticsPage() {
             value={matchesThis}
             previous={matchesPrev}
             series={matchesSeries}
-            color="#7C3AED"
+            color="#006EB6"
             goodWhen="up"
           />
           <MoMTile
@@ -330,7 +330,7 @@ export default async function AnalyticsPage() {
             value={accThis}
             previous={accPrev}
             series={acceptanceRateSeries}
-            color="#B45309"
+            color="#4F9ACF"
             asPercentPoints
             goodWhen="up"
             valueSuffix="%"
@@ -341,7 +341,7 @@ export default async function AnalyticsPage() {
       {/* Trends */}
       <section className="grid gap-4 lg:grid-cols-2">
         <ChartCard title="Requests submitted" subtitle="By month, last 12">
-          <MonthlyBars points={requestsSeries} color="#0EA5E9" />
+          <MonthlyBars points={requestsSeries} color="#4F9ACF" />
         </ChartCard>
         <ChartCard title="Requests accepted" subtitle="By month, last 12">
           <MonthlyBars points={acceptedSeries} color="#0F766E" />
@@ -349,7 +349,7 @@ export default async function AnalyticsPage() {
         <ChartCard title="Meeting minutes" subtitle="Total time logged per month">
           <MonthlyLine
             points={minutesSeries}
-            color="#1B3A6B"
+            color="#214491"
             format={(n) => `${Math.round(n / 60)}h`}
             unit=""
           />
@@ -357,7 +357,7 @@ export default async function AnalyticsPage() {
         <ChartCard title="Avg feedback rating" subtitle="Mentee + mentor monthly check-ins">
           <MonthlyLine
             points={ratingSeries}
-            color="#B45309"
+            color="#006EB6"
             format={(n) => n.toFixed(2)}
           />
         </ChartCard>
@@ -369,7 +369,7 @@ export default async function AnalyticsPage() {
           <h3 className="font-display text-base font-bold text-navy-800">Capacity utilization</h3>
           <p className="mt-1 text-xs text-slate-500">Active matches vs total mentor capacity</p>
           <div className="mt-3 flex items-center gap-4">
-            <Donut value={capFilled} total={Math.max(1, capTotal)} color="#7C3AED" />
+            <Donut value={capFilled} total={Math.max(1, capTotal)} color="#006EB6" />
             <div className="text-sm">
               <p className="font-display text-2xl font-black text-navy-800">
                 {capFilled}<span className="text-base font-medium text-slate-400"> / {capTotal}</span>
@@ -407,7 +407,7 @@ export default async function AnalyticsPage() {
                   <div className="mt-1 h-1.5 rounded-full bg-white">
                     <div
                       className="h-1.5 rounded-full"
-                      style={{ width: `${Math.max(2, pct)}%`, background: "#7C3AED" }}
+                      style={{ width: `${Math.max(2, pct)}%`, background: "#006EB6" }}
                     />
                   </div>
                   <p className="mt-0.5 text-[10px] text-slate-500">{m.lifetime} mentees lifetime</p>
@@ -421,16 +421,16 @@ export default async function AnalyticsPage() {
       {/* Distributions */}
       <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
         <ChartCard title="Mentors by major" subtitle="Top 8">
-          <HBarList rows={topMajors.rows as { label: string; value: number }[]} color="#0F766E" />
+          <HBarList rows={topMajors.rows as { label: string; value: number }[]} color="#006EB6" />
         </ChartCard>
         <ChartCard title="Members by semester" subtitle="Class composition">
-          <HBarList rows={semesterDistribution.rows as { label: string; value: number }[]} color="#1B3A6B" />
+          <HBarList rows={semesterDistribution.rows as { label: string; value: number }[]} color="#214491" />
         </ChartCard>
         <ChartCard title="Top career interests" subtitle="Across all members">
-          <HBarList rows={topInterests.rows as { label: string; value: number }[]} color="#B45309" />
+          <HBarList rows={topInterests.rows as { label: string; value: number }[]} color="#4F9ACF" />
         </ChartCard>
         <ChartCard title="Meeting types" subtitle="Format breakdown">
-          <HBarList rows={meetingTypes.rows as { label: string; value: number }[]} color="#0EA5E9" />
+          <HBarList rows={meetingTypes.rows as { label: string; value: number }[]} color="#A0D4ED" />
         </ChartCard>
       </section>
 
@@ -442,7 +442,7 @@ export default async function AnalyticsPage() {
             Of {totalReq12} requests submitted in the last year
           </p>
           <div className="mt-3 flex items-center gap-4">
-            <Donut value={totalAcc12} total={Math.max(1, totalReq12)} color="#0F766E" />
+            <Donut value={totalAcc12} total={Math.max(1, totalReq12)} color="#006EB6" />
             <div className="text-sm">
               <p className="font-display text-2xl font-black text-navy-800">
                 {overallAcceptance}%
@@ -452,7 +452,7 @@ export default async function AnalyticsPage() {
           </div>
           <div className="mt-4">
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Monthly rate</p>
-            <MonthlyLine points={acceptanceRateSeries} color="#0F766E" format={(n) => `${n}%`} />
+            <MonthlyLine points={acceptanceRateSeries} color="#006EB6" format={(n) => `${n}%`} />
           </div>
         </div>
 

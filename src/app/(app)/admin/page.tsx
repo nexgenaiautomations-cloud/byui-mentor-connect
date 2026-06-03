@@ -76,7 +76,10 @@ export default async function AdminPage() {
             Program overview, mentor application review, recent activity.
           </p>
         </div>
-        <Link href="/admin/analytics" className="btn-gold">
+        <Link
+          href="/admin/analytics"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-byui-blue px-5 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-byui-blue-dark active:scale-[0.98] cursor-pointer"
+        >
           Full analytics →
         </Link>
       </header>
@@ -84,10 +87,10 @@ export default async function AdminPage() {
       <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
         <StatTile label="Members"      value={counts?.members ?? 0}        tone="navy"    hint="Registered" />
         <StatTile label="Mentors"      value={counts?.mentors ?? 0}        tone="emerald" hint="Approved" />
-        <StatTile label="Matches"      value={counts?.activeMatches ?? 0}  tone="violet"  hint="Active" />
-        <StatTile label="Requests"     value={counts?.pendingRequests ?? 0} tone="amber"   hint="Pending" />
+        <StatTile label="Matches"      value={counts?.activeMatches ?? 0}  tone="sky"     hint="Active" />
+        <StatTile label="Requests"     value={counts?.pendingRequests ?? 0} tone="navy"    hint="Pending" />
         <StatTile label="Meetings"     value={counts?.meetingLogs ?? 0}    tone="sky"     hint="All time" />
-        <StatTile label="To review"    value={counts?.pendingApps ?? 0}    tone="gold"    hint="Applications" />
+        <StatTile label="To review"    value={counts?.pendingApps ?? 0}    tone="amber"   hint="Applications" />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
