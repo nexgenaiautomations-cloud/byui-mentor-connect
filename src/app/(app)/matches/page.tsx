@@ -87,7 +87,8 @@ export default async function MatchesPage() {
   }
 
   // Pending outgoing requests are only relevant for members on this page —
-  // mentors review pending requests on /requests, and admins don't use it.
+  // mentors respond to pending requests via the forced popup, and admins
+  // don't use this surface.
   const pendingMentorAlias = alias(users, "pending_mentor_u");
   const pendingOutgoing = me.isMentor || me.isAdmin
     ? []

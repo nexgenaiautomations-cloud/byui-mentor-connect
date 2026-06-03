@@ -15,7 +15,6 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
   if (user.isMentor) {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
-      { href: "/requests", label: "Requests" },
       { href: "/matches", label: "My Mentees" },
       { href: "/log-meeting", label: "Log an activity" }
     );

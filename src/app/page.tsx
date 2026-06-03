@@ -297,7 +297,7 @@ export default async function LandingPage() {
               },
               {
                 title: "Track every step",
-                body: "Pending, accepted, declined — always know where each request stands. Mentor contact unlocks the moment they accept.",
+                body: "See where each request stands. Mentor contact unlocks the moment they accept.",
               },
               {
                 title: "Stay accountable",

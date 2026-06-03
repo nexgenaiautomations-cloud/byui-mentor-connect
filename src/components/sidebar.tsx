@@ -22,7 +22,6 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
   if (user.isMentor) {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
-      { href: "/requests", label: "Requests" },
       { href: "/matches", label: "My Mentees" },
       { href: "/log-meeting", label: "Log an activity" }
     );
@@ -226,7 +225,6 @@ export function MobileBar({ user }: { user: User }) {
   } else if (user.isMentor) {
     items = [
       { href: "/dashboard", label: "Home", icon: "home" },
-      { href: "/requests", label: "Requests", icon: "requests" },
       { href: "/matches", label: "Mentees", icon: "mentees" },
       { href: "/log-meeting", label: "Activity", icon: "meetings" },
     ];
