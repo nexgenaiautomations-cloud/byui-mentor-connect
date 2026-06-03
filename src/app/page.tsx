@@ -78,11 +78,11 @@ export default async function LandingPage() {
           <div className="flex flex-col items-center text-center text-white md:items-start md:text-left">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/byuican-handshake-white.png"
-              alt="BYUI CAN handshake mark"
-              width={220}
-              height={220}
-              className="h-44 w-44 select-none md:h-56 md:w-56"
+              src="/byuican-shield.png"
+              alt="BYUI CAN Career Advancement Network shield"
+              width={260}
+              height={260}
+              className="h-52 w-52 select-none md:h-64 md:w-64"
             />
             <h1 className="mt-6 font-display text-5xl font-black leading-[1.05] tracking-tight md:text-7xl">
               BYUI CAN
