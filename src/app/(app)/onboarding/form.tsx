@@ -28,10 +28,16 @@ export function OnboardingForm({
   initial,
   careerOptions,
   semesterLevels,
+  majorOptions,
+  minorOptions,
+  graduationOptions,
 }: {
   initial: Initial;
   careerOptions: string[];
   semesterLevels: string[];
+  majorOptions: string[];
+  minorOptions: string[];
+  graduationOptions: string[];
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -158,20 +164,30 @@ export function OnboardingForm({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">Major</label>
-                <input
+                <select
                   required
                   className="input"
                   value={form.major}
                   onChange={(e) => setForm({ ...form, major: e.target.value })}
-                />
+                >
+                  <option value="">Select your major</option>
+                  {majorOptions.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <label className="label">Minor (optional)</label>
-                <input
+                <label className="label">Minor</label>
+                <select
                   className="input"
                   value={form.minor}
                   onChange={(e) => setForm({ ...form, minor: e.target.value })}
-                />
+                >
+                  <option value="">Select your minor</option>
+                  {minorOptions.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -190,14 +206,18 @@ export function OnboardingForm({
                 </select>
               </div>
               <div>
-                <label className="label">Expected graduation</label>
-                <input
+                <label className="label">Expected Graduation Date</label>
+                <select
                   required
                   className="input"
-                  placeholder="e.g. Spring 2027"
                   value={form.expectedGraduation}
                   onChange={(e) => setForm({ ...form, expectedGraduation: e.target.value })}
-                />
+                >
+                  <option value="">Select expected graduation date</option>
+                  {graduationOptions.map((g) => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

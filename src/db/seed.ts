@@ -508,7 +508,6 @@ export async function seedDemo() {
       topicsDiscussed: TOPICS[mt.topic],
       actionItems: ACTIONS[mt.action],
       nextMeetingDate: daysAgo(mt.daysAgo - 14),
-      mentorNotes: mt.daysAgo > 10 ? "Strong engagement; keep stretching." : null,
     });
   }
 

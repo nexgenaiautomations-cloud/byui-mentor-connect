@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { matches, requests, users } from "@/db/schema";
+import { matches, meetingLogs, requests, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
-import { and, desc, eq, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { INACTIVITY_WARN_DAYS, POSSIBLE_ACTIONS } from "@/lib/possible-actions";
 import { EmptyState } from "@/components/empty-state";
 import { CancelRequestButton } from "./cancel-request-button";
+import { CanTodosButton } from "./can-todos-button";
 
 function daysSince(d: Date) {
   return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
@@ -35,12 +36,18 @@ export default async function MatchesPage() {
       mentorEmail: mentor.email,
       mentorPhone: mentor.phone,
       mentorMajor: mentor.major,
+      mentorMinor: mentor.minor,
+      mentorExpectedGraduation: mentor.expectedGraduation,
+      mentorCareerInterests: mentor.careerInterests,
       mentorBio: mentor.bio,
       menteeName: mentee.name,
       menteeImage: mentee.image,
       menteeEmail: mentee.email,
       menteePhone: mentee.phone,
       menteeMajor: mentee.major,
+      menteeMinor: mentee.minor,
+      menteeExpectedGraduation: mentee.expectedGraduation,
+      menteeCareerInterests: mentee.careerInterests,
       menteeBio: mentee.bio,
     })
     .from(matches)
@@ -52,6 +59,32 @@ export default async function MatchesPage() {
         eq(matches.status, "active")
       )
     );
+
+  // Recent activities per active match — only fetched when I'm the mentor on
+  // at least one match, since they only show on mentee cards.
+  const mentorMatchIds = rows
+    .filter((r) => r.mentorId === me.id)
+    .map((r) => r.id);
+  const recentActivities = mentorMatchIds.length
+    ? await db
+        .select({
+          id: meetingLogs.id,
+          matchId: meetingLogs.matchId,
+          meetingDate: meetingLogs.meetingDate,
+          meetingType: meetingLogs.meetingType,
+          durationMinutes: meetingLogs.durationMinutes,
+          topicsDiscussed: meetingLogs.topicsDiscussed,
+        })
+        .from(meetingLogs)
+        .where(inArray(meetingLogs.matchId, mentorMatchIds))
+        .orderBy(desc(meetingLogs.meetingDate), desc(meetingLogs.createdAt))
+    : [];
+  const activitiesByMatch = new Map<string, typeof recentActivities>();
+  for (const a of recentActivities) {
+    const list = activitiesByMatch.get(a.matchId) ?? [];
+    list.push(a);
+    activitiesByMatch.set(a.matchId, list);
+  }
 
   // Pending outgoing requests are only relevant for members on this page —
   // mentors review pending requests on /requests, and admins don't use it.
@@ -131,6 +164,7 @@ export default async function MatchesPage() {
                 <span><strong>Do a career accomplishment together.</strong></span>
               </li>
             </ol>
+            <CanTodosButton actions={POSSIBLE_ACTIONS} />
           </div>
         </div>
       )}
@@ -163,6 +197,9 @@ export default async function MatchesPage() {
                   email: m.menteeEmail,
                   phone: m.menteePhone,
                   major: m.menteeMajor,
+                  minor: m.menteeMinor,
+                  expectedGraduation: m.menteeExpectedGraduation,
+                  careerInterests: m.menteeCareerInterests,
                   bio: m.menteeBio,
                   role: "Mentee",
                 }
@@ -172,6 +209,9 @@ export default async function MatchesPage() {
                   email: m.mentorEmail,
                   phone: m.mentorPhone,
                   major: m.mentorMajor,
+                  minor: m.mentorMinor,
+                  expectedGraduation: m.mentorExpectedGraduation,
+                  careerInterests: m.mentorCareerInterests,
                   bio: m.mentorBio,
                   role: "Mentor",
                 };
@@ -269,6 +309,28 @@ export default async function MatchesPage() {
                   </div>
                 </dl>
 
+                {/* Student details — shown to mentors on their mentee cards. */}
+                {iAmMentor && (
+                  <dl className="grid gap-1.5 text-xs">
+                    <div className="flex flex-wrap gap-x-1.5">
+                      <dt className="font-semibold text-slate-500">Minor:</dt>
+                      <dd className="text-slate-700">{other.minor || "Not listed"}</dd>
+                    </div>
+                    <div className="flex flex-wrap gap-x-1.5">
+                      <dt className="font-semibold text-slate-500">Expected Graduation Date:</dt>
+                      <dd className="text-slate-700">{other.expectedGraduation || "Not listed"}</dd>
+                    </div>
+                    <div className="flex flex-wrap gap-x-1.5">
+                      <dt className="font-semibold text-slate-500 shrink-0">Career Interests:</dt>
+                      <dd className="text-slate-700">
+                        {other.careerInterests && other.careerInterests.length > 0
+                          ? other.careerInterests.join(", ")
+                          : "Not listed"}
+                      </dd>
+                    </div>
+                  </dl>
+                )}
+
                 {showInactivityWarn && (
                   <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
                     <p className="font-semibold">No activity in {inactivityDays} days.</p>
@@ -278,25 +340,74 @@ export default async function MatchesPage() {
                   </div>
                 )}
 
-                {/* Possible actions together — only on mentor cards, where the
-                    mentor needs a menu of obvious next steps. */}
-                {iAmMentor && (
-                  <div className="mt-auto">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-byui-blue">
-                      Things you can do together
-                    </p>
-                    <ul className="mt-2 space-y-1">
-                      {POSSIBLE_ACTIONS.map((a) => (
-                        <li key={a} className="flex items-start gap-1.5 text-xs leading-snug text-slate-700">
-                          <span aria-hidden className="mt-0.5 inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-byui-blue text-[9px] font-black text-white">
-                            ✓
-                          </span>
-                          <span>{a}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {/* Recent Activities — scrollable feed of logged activities
+                    for this specific mentee. Shown only on the mentor's view. */}
+                {iAmMentor && (() => {
+                  const items = activitiesByMatch.get(m.id) ?? [];
+                  return (
+                    <div className="mt-auto">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-byui-blue">
+                          Recent Activities
+                        </p>
+                        {items.length > 0 && (
+                          <Link
+                            href={`/log-meeting?matchId=${m.id}`}
+                            className="text-[10px] font-bold uppercase tracking-wider text-byui-blue hover:underline"
+                          >
+                            Log →
+                          </Link>
+                        )}
+                      </div>
+                      {items.length === 0 ? (
+                        <div className="mt-2 rounded-xl border border-dashed border-byui-blue-light/60 bg-slate-50 p-3 text-center">
+                          <p className="text-xs text-slate-600">No activities logged yet.</p>
+                          <Link
+                            href={`/log-meeting?matchId=${m.id}`}
+                            className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-byui-blue hover:underline"
+                          >
+                            Log an Activity →
+                          </Link>
+                        </div>
+                      ) : (
+                        <ul className="mt-2 max-h-[180px] space-y-2 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-2 pr-1">
+                          {items.map((a) => (
+                            <li
+                              key={a.id}
+                              className="rounded-lg border border-slate-100 bg-white p-2.5"
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-1">
+                                <p className="text-xs font-bold text-byui-blue-dark">
+                                  {new Date(a.meetingDate).toLocaleDateString(undefined, {
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </p>
+                                <span className="inline-flex items-center rounded-full bg-byui-blue-light/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-byui-blue-dark">
+                                  {a.meetingType.replace("_", " ")}
+                                </span>
+                              </div>
+                              {a.durationMinutes ? (
+                                <p className="mt-0.5 text-[11px] text-slate-500">
+                                  {a.durationMinutes} minutes
+                                </p>
+                              ) : null}
+                              {a.topicsDiscussed && (
+                                <p className="mt-1 text-xs leading-snug text-slate-700">
+                                  <span className="font-semibold text-slate-500">Accomplishments:</span>{" "}
+                                  {a.topicsDiscussed
+                                    .split(" · ")
+                                    .filter(Boolean)
+                                    .join(", ")}
+                                </p>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })()}
 
               </article>
             );

@@ -16,7 +16,23 @@ export const POSSIBLE_ACTIONS = [
   "Work on Elevator Pitch",
   "Help apply to an internship or job",
   "Help with Grad School Preparation/Application",
+  "Course planning",
 ];
+
+// "Other" sentinel — when this is checked on the log form, the mentor must
+// also fill in the free-text "otherAccomplishment" input.
+export const OTHER_ACCOMPLISHMENT = "Other";
+
+// Full list shown on the Log an Activity form: the 15 POSSIBLE_ACTIONS plus
+// outcome items (offer received) and the Other sentinel. Order matters and
+// is asserted by tests.
+export const LOG_ACCOMPLISHMENT_OPTIONS = [
+  ...POSSIBLE_ACTIONS,
+  "My mentee got an internship offer",
+  "My mentee got a career-related, part-time job offer",
+  "My mentee got a career-related, full-time job offer",
+  OTHER_ACCOMPLISHMENT,
+] as const;
 
 // BYUI CAN program cadence — "1 Career Task weekly · 2 Internships before
 // senior year · 3 Career Chats each month".

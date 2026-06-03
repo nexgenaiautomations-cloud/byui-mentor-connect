@@ -24,17 +24,27 @@ export default async function LogMeetingPage({
       menteeId: matches.menteeId,
       menteeName: mentee.name,
       menteeImage: mentee.image,
+      menteeMajor: mentee.major,
       startedAt: matches.startedAt,
     })
     .from(matches)
     .innerJoin(mentee, eq(mentee.id, matches.menteeId))
     .where(and(eq(matches.mentorId, me.id), eq(matches.status, "active")));
 
+  const recentMentee = alias(users, "recent_mentee_u");
   const recent = await db
-    .select()
+    .select({
+      id: meetingLogs.id,
+      meetingDate: meetingLogs.meetingDate,
+      meetingType: meetingLogs.meetingType,
+      durationMinutes: meetingLogs.durationMinutes,
+      topicsDiscussed: meetingLogs.topicsDiscussed,
+      menteeName: recentMentee.name,
+    })
     .from(meetingLogs)
+    .innerJoin(recentMentee, eq(recentMentee.id, meetingLogs.menteeId))
     .where(eq(meetingLogs.mentorId, me.id))
-    .orderBy(desc(meetingLogs.createdAt))
+    .orderBy(desc(meetingLogs.meetingDate), desc(meetingLogs.createdAt))
     .limit(5);
 
   return (
@@ -43,7 +53,7 @@ export default async function LogMeetingPage({
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Mentor tools</p>
         <h1 className="mt-1 font-display text-3xl font-black text-byui-blue-dark">Log an activity</h1>
         <p className="mt-1 text-sm text-slate-600">
-          After every meeting, call, or career event together, capture what happened. Logs flow to the admin dashboard — your private notes stay private.
+          After every meeting, call, or career event together, capture what happened.
         </p>
       </header>
 
@@ -59,24 +69,41 @@ export default async function LogMeetingPage({
         </div>
 
         <div className="card">
-          <h2 className="font-display text-lg font-bold text-navy-800">Recent activity</h2>
+          <h2 className="font-display text-lg font-bold text-byui-blue-dark">Recent activity</h2>
           {recent.length === 0 ? (
             <p className="mt-3 text-sm text-slate-500">No activities logged yet.</p>
           ) : (
             <ul className="mt-3 space-y-3">
               {recent.map((l) => (
                 <li key={l.id} className="rounded-xl border border-slate-100 p-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-navy-800">
-                      {new Date(l.meetingDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-byui-blue-dark">
+                      {new Date(l.meetingDate).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </p>
-                    <span className="pill capitalize">{l.meetingType.replace("_", " ")}</span>
+                    <span className="inline-flex items-center rounded-full bg-byui-blue-light/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-byui-blue-dark capitalize">
+                      {l.meetingType.replace("_", " ")}
+                    </span>
                   </div>
-                  {l.topicsDiscussed && (
-                    <p className="mt-1 line-clamp-2 text-xs text-slate-600">{l.topicsDiscussed}</p>
+                  {l.menteeName && (
+                    <p className="mt-0.5 text-xs font-medium text-slate-700">
+                      {l.menteeName}
+                    </p>
                   )}
-                  {l.durationMinutes && (
-                    <p className="mt-1 text-[11px] text-slate-400">{l.durationMinutes} minutes</p>
+                  {l.durationMinutes ? (
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      {l.durationMinutes} minutes
+                    </p>
+                  ) : null}
+                  {l.topicsDiscussed && (
+                    <p className="mt-1 text-xs leading-snug text-slate-700">
+                      {l.topicsDiscussed
+                        .split(" · ")
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
                   )}
                 </li>
               ))}

@@ -1,14 +1,30 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { POSSIBLE_ACTIONS } from "@/lib/possible-actions";
+import { useEffect, useMemo, useState } from "react";
+import {
+  LOG_ACCOMPLISHMENT_OPTIONS,
+  OTHER_ACCOMPLISHMENT,
+} from "@/lib/possible-actions";
 
 type Match = {
   id: string;
   menteeName: string | null;
   menteeImage: string | null;
+  menteeMajor: string | null;
 };
+
+const MEETING_TYPES = [
+  { value: "in_person", label: "In person" },
+  { value: "video", label: "Video" },
+  { value: "phone", label: "Phone" },
+  { value: "other", label: "Other" },
+] as const;
+
+function avatarFor(name: string | null) {
+  const seed = encodeURIComponent(name || "Mentee");
+  return `https://api.dicebear.com/9.x/initials/svg?seed=${seed}&backgroundColor=006EB6&textColor=ffffff`;
+}
 
 export function LogMeetingForm({
   matches,
@@ -24,15 +40,21 @@ export function LogMeetingForm({
       : matches[0]?.id ?? "";
   const [matchId, setMatchId] = useState(preselect);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [meetingType, setMeetingType] = useState("in_person");
-  const [duration, setDuration] = useState(30);
+  const [meetingType, setMeetingType] = useState<string>("");
+  const [duration, setDuration] = useState<string>("");
   const [accomplishments, setAccomplishments] = useState<Set<string>>(new Set());
+  const [otherText, setOtherText] = useState("");
   const [actions, setActions] = useState("");
   const [next, setNext] = useState("");
-  const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const selectedMatch = useMemo(
+    () => matches.find((m) => m.id === matchId),
+    [matches, matchId]
+  );
 
   function toggle(action: string) {
     setAccomplishments((prev) => {
@@ -43,25 +65,66 @@ export function LogMeetingForm({
     });
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  function validate(): string | null {
+    if (!matchId) return "Please select a mentee.";
+    if (!date) return "Please choose an activity date.";
+    if (accomplishments.size === 0) {
+      return "Please check at least one accomplishment.";
+    }
+    if (accomplishments.has(OTHER_ACCOMPLISHMENT) && !otherText.trim()) {
+      return "Please describe the Other accomplishment.";
+    }
+    return null;
+  }
+
+  function onReview(e: React.FormEvent) {
     e.preventDefault();
+    const v = validate();
+    if (v) {
+      setError(v);
+      return;
+    }
+    setError(null);
+    setConfirmOpen(true);
+  }
+
+  // Lock body scroll while the confirmation modal is open + Escape closes it.
+  useEffect(() => {
+    if (!confirmOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setConfirmOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [confirmOpen]);
+
+  async function onConfirmSubmit() {
     setSubmitting(true);
     setError(null);
-    // Send the selected accomplishments as a single newline-joined string in
-    // topicsDiscussed so existing analytics + admin views keep working.
-    const topics = [...accomplishments].join(" · ");
+    const checked = [...accomplishments];
+    // Replace the "Other" sentinel with the free-text the mentor typed so the
+    // saved log carries the actual thing they did, not a placeholder.
+    const accomplishmentList = checked.map((a) =>
+      a === OTHER_ACCOMPLISHMENT ? `Other: ${otherText.trim()}` : a
+    );
+    const topics = accomplishmentList.join(" · ");
+    const durationNum = duration ? Number(duration) : null;
     const res = await fetch("/api/meeting-logs", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         matchId,
         meetingDate: date,
-        meetingType,
-        durationMinutes: duration || null,
+        meetingType: meetingType || null,
+        durationMinutes: durationNum,
         topicsDiscussed: topics || null,
         actionItems: actions || null,
         nextMeetingDate: next || null,
-        mentorNotes: notes || null,
       }),
     });
     if (!res.ok) {
@@ -72,124 +135,348 @@ export function LogMeetingForm({
     }
     setSaved(true);
     setSubmitting(false);
+    setConfirmOpen(false);
     setAccomplishments(new Set());
+    setOtherText("");
     setActions("");
     setNext("");
-    setNotes("");
+    setMeetingType("");
+    setDuration("");
     router.refresh();
     setTimeout(() => setSaved(false), 2500);
   }
 
+  const accomplishmentSummary = useMemo(() => {
+    return [...accomplishments].map((a) =>
+      a === OTHER_ACCOMPLISHMENT ? `Other: ${otherText.trim() || "—"}` : a
+    );
+  }, [accomplishments, otherText]);
+
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
-      <div>
-        <label className="label">Mentee</label>
-        <select className="input" value={matchId} onChange={(e) => setMatchId(e.target.value)} required>
-          {matches.map((m) => (
-            <option key={m.id} value={m.id}>{m.menteeName ?? "Mentee"}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
+    <>
+      <form onSubmit={onReview} className="space-y-5">
         <div>
-          <label className="label">Activity date</label>
-          <input type="date" className="input" value={date} onChange={(e) => setDate(e.target.value)} required />
-        </div>
-        <div>
-          <label className="label">Type</label>
-          <select className="input" value={meetingType} onChange={(e) => setMeetingType(e.target.value)}>
-            <option value="in_person">In person</option>
-            <option value="video">Video</option>
-            <option value="phone">Phone</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div>
-          <label className="label">Duration (min)</label>
-          <input
-            type="number"
-            min={1}
-            max={600}
-            className="input"
-            value={duration}
-            onChange={(e) => setDuration(Number(e.target.value))}
-          />
-        </div>
-      </div>
-
-      <fieldset>
-        <legend className="label">Accomplishments</legend>
-        <p className="mt-0.5 text-xs text-slate-500">
-          Check anything you covered in this activity.
-        </p>
-        <div className="mt-2 grid gap-1 rounded-xl border border-byui-blue-light/40 bg-slate-50 p-2 sm:grid-cols-2">
-          {POSSIBLE_ACTIONS.map((a) => {
-            const checked = accomplishments.has(a);
-            return (
-              <label
-                key={a}
-                className={
-                  "flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs leading-snug transition " +
-                  (checked
-                    ? "bg-byui-blue/10 text-byui-blue-dark ring-1 ring-byui-blue/40"
-                    : "text-slate-700 hover:bg-white")
-                }
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggle(a)}
-                  className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer accent-byui-blue"
+          <label className="label">Mentee</label>
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              className="input w-auto min-w-[180px] flex-none"
+              value={matchId}
+              onChange={(e) => setMatchId(e.target.value)}
+              required
+            >
+              {matches.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.menteeName ?? "Mentee"}
+                </option>
+              ))}
+            </select>
+            {selectedMatch && (
+              <div className="flex items-center gap-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={selectedMatch.menteeImage || avatarFor(selectedMatch.menteeName)}
+                  alt=""
+                  className="h-10 w-10 shrink-0 rounded-full border border-byui-blue-light/40 object-cover"
                 />
-                <span>{a}</span>
+                <p className="text-sm font-medium text-slate-700">
+                  {selectedMatch.menteeMajor || (
+                    <span className="text-slate-400">Major not listed</span>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="label">Activity date</label>
+            <input
+              type="date"
+              className="input"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="label">
+              Type <span className="font-normal text-slate-400">(optional)</span>
+            </label>
+            <select
+              className="input"
+              value={meetingType}
+              onChange={(e) => setMeetingType(e.target.value)}
+            >
+              <option value="">Select…</option>
+              {MEETING_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">
+              Duration (min) <span className="font-normal text-slate-400">(optional)</span>
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={600}
+              className="input"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <fieldset>
+          <legend className="label">Accomplishments</legend>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Check anything you covered in this activity.
+          </p>
+          <div className="mt-2 grid gap-1 rounded-xl border border-byui-blue-light/40 bg-slate-50 p-2 sm:grid-cols-2">
+            {LOG_ACCOMPLISHMENT_OPTIONS.map((a) => {
+              const checked = accomplishments.has(a);
+              return (
+                <label
+                  key={a}
+                  className={
+                    "flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs leading-snug transition " +
+                    (checked
+                      ? "bg-byui-blue/10 text-byui-blue-dark ring-1 ring-byui-blue/40"
+                      : "text-slate-700 hover:bg-white")
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(a)}
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer accent-byui-blue"
+                  />
+                  <span>{a}</span>
+                </label>
+              );
+            })}
+          </div>
+          {accomplishments.has(OTHER_ACCOMPLISHMENT) && (
+            <div className="mt-2">
+              <label htmlFor="other-accomplishment" className="sr-only">
+                Other accomplishment
               </label>
-            );
-          })}
-        </div>
-      </fieldset>
+              <input
+                id="other-accomplishment"
+                className="input"
+                placeholder="Other accomplishment"
+                value={otherText}
+                onChange={(e) => setOtherText(e.target.value)}
+                required
+              />
+            </div>
+          )}
+        </fieldset>
 
-      <div>
-        <label className="label">Action items</label>
-        <textarea
-          rows={2}
-          className="input"
-          placeholder="What's the mentee doing before next time?"
-          value={actions}
-          onChange={(e) => setActions(e.target.value)}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="label">Next meeting</label>
-          <input type="date" className="input" value={next} onChange={(e) => setNext(e.target.value)} />
-        </div>
-        <div>
-          <label className="label">Private mentor notes</label>
-          <input
+          <label className="label">
+            Action items <span className="font-normal text-slate-400">(optional)</span>
+          </label>
+          <textarea
+            rows={2}
             className="input"
-            placeholder="Not visible to mentee"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            placeholder="What's the mentee doing before next time?"
+            value={actions}
+            onChange={(e) => setActions(e.target.value)}
           />
         </div>
-      </div>
 
-      {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
-      )}
-      {saved && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          Logged ✓
+        <div>
+          <label className="label">
+            Next meeting <span className="font-normal text-slate-400">(optional)</span>
+          </label>
+          <input
+            type="date"
+            className="input"
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+          />
+        </div>
+
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        {saved && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            Logged ✓
+          </div>
+        )}
+
+        <div className="flex items-center justify-end">
+          <button type="submit" disabled={submitting} className="btn-primary">
+            Log activity
+          </button>
+        </div>
+      </form>
+
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            aria-hidden
+            onClick={() => !submitting && setConfirmOpen(false)}
+            className="absolute inset-0 bg-byui-blue-dark/70 backdrop-blur-sm"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-log-title"
+            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-byui-blue sm:p-6"
+          >
+            <button
+              type="button"
+              onClick={() => !submitting && setConfirmOpen(false)}
+              aria-label="Close"
+              className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer disabled:opacity-40"
+              disabled={submitting}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M6 6 18 18M18 6 6 18" />
+              </svg>
+            </button>
+
+            <p className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+              Review
+            </p>
+            <h2
+              id="confirm-log-title"
+              className="mt-1 font-display text-xl font-black leading-tight text-byui-blue-dark"
+            >
+              Confirm Activity Log
+            </h2>
+            <p className="mt-1 text-xs text-slate-600">
+              Please review what you recorded before submitting.
+            </p>
+
+            <dl className="mt-4 max-h-[60vh] space-y-2 overflow-y-auto pr-1 text-sm">
+              <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Mentee
+                </dt>
+                <dd className="mt-0.5 text-slate-800">
+                  {selectedMatch?.menteeName ?? "—"}
+                </dd>
+              </div>
+              <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Activity Date
+                </dt>
+                <dd className="mt-0.5 text-slate-800">
+                  {date
+                    ? new Date(date).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "—"}
+                </dd>
+              </div>
+              {meetingType && (
+                <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Type
+                  </dt>
+                  <dd className="mt-0.5 text-slate-800">
+                    {MEETING_TYPES.find((t) => t.value === meetingType)?.label ??
+                      meetingType}
+                  </dd>
+                </div>
+              )}
+              {duration && (
+                <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Duration
+                  </dt>
+                  <dd className="mt-0.5 text-slate-800">{duration} minutes</dd>
+                </div>
+              )}
+              <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Accomplishments
+                </dt>
+                <dd className="mt-0.5 text-slate-800">
+                  {accomplishmentSummary.length > 0 ? (
+                    <ul className="list-disc space-y-0.5 pl-4">
+                      {accomplishmentSummary.map((a, i) => (
+                        <li key={i}>{a}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    "—"
+                  )}
+                </dd>
+              </div>
+              {actions.trim() && (
+                <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Action Items
+                  </dt>
+                  <dd className="mt-0.5 whitespace-pre-wrap text-slate-800">
+                    {actions}
+                  </dd>
+                </div>
+              )}
+              {next && (
+                <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Next Meeting
+                  </dt>
+                  <dd className="mt-0.5 text-slate-800">
+                    {new Date(next).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            {error && (
+              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                disabled={submitting}
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={onConfirmSubmit}
+                disabled={submitting}
+                className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-5 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              >
+                {submitting ? "Saving…" : "Confirm & Submit"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
-
-      <div className="flex items-center justify-end">
-        <button type="submit" disabled={submitting} className="btn-primary">
-          {submitting ? "Saving…" : "Log activity"}
-        </button>
-      </div>
-    </form>
+    </>
   );
 }

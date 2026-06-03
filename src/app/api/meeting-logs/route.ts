@@ -4,25 +4,26 @@ import { db } from "@/db/client";
 import { matches, meetingLogs } from "@/db/schema";
 import { eq, or } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
-import { sql } from "drizzle-orm";
 
 const logSchema = z.object({
   matchId: z.string().uuid(),
   meetingDate: z.coerce.date(),
-  meetingType: z.enum(["in_person", "video", "phone", "other"]),
+  // Type is optional on the new form; default to "other" at insert time so
+  // existing not-null DB constraint is honored.
+  meetingType: z
+    .enum(["in_person", "video", "phone", "other"])
+    .optional()
+    .nullable(),
   durationMinutes: z.number().int().min(1).max(600).optional().nullable(),
-  topicsDiscussed: z.string().max(2000).optional().nullable(),
+  topicsDiscussed: z.string().min(1).max(2000),
   actionItems: z.string().max(2000).optional().nullable(),
   nextMeetingDate: z.coerce.date().optional().nullable(),
-  mentorNotes: z.string().max(4000).optional().nullable(),
 });
 
 export async function GET() {
   const me = await getCurrentUser();
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Mentors see their own notes; mentees never see mentorNotes — project the
-  // field only when the viewer is the mentor on that log.
   const rows = await db
     .select({
       id: meetingLogs.id,
@@ -37,8 +38,6 @@ export async function GET() {
       nextMeetingDate: meetingLogs.nextMeetingDate,
       menteeConfirmed: meetingLogs.menteeConfirmed,
       createdAt: meetingLogs.createdAt,
-      // Conditional projection: NULL when viewer is the mentee.
-      mentorNotes: sql<string | null>`CASE WHEN ${meetingLogs.mentorId} = ${me.id} THEN ${meetingLogs.mentorNotes} ELSE NULL END`,
     })
     .from(meetingLogs)
     .where(or(eq(meetingLogs.mentorId, me.id), eq(meetingLogs.menteeId, me.id)));
@@ -72,12 +71,11 @@ export async function POST(req: Request) {
       mentorId: match.mentorId,
       menteeId: match.menteeId,
       meetingDate: parsed.data.meetingDate,
-      meetingType: parsed.data.meetingType,
+      meetingType: parsed.data.meetingType ?? "other",
       durationMinutes: parsed.data.durationMinutes ?? null,
-      topicsDiscussed: parsed.data.topicsDiscussed ?? null,
+      topicsDiscussed: parsed.data.topicsDiscussed,
       actionItems: parsed.data.actionItems ?? null,
       nextMeetingDate: parsed.data.nextMeetingDate ?? null,
-      mentorNotes: parsed.data.mentorNotes ?? null,
     })
     .returning();
 

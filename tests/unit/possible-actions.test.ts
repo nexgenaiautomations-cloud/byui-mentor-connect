@@ -14,8 +14,12 @@ describe("POSSIBLE_ACTIONS", () => {
     expect(POSSIBLE_ACTIONS).toContain("Help with Grad School Preparation/Application");
   });
 
-  it("has 13 actions", () => {
-    expect(POSSIBLE_ACTIONS).toHaveLength(13);
+  it("has 15 actions", () => {
+    expect(POSSIBLE_ACTIONS).toHaveLength(15);
+  });
+
+  it("includes Course planning", () => {
+    expect(POSSIBLE_ACTIONS).toContain("Course planning");
   });
 });
 

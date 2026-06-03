@@ -18,7 +18,7 @@ export function Logo({
         width={size}
         height={size}
         style={{ width: size, height: size }}
-        className="select-none"
+        className="select-none rounded-xl shadow-sm ring-1 ring-white/20"
       />
       {withText && (
         <span className="leading-tight">

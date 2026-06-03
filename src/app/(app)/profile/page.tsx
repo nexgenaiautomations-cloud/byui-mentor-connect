@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { CAREER_OPTIONS, SEMESTER_LEVELS } from "@/lib/careers";
+import {
+  MAJOR_OPTIONS,
+  MINOR_OPTIONS,
+  GRADUATION_OPTIONS,
+} from "@/lib/academic-options";
 import { OnboardingForm } from "../onboarding/form";
 import { signOutAction } from "@/lib/actions";
 
@@ -42,6 +47,9 @@ export default async function ProfilePage() {
           }}
           careerOptions={[...CAREER_OPTIONS]}
           semesterLevels={[...SEMESTER_LEVELS]}
+          majorOptions={[...MAJOR_OPTIONS]}
+          minorOptions={[...MINOR_OPTIONS]}
+          graduationOptions={[...GRADUATION_OPTIONS]}
         />
       </div>
     </div>

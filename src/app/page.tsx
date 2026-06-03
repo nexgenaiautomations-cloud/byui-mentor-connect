@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "../../auth";
-import { Logo, FullCrest } from "@/components/logo";
+import { FullCrest } from "@/components/logo";
 import { InstallButton } from "@/components/install-button";
 
 const FEATURED_STATS = [
@@ -42,15 +42,16 @@ export default async function LandingPage() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-byui-blue-dark/95 via-byui-blue-dark/85 to-byui-blue/70" />
 
         <nav className="relative flex items-center justify-between px-6 py-5 md:px-10">
-          <div className="flex items-center gap-3">
-            <Logo size={44} />
-            <div className="leading-tight">
-              <p className="font-display text-sm font-black tracking-tight text-white">BYUI CAN</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/75">
-                Career Advancement Network
-              </p>
-            </div>
-          </div>
+          <Link href="/" aria-label="BYUI CAN home" className="flex items-center gap-2 cursor-pointer">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/byuican-handshake-white.png"
+              alt=""
+              width={44}
+              height={44}
+              className="h-11 w-11 select-none"
+            />
+          </Link>
           <div className="hidden items-center gap-6 md:flex">
             <a href="#why" className="text-sm font-semibold text-white/85 hover:text-white">
               Why BYUI CAN
@@ -73,22 +74,18 @@ export default async function LandingPage() {
           </div>
         </nav>
 
-        <div className="relative mx-auto grid max-w-6xl gap-10 px-6 pb-24 pt-10 md:grid-cols-[1.1fr_0.9fr] md:pb-32 md:pt-20">
-          <div className="text-white">
-            <span className="inline-flex items-center rounded-full border border-white/40 bg-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur">
-              Peer-to-Peer Career Mentorship
-            </span>
-            <h1 className="mt-6 font-display text-4xl font-black leading-[1.05] tracking-tight md:text-6xl">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-6 pb-24 pt-16 md:grid-cols-[1.1fr_0.9fr] md:pb-32 md:pt-28">
+          <div className="text-center text-white md:text-left">
+            <FullCrest size={240} />
+            <h1 className="mt-6 font-display text-5xl font-black leading-[1.05] tracking-tight md:text-7xl">
               BYUI CAN
-              <span className="mt-2 block text-xl font-bold tracking-tight text-byui-blue-light md:text-2xl">
-                (Career Advancement Network)
-              </span>
             </h1>
-            <p className="mt-6 max-w-md text-lg font-medium text-white">
-              Find your mentor. Skip the luck. Sign up as a member, browse upperclassmen
-              in your major, and request a mentor in minutes.
+            <p className="mt-6 max-w-md text-lg font-medium text-white md:text-xl">
+              Choose a mentor. Build your network. Launch your Career. You CAN with
+              {" "}
+              <span className="whitespace-nowrap">&ldquo;BYUI CAN&rdquo;</span>
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-bold text-byui-blue-dark shadow-lift hover:bg-byui-blue-light/30 active:scale-[0.98] cursor-pointer"
@@ -112,13 +109,38 @@ export default async function LandingPage() {
               <p className="mt-2 text-sm text-slate-600">Three quick steps to your first mentor match.</p>
               <ul className="mt-5 space-y-3">
                 {[
-                  { n: 1, title: "Register as a member", body: "Major, expected graduation, career interests." },
-                  { n: 2, title: "Browse and request", body: "Filter by major, semester, and career interest." },
-                  { n: 3, title: "Meet and grow", body: "Contact unlocks on accept. Log every meeting." },
+                  {
+                    title: "Register as a member",
+                    body: "Major, expected graduation, career interests.",
+                  },
+                  {
+                    title: "Browse and request",
+                    body: "Search for mentors that align with your career.",
+                  },
+                  {
+                    title: "Network and grow",
+                    body: "Turn goals into results alongside your mentor.",
+                  },
                 ].map((s) => (
-                  <li key={s.n} className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-byui-blue text-xs font-black text-white">
-                      {s.n}
+                  <li
+                    key={s.title}
+                    className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3"
+                  >
+                    <span
+                      aria-hidden
+                      className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-byui-blue text-white"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={3}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M5 12.5 10 17.5 19 7.5" />
+                      </svg>
                     </span>
                     <div>
                       <p className="text-sm font-bold text-byui-blue-dark">{s.title}</p>
