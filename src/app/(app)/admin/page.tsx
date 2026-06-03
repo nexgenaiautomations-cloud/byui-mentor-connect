@@ -199,8 +199,7 @@ export default async function AdminPage() {
       )}
 
       <p className="text-xs text-slate-400">
-        Tip: searchable user lookup, charts, and pagination land in v2.{" "}
-        <Link href="/dashboard" className="text-navy-700 underline">Back to member view</Link>.
+        Tip: searchable user lookup, charts, and pagination land in v2.
       </p>
     </div>
   );

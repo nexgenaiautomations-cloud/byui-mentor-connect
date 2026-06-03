@@ -171,11 +171,14 @@ export default async function AnalyticsPage() {
      limit 8
   `);
 
+  // ORDER BY references the underlying column expression (not the alias) —
+  // Postgres treats column aliases inside CASE operands as input columns and
+  // throws "column \"label\" does not exist".
   const semesterDistribution = await db.execute(sql<{ label: string; value: number }>`
     select coalesce(semester_level, 'Unknown') as label, count(*)::int as value
       from "user"
      group by 1
-     order by case label
+     order by case coalesce(semester_level, 'Unknown')
                 when 'Freshman' then 1
                 when 'Sophomore' then 2
                 when 'Junior' then 3

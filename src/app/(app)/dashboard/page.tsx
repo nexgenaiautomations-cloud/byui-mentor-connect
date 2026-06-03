@@ -11,6 +11,9 @@ export default async function DashboardPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
+  // Admins (who aren't also mentors) don't get a member/mentor dashboard —
+  // their home is the program overview at /admin.
+  if (me.isAdmin && !me.isMentor) redirect("/admin");
 
   // Members still see their own pending/outgoing request counts. Mentors
   // never look at request status from the dashboard — that surface is gone.
