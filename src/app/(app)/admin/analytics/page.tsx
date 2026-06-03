@@ -213,19 +213,36 @@ export default async function AnalyticsPage() {
     })
     .from(sql`(select 1) as _t`);
 
-  // Top mentors by active mentees this period (vs capacity)
-  const topMentors = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      capacity: users.mentorCapacity,
-      active: sql<number>`(select count(*)::int from "match" m where m.mentor_id = ${users.id} and m.status = 'active')`,
-      lifetime: sql<number>`(select count(distinct m.mentee_id)::int from "match" m where m.mentor_id = ${users.id})`,
-    })
-    .from(users)
-    .where(eq(users.isMentor, true))
-    .orderBy(desc(sql`(select count(*)::int from "match" m where m.mentor_id = ${users.id} and m.status = 'active')`))
-    .limit(6);
+  // Top mentors by active mentees this period (vs capacity). Done as a single
+  // raw SQL aggregate so correlated subqueries in the ORDER BY don't trip
+  // Postgres' type resolver on the text mentor_id column.
+  const topMentorsRows = await db.execute(sql<{
+    id: string;
+    name: string | null;
+    capacity: number | null;
+    active: number;
+    lifetime: number;
+  }>`
+    select
+      u.id            as id,
+      u.name          as name,
+      u.mentor_capacity as capacity,
+      coalesce(sum(case when m.status = 'active' then 1 else 0 end), 0)::int as active,
+      coalesce(count(distinct m.mentee_id), 0)::int as lifetime
+    from "user" u
+    left join "match" m on m.mentor_id = u.id
+    where u.is_mentor = true
+    group by u.id, u.name, u.mentor_capacity
+    order by active desc, lifetime desc
+    limit 6
+  `);
+  const topMentors = topMentorsRows.rows as {
+    id: string;
+    name: string | null;
+    capacity: number | null;
+    active: number;
+    lifetime: number;
+  }[];
 
   // -------- Recent activity feed --------
   const recentRequests = await db
