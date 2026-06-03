@@ -75,8 +75,15 @@ export default async function LandingPage() {
         </nav>
 
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-6 pb-24 pt-16 md:grid-cols-[1.1fr_0.9fr] md:pb-32 md:pt-28">
-          <div className="text-center text-white md:text-left">
-            <FullCrest size={240} />
+          <div className="flex flex-col items-center text-center text-white md:items-start md:text-left">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/byuican-handshake-white.png"
+              alt="BYUI CAN handshake mark"
+              width={220}
+              height={220}
+              className="h-44 w-44 select-none md:h-56 md:w-56"
+            />
             <h1 className="mt-6 font-display text-5xl font-black leading-[1.05] tracking-tight md:text-7xl">
               BYUI CAN
             </h1>
