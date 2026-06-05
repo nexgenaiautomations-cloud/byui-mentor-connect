@@ -29,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen min-w-0 flex-col lg:pl-64">
         <TopBar user={user} />
         <main className="flex-1 p-2 pb-20 lg:p-6 lg:pb-8">
-          <div className="rounded-2xl bg-slate-50 px-4 py-5 shadow-lift ring-1 ring-byui-blue-light/70 lg:rounded-3xl lg:px-8 lg:py-6 lg:ring-2">
+          <div className="rounded-2xl bg-slate-50 px-4 py-5 shadow-lift lg:rounded-3xl lg:px-8 lg:py-6">
             <div className="mx-auto max-w-6xl">{children}</div>
           </div>
         </main>
