@@ -60,7 +60,7 @@ export default async function LandingPage() {
               Standards
             </a>
             <a href="#what" className="text-sm font-semibold text-white/85 hover:text-white">
-              What you get
+              Prophets&rsquo; &ldquo;Why&rdquo;
             </a>
           </div>
           <div className="flex items-center gap-2">
@@ -277,40 +277,47 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ──────────────────────── WHAT YOU GET ────────────────────────── */}
+      {/* ─────────────────────── PROPHETS' "WHY" ──────────────────────── */}
       <section id="what" className="bg-white px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <header className="text-center">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-byui-blue">
-              What you get
+              Prophets&rsquo; &ldquo;Why&rdquo;
             </p>
             <h2 className="mt-2 font-display text-3xl font-black text-byui-blue-dark md:text-4xl">
-              Built around the work, not the form.
+              BYUI CAN will grow your career
             </h2>
           </header>
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {[
               {
-                title: "Pick the right person",
-                body: "Filter mentors by major, semester level, and career interest. See slots-left so you don't waste a request on someone at capacity.",
+                name: "President Dallin H. Oaks",
+                quote:
+                  "Do not limit yourself to a grudging compliance with minimum requirements of attendance, assignments, and degrees.",
               },
               {
-                title: "Track every step",
-                body: "See where each request stands. Mentor contact unlocks the moment they accept.",
+                name: "President Henry B. Eyring",
+                quote:
+                  "All people are happier and feel more self-respect when they can provide for themselves and their family and then reach out to take care of others.",
               },
               {
-                title: "Stay accountable",
-                body: "Mentors log every meeting. Admins see aggregate progress on the analytics dashboard.",
+                name: "Elder David A. Bednar",
+                quote:
+                  "As learners, you and I are to act and be doers of the word and not simply hearers who are only acted upon. Are you and I agents who act... or are we waiting to be taught?",
               },
             ].map((c) => (
-              <div
-                key={c.title}
-                className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-slate-100"
+              <figure
+                key={c.name}
+                className="flex flex-col rounded-2xl bg-white p-6 shadow-soft ring-1 ring-slate-100"
               >
-                <p className="font-display text-lg font-bold text-byui-blue-dark">{c.title}</p>
-                <p className="mt-3 text-sm leading-6 text-slate-700">{c.body}</p>
-              </div>
+                <figcaption className="font-display text-lg font-bold text-byui-blue">
+                  {c.name}
+                </figcaption>
+                <blockquote className="mt-3 text-sm leading-6 text-slate-700">
+                  &ldquo;{c.quote}&rdquo;
+                </blockquote>
+              </figure>
             ))}
           </div>
         </div>
