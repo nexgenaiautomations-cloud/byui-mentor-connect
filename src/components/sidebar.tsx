@@ -63,8 +63,8 @@ export function Sidebar({ user }: { user: User }) {
 
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 z-10 h-screen w-64 flex-col text-white bg-gradient-to-b from-byui-blue-dark/55 via-byui-blue-dark/45 to-byui-blue-dark/40 backdrop-blur-[2px] border-r border-white/10">
-      <Link href="/dashboard" className="flex items-center gap-3 px-6 pt-7 pb-8 cursor-pointer">
-        <Logo size={44} />
+      <Link href="/dashboard" className="flex items-center gap-3 px-6 pt-5 pb-4 cursor-pointer">
+        <Logo size={40} />
         <div className="leading-tight">
           <p className="font-display text-sm font-black tracking-tight text-white">BYUI CAN</p>
           <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
@@ -73,19 +73,26 @@ export function Sidebar({ user }: { user: User }) {
         </div>
       </Link>
 
-      <nav className="flex-1 overflow-y-auto px-6">
-        <ul className="space-y-1.5">
-          {primary.map((item) => (
-            <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
-          ))}
-        </ul>
+      <nav className="flex-1 min-h-0 overflow-hidden px-6">
+        {primary.length > 0 && (
+          <ul className="space-y-1">
+            {primary.map((item) => (
+              <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
+            ))}
+          </ul>
+        )}
 
         {admin.length > 0 && (
           <>
-            <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">
+            <p
+              className={
+                (primary.length > 0 ? "mt-5" : "mt-0") +
+                " text-[10px] font-bold uppercase tracking-[0.18em] text-white/50"
+              }
+            >
               Admin
             </p>
-            <ul className="mt-2 space-y-1.5">
+            <ul className="mt-1 space-y-1">
               {admin.map((item) => (
                 <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
               ))}
@@ -94,7 +101,7 @@ export function Sidebar({ user }: { user: User }) {
         )}
       </nav>
 
-      <div className="border-t border-white/15 px-6 py-5">
+      <div className="border-t border-white/15 px-6 py-4">
         <Link
           href="/profile"
           className="flex items-center gap-3 cursor-pointer"
@@ -115,10 +122,10 @@ export function Sidebar({ user }: { user: User }) {
           </div>
         </Link>
         <InstallButton variant="sidebar" />
-        <form action={signOutAction} className="mt-3">
+        <form action={signOutAction} className="mt-2">
           <button
             type="submit"
-            className="w-full rounded-lg bg-byui-blue px-3 py-2 text-center text-xs font-bold text-white transition hover:bg-byui-blue-dark cursor-pointer"
+            className="w-full rounded-lg bg-byui-blue px-3 py-1.5 text-center text-xs font-bold text-white transition hover:bg-byui-blue-dark cursor-pointer"
           >
             Sign out →
           </button>
@@ -134,7 +141,7 @@ function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
       <Link
         href={item.href}
         className={
-          "block rounded-lg px-3 py-1.5 text-[15px] font-semibold tracking-tight transition cursor-pointer " +
+          "block rounded-lg px-3 py-1 text-[14px] font-semibold tracking-tight transition cursor-pointer " +
           (active
             ? "bg-white text-byui-blue-dark shadow-soft"
             : "bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20 hover:ring-white/40")
