@@ -75,8 +75,8 @@ export function Sidebar({ user }: { user: User }) {
         </div>
       </Link>
 
-      {/* pt-6 mirrors the main's lg:p-6 so the first nav item sits at the
-          same y as the top edge of the content card. */}
+      {/* pt-6 mirrors the main's lg:p-6 so the first nav tab sits at the
+          same y as the top edge of the white content card on the right. */}
       <nav className="flex-1 min-h-0 overflow-hidden px-6 pt-6">
         {primary.length > 0 && (
           <ul className="space-y-1">
@@ -87,21 +87,18 @@ export function Sidebar({ user }: { user: User }) {
         )}
 
         {admin.length > 0 && (
-          <>
-            <p
-              className={
-                (primary.length > 0 ? "mt-5" : "mt-0") +
-                " text-[10px] font-bold uppercase tracking-[0.18em] text-white/50"
-              }
-            >
-              Admin
-            </p>
-            <ul className="mt-1 space-y-1">
-              {admin.map((item) => (
-                <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
-              ))}
-            </ul>
-          </>
+          <ul
+            className={
+              "space-y-1 " +
+              (primary.length > 0
+                ? "mt-4 border-t border-white/15 pt-4"
+                : "")
+            }
+          >
+            {admin.map((item) => (
+              <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
+            ))}
+          </ul>
         )}
       </nav>
 
