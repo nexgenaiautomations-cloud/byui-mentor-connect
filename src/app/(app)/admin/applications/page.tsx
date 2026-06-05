@@ -92,7 +92,7 @@ export default async function AdminApplicationsPage() {
                   </dd>
                 </div>
               </dl>
-              <ApplicationActions id={a.id} />
+              <ApplicationActions id={a.id} applicantEmail={a.applicantEmail} />
             </div>
           ))}
         </div>

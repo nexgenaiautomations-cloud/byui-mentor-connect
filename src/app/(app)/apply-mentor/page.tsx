@@ -46,14 +46,28 @@ export default async function ApplyMentorPage() {
         <section>
           <h2 className="font-display text-lg font-bold text-navy-800">Your applications</h2>
           <ul className="mt-3 space-y-2">
-            {recent.map((r) => (
-              <li key={r.id} className="rounded-lg border border-slate-200 bg-white p-3 text-sm flex items-center justify-between">
-                <span className="text-slate-600">
-                  Submitted {new Date(r.submittedAt).toLocaleDateString()}
-                </span>
-                <span className="pill">{r.status}</span>
-              </li>
-            ))}
+            {recent.map((r) => {
+              // Surface a softer label to the applicant — never show the raw
+              // "rejected" status. Admins still see the real status in their
+              // own views.
+              const label =
+                r.status === "rejected"
+                  ? "Update sent"
+                  : r.status === "approved"
+                  ? "Approved"
+                  : "Pending review";
+              return (
+                <li
+                  key={r.id}
+                  className="rounded-lg border border-slate-200 bg-white p-3 text-sm flex items-center justify-between"
+                >
+                  <span className="text-slate-600">
+                    Submitted {new Date(r.submittedAt).toLocaleDateString()}
+                  </span>
+                  <span className="pill">{label}</span>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

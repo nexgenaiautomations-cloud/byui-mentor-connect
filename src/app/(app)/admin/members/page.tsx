@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { mentorApplications, users } from "@/db/schema";
 import { desc, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { MembersTable, type MemberRow } from "./members-table";
 
 export default async function AdminMembersPage() {
   const me = await getCurrentUser();
@@ -16,22 +17,82 @@ export default async function AdminMembersPage() {
       email: users.email,
       image: users.image,
       major: users.major,
+      minor: users.minor,
       semesterLevel: users.semesterLevel,
       expectedGraduation: users.expectedGraduation,
+      careerInterests: users.careerInterests,
       isMentor: users.isMentor,
       isAdmin: users.isAdmin,
+      mentorAvailable: users.mentorAvailable,
+      mentorCapacity: users.mentorCapacity,
       onboardedAt: users.onboardedAt,
       createdAt: users.createdAt,
       activeMatches: sql<number>`(select count(*)::int from "match" where (mentor_id = "user".id or mentee_id = "user".id) and status = 'active')`,
+      recentActivityCount: sql<number>`(select count(*)::int from "meeting_log" where (mentor_id = "user".id or mentee_id = "user".id) and created_at > now() - interval '90 days')`,
     })
     .from(users)
     .orderBy(desc(users.createdAt));
 
+  // Most recent application per user — we surface it on the profile modal so
+  // the admin gets the full picture without leaving the Members tab. Private
+  // mentor review notes are NOT selected here on purpose.
+  const apps = await db
+    .select({
+      userId: mentorApplications.userId,
+      status: mentorApplications.status,
+      submittedAt: mentorApplications.submittedAt,
+      reviewedAt: mentorApplications.reviewedAt,
+      motivation: mentorApplications.motivation,
+      informationalInterviews: mentorApplications.informationalInterviews,
+      internshipsCount: mentorApplications.internshipsCount,
+      capacity: mentorApplications.capacity,
+    })
+    .from(mentorApplications)
+    .orderBy(desc(mentorApplications.submittedAt));
+  const latestAppByUser = new Map<string, (typeof apps)[number]>();
+  for (const a of apps) {
+    if (!latestAppByUser.has(a.userId)) latestAppByUser.set(a.userId, a);
+  }
+
+  const memberRows: MemberRow[] = rows.map((u) => {
+    const app = latestAppByUser.get(u.id) ?? null;
+    return {
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      image: u.image,
+      major: u.major,
+      minor: u.minor,
+      semesterLevel: u.semesterLevel,
+      expectedGraduation: u.expectedGraduation,
+      careerInterests: u.careerInterests,
+      isMentor: u.isMentor,
+      isAdmin: u.isAdmin,
+      mentorAvailable: u.mentorAvailable,
+      mentorCapacity: u.mentorCapacity,
+      onboardedAt: u.onboardedAt ? u.onboardedAt.toISOString() : null,
+      createdAt: u.createdAt.toISOString(),
+      activeMatches: u.activeMatches,
+      recentActivityCount: u.recentActivityCount,
+      application: app
+        ? {
+            status: app.status,
+            submittedAt: app.submittedAt.toISOString(),
+            reviewedAt: app.reviewedAt ? app.reviewedAt.toISOString() : null,
+            motivation: app.motivation,
+            informationalInterviews: app.informationalInterviews,
+            internshipsCount: app.internshipsCount,
+            capacity: app.capacity,
+          }
+        : null,
+    };
+  });
+
   const counts = {
-    total: rows.length,
-    mentors: rows.filter((r) => r.isMentor).length,
-    admins: rows.filter((r) => r.isAdmin).length,
-    onboarded: rows.filter((r) => r.onboardedAt).length,
+    total: memberRows.length,
+    mentors: memberRows.filter((r) => r.isMentor).length,
+    admins: memberRows.filter((r) => r.isAdmin).length,
+    onboarded: memberRows.filter((r) => r.onboardedAt).length,
   };
 
   return (
@@ -44,96 +105,7 @@ export default async function AdminMembersPage() {
         </p>
       </header>
 
-      {/* Mobile: card per row */}
-      <div className="space-y-3 md:hidden">
-        {rows.map((u) => (
-          <div key={u.id} className="card !p-4">
-            <div className="flex items-start gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={u.image || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(u.name || u.email)}&backgroundColor=1B3A6B&textColor=ffffff`}
-                alt=""
-                className="h-11 w-11 rounded-full object-cover"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-navy-800">{u.name || "—"}</p>
-                <p className="truncate text-xs text-slate-500">{u.email}</p>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {u.isAdmin && <span className="pill bg-rose-50 text-rose-700 border-rose-100">Admin</span>}
-                  {u.isMentor && <span className="pill bg-emerald-50 text-emerald-700 border-emerald-100">Mentor</span>}
-                  {!u.isMentor && !u.isAdmin && <span className="pill">Member</span>}
-                </div>
-              </div>
-              <span className="text-xs font-semibold text-slate-500">{u.activeMatches} active</span>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 text-xs">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Major</p>
-                <p className="text-slate-700">{u.major || "—"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Semester · Grad</p>
-                <p className="text-slate-700">
-                  {u.semesterLevel || "—"}{u.expectedGraduation ? ` · ${u.expectedGraduation}` : ""}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Desktop: table */}
-      <div className="card hidden overflow-hidden p-0 md:block">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-100 text-sm">
-            <thead className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              <tr>
-                <th className="px-5 py-3">Member</th>
-                <th className="px-3 py-3">Major</th>
-                <th className="px-3 py-3">Semester</th>
-                <th className="px-3 py-3">Expected grad</th>
-                <th className="px-3 py-3">Role</th>
-                <th className="px-3 py-3">Active</th>
-                <th className="px-5 py-3">Joined</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {rows.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-50">
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={u.image || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(u.name || u.email)}&backgroundColor=1B3A6B&textColor=ffffff`}
-                        alt=""
-                        className="h-9 w-9 rounded-full object-cover"
-                      />
-                      <div>
-                        <p className="font-semibold text-navy-800">{u.name || "—"}</p>
-                        <p className="text-xs text-slate-500">{u.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 text-slate-700">{u.major || "—"}</td>
-                  <td className="px-3 py-3 text-slate-700">{u.semesterLevel || "—"}</td>
-                  <td className="px-3 py-3 text-slate-700">{u.expectedGraduation || "—"}</td>
-                  <td className="px-3 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {u.isAdmin && <span className="pill bg-rose-50 text-rose-700 border-rose-100">Admin</span>}
-                      {u.isMentor && <span className="pill bg-emerald-50 text-emerald-700 border-emerald-100">Mentor</span>}
-                      {!u.isMentor && !u.isAdmin && <span className="pill">Member</span>}
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 text-slate-700">{u.activeMatches}</td>
-                  <td className="px-5 py-3 text-xs text-slate-500">
-                    {new Date(u.createdAt).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <MembersTable rows={memberRows} />
     </div>
   );
 }

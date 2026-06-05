@@ -134,7 +134,7 @@ export default async function AdminPage() {
                     <span className="pill">Internships: {a.internshipsCount}</span>
                   )}
                 </div>
-                <ApplicationActions id={a.id} />
+                <ApplicationActions id={a.id} applicantEmail={a.applicantEmail} />
               </div>
             ))}
           </div>
