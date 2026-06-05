@@ -5,6 +5,12 @@ import { alias } from "drizzle-orm/pg-core";
 import { desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { StatTile } from "@/components/stat-card";
+import {
+  ActiveMatchesTable,
+  EndedMatchesTable,
+  type ActiveMatchRow,
+  type EndedMatchRow,
+} from "./matches-table";
 
 function daysSince(d: Date) {
   return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
@@ -42,6 +48,31 @@ export default async function AdminMatchesPage() {
   const stale = active.filter((r) => daysSince(r.lastActivityAt) > 30);
   const ended = rows.filter((r) => r.status !== "active");
 
+  const activeRows: ActiveMatchRow[] = active.map((m) => ({
+    id: m.id,
+    mentorName: m.mentorName,
+    mentorImage: m.mentorImage,
+    mentorEmail: m.mentorEmail,
+    menteeName: m.menteeName,
+    menteeImage: m.menteeImage,
+    menteeEmail: m.menteeEmail,
+    meetingCount: m.meetingCount,
+    startedAt: m.startedAt.toISOString(),
+    lastActivityAt: m.lastActivityAt.toISOString(),
+  }));
+
+  const endedRows: EndedMatchRow[] = ended.map((m) => ({
+    id: m.id,
+    status: m.status as "completed" | "cancelled",
+    endedAt: m.endedAt ? m.endedAt.toISOString() : null,
+    mentorName: m.mentorName,
+    mentorImage: m.mentorImage,
+    mentorEmail: m.mentorEmail,
+    menteeName: m.menteeName,
+    menteeImage: m.menteeImage,
+    menteeEmail: m.menteeEmail,
+  }));
+
   return (
     <div className="space-y-8">
       <header>
@@ -65,124 +96,15 @@ export default async function AdminMatchesPage() {
 
       <section>
         <h2 className="mb-3 font-display text-lg font-bold text-navy-800">Active</h2>
-        {active.length === 0 ? (
-          <p className="text-sm text-slate-500">No active matches yet.</p>
-        ) : (
-          <div className="card overflow-hidden p-0">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-100 text-sm">
-                <thead className="bg-slate-50 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3">Mentor</th>
-                    <th className="px-3 py-3">Mentee</th>
-                    <th className="px-3 py-3">Meetings</th>
-                    <th className="px-3 py-3">Started</th>
-                    <th className="px-5 py-3">Last activity</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {active.map((m) => {
-                    const inactive = daysSince(m.lastActivityAt);
-                    return (
-                      <tr key={m.id} className="hover:bg-slate-50">
-                        <td className="px-5 py-3">
-                          <PersonCell name={m.mentorName} image={m.mentorImage} email={m.mentorEmail} />
-                        </td>
-                        <td className="px-3 py-3">
-                          <PersonCell name={m.menteeName} image={m.menteeImage} email={m.menteeEmail} />
-                        </td>
-                        <td className="px-3 py-3 text-slate-700">{m.meetingCount}</td>
-                        <td className="px-3 py-3 text-xs text-slate-500">
-                          {new Date(m.startedAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-5 py-3">
-                          <span
-                            className={
-                              inactive > 30
-                                ? "pill-pending"
-                                : inactive > 14
-                                ? "pill bg-amber-50 text-amber-700 border-amber-200"
-                                : "pill-accepted"
-                            }
-                          >
-                            {inactive}d ago
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+        <ActiveMatchesTable rows={activeRows} />
       </section>
 
-      {ended.length > 0 && (
+      {endedRows.length > 0 && (
         <section>
           <h2 className="mb-3 font-display text-lg font-bold text-navy-800">Ended</h2>
-          <div className="card overflow-hidden p-0">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-100 text-sm">
-                <thead className="bg-slate-50 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3">Mentor</th>
-                    <th className="px-3 py-3">Mentee</th>
-                    <th className="px-3 py-3">Status</th>
-                    <th className="px-5 py-3">Ended</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {ended.map((m) => (
-                    <tr key={m.id} className="hover:bg-slate-50">
-                      <td className="px-5 py-3">
-                        <PersonCell name={m.mentorName} image={m.mentorImage} email={m.mentorEmail} />
-                      </td>
-                      <td className="px-3 py-3">
-                        <PersonCell name={m.menteeName} image={m.menteeImage} email={m.menteeEmail} />
-                      </td>
-                      <td className="px-3 py-3">
-                        <span className="pill-declined">{m.status}</span>
-                      </td>
-                      <td className="px-5 py-3 text-xs text-slate-500">
-                        {m.endedAt ? new Date(m.endedAt).toLocaleDateString() : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <EndedMatchesTable rows={endedRows} />
         </section>
       )}
-    </div>
-  );
-}
-
-function PersonCell({
-  name,
-  image,
-  email,
-}: {
-  name: string | null;
-  image: string | null;
-  email: string | null;
-}) {
-  return (
-    <div className="flex items-center gap-2.5">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={
-          image ||
-          `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name || email || "")}&backgroundColor=1B3A6B&textColor=ffffff`
-        }
-        alt=""
-        className="h-8 w-8 rounded-full object-cover"
-      />
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-navy-800">{name ?? "—"}</p>
-        <p className="truncate text-[11px] text-slate-500">{email}</p>
-      </div>
     </div>
   );
 }

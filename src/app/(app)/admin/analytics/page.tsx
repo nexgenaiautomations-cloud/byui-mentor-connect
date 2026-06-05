@@ -300,7 +300,6 @@ export default async function AnalyticsPage() {
         <div className="flex gap-2 text-xs">
           <Link href="/admin" className="btn-outline">Overview</Link>
           <Link href="/admin/meetings" className="btn-outline">Meetings</Link>
-          <Link href="/admin/feedback" className="btn-outline">Feedback</Link>
         </div>
       </header>
 

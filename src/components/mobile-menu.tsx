@@ -37,8 +37,8 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
       { href: "/admin/mentors", label: "Mentors" },
       { href: "/admin/applications", label: "Applications" },
       { href: "/admin/matches", label: "Matches" },
-      { href: "/admin/meetings", label: "Meetings" },
-      { href: "/admin/feedback", label: "Feedback" }
+      { href: "/admin/matchmaker", label: "Matchmaker" },
+      { href: "/admin/meetings", label: "Meetings" }
     );
   }
   return { primary, admin };
