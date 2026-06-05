@@ -62,7 +62,7 @@ export function Sidebar({ user }: { user: User }) {
   const { primary, admin } = buildNav(user);
 
   return (
-    <aside className="hidden lg:flex fixed left-0 top-0 z-10 h-screen w-64 flex-col text-white">
+    <aside className="hidden lg:flex fixed left-0 top-0 z-10 h-screen w-64 flex-col text-white bg-gradient-to-b from-byui-blue-dark/55 via-byui-blue-dark/45 to-byui-blue-dark/40 backdrop-blur-[2px] border-r border-white/10">
       <Link href="/dashboard" className="flex items-center gap-3 px-6 pt-7 pb-8 cursor-pointer">
         <Logo size={44} />
         <div className="leading-tight">
@@ -134,10 +134,10 @@ function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
       <Link
         href={item.href}
         className={
-          "block py-1.5 text-[15px] font-semibold tracking-tight transition cursor-pointer " +
+          "block rounded-lg px-3 py-1.5 text-[15px] font-semibold tracking-tight transition cursor-pointer " +
           (active
-            ? "text-byui-blue-light border-y border-byui-blue"
-            : "text-white/85 hover:text-white")
+            ? "bg-white text-byui-blue-dark shadow-soft"
+            : "bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20 hover:ring-white/40")
         }
       >
         {item.label}

@@ -41,36 +41,59 @@ function avatarUrl(name: string | null, email: string) {
   return `https://api.dicebear.com/9.x/initials/svg?seed=${seed}&backgroundColor=1B3A6B&textColor=ffffff`;
 }
 
+function GripIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      aria-hidden
+      fill="currentColor"
+    >
+      <circle cx="9" cy="6" r="1.4" />
+      <circle cx="15" cy="6" r="1.4" />
+      <circle cx="9" cy="12" r="1.4" />
+      <circle cx="15" cy="12" r="1.4" />
+      <circle cx="9" cy="18" r="1.4" />
+      <circle cx="15" cy="18" r="1.4" />
+    </svg>
+  );
+}
+
 export function MatchmakerBoard({
   mentees,
   mentors,
+  initialAssignments,
 }: {
   mentees: MenteeCard[];
   mentors: MentorCard[];
+  initialAssignments: Record<string, string>;
 }) {
   const router = useRouter();
-  // Local mutable copy so we can remove rows after a successful Match without
-  // a full server round-trip — refresh() runs in the background to resync.
   const [menteeList, setMenteeList] = useState(mentees);
-  // assignments: menteeId -> mentorId
-  const [assignments, setAssignments] = useState<Record<string, string>>({});
+  // assignments: menteeId -> mentorId. Seeded from the server-computed
+  // suggestion so the board opens already-populated.
+  const [assignments, setAssignments] =
+    useState<Record<string, string>>(initialAssignments);
   const [confirmAllOpen, setConfirmAllOpen] = useState(false);
-  const [busy, setBusy] = useState<string | null>(null); // menteeId or "all"
+  const [busy, setBusy] = useState<string | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
-  // Keep local list in sync when the server re-fetches (e.g. after refresh()).
+  // Server may re-fetch after a match — reapply the latest seeded suggestions
+  // for the rows still on the board, while preserving any manual edits the
+  // admin made for mentees that survived the refresh.
   useEffect(() => {
     setMenteeList(mentees);
     setAssignments((prev) => {
       const next: Record<string, string> = {};
       for (const m of mentees) {
         if (prev[m.id]) next[m.id] = prev[m.id];
+        else if (initialAssignments[m.id]) next[m.id] = initialAssignments[m.id];
       }
       return next;
     });
-  }, [mentees]);
+  }, [mentees, initialAssignments]);
 
   const mentorById = useMemo(() => {
     const map = new Map<string, MentorCard>();
@@ -79,15 +102,11 @@ export function MatchmakerBoard({
   }, [mentors]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
 
   function onDragStart(e: DragStartEvent) {
-    const id = String(e.active.id);
-    // Mentor pool ids are prefixed "pool:" — slot drags carry their mentee id
-    // in "slot:<menteeId>". We strip prefixes here so the overlay can find
-    // the mentor record.
-    setActiveDragId(id);
+    setActiveDragId(String(e.active.id));
   }
 
   function onDragEnd(e: DragEndEvent) {
@@ -95,7 +114,7 @@ export function MatchmakerBoard({
     const overId = e.over?.id ? String(e.over.id) : null;
     const activeId = String(e.active.id);
     if (!overId) return;
-    // Source mentor id
+
     let mentorId: string | null = null;
     let fromMenteeId: string | null = null;
     if (activeId.startsWith("pool:")) {
@@ -106,14 +125,12 @@ export function MatchmakerBoard({
     }
     if (!mentorId) return;
 
-    // Drop target: either a mentee slot or back into the pool.
     if (overId.startsWith("mentee:")) {
       const toMenteeId = overId.slice("mentee:".length);
+      if (fromMenteeId === toMenteeId) return;
       setAssignments((prev) => {
         const next = { ...prev };
-        if (fromMenteeId && fromMenteeId !== toMenteeId) {
-          delete next[fromMenteeId]; // moved across rows
-        }
+        if (fromMenteeId) delete next[fromMenteeId];
         next[toMenteeId] = mentorId!;
         return next;
       });
@@ -215,7 +232,6 @@ export function MatchmakerBoard({
     setTimeout(() => setFlash(null), 3500);
   }
 
-  // Lock scroll for Match All modal.
   useEffect(() => {
     if (!confirmAllOpen) return;
     const prev = document.body.style.overflow;
@@ -240,8 +256,10 @@ export function MatchmakerBoard({
 
   if (menteeList.length === 0) {
     return (
-      <div className="card text-center">
-        <p className="font-display text-lg font-bold text-byui-blue-dark">All matched up.</p>
+      <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-byui-blue-light/40">
+        <p className="font-display text-lg font-bold text-byui-blue-dark">
+          All matched up.
+        </p>
         <p className="mt-1 text-sm text-slate-600">
           No unassigned mentees right now. New members will appear here after they
           onboard.
@@ -254,7 +272,9 @@ export function MatchmakerBoard({
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-slate-600">
-          {readyToMatchCount} of {menteeList.length} ready to match.
+          <span className="font-bold text-byui-blue-dark">{readyToMatchCount}</span> of{" "}
+          {menteeList.length} ready to match
+          {readyToMatchCount > 0 ? " — review suggestions and adjust." : "."}
         </p>
         <button
           type="button"
@@ -279,8 +299,8 @@ export function MatchmakerBoard({
 
       <MentorPool mentors={mentors} />
 
-      <div className="rounded-2xl border border-slate-100 bg-white">
-        <div className="grid grid-cols-[1.1fr_1.3fr_0.8fr] gap-3 border-b border-slate-100 px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:grid-cols-[1fr_1.3fr_0.7fr]">
+      <div className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
+        <div className="grid grid-cols-[1.1fr_1.3fr_120px] gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:grid-cols-[1fr_1.3fr_120px]">
           <p>Unassigned Mentees</p>
           <p>Mentor Matches</p>
           <p className="text-right">Actions</p>
@@ -291,15 +311,17 @@ export function MatchmakerBoard({
             const assignedMentor = assignedMentorId
               ? mentorById.get(assignedMentorId)
               : undefined;
+            const matchTier = matchQuality(m, assignedMentor);
             return (
               <li
                 key={m.id}
-                className="grid grid-cols-[1.1fr_1.3fr_0.8fr] gap-3 px-4 py-4 md:grid-cols-[1fr_1.3fr_0.7fr]"
+                className="grid grid-cols-[1.1fr_1.3fr_120px] gap-3 px-4 py-4 md:grid-cols-[1fr_1.3fr_120px]"
               >
                 <MenteeRow mentee={m} />
                 <MentorSlot
                   menteeId={m.id}
                   mentor={assignedMentor}
+                  matchTier={matchTier}
                   onClear={() => clearSlot(m.id)}
                 />
                 <div className="flex items-center justify-end">
@@ -318,8 +340,12 @@ export function MatchmakerBoard({
         </ul>
       </div>
 
-      <DragOverlay>
-        {activeMentor ? <MentorCardView mentor={activeMentor} dragging /> : null}
+      <DragOverlay dropAnimation={null}>
+        {activeMentor ? (
+          <div className="w-72">
+            <MentorChip mentor={activeMentor} dragging />
+          </div>
+        ) : null}
       </DragOverlay>
 
       {confirmAllOpen && (
@@ -375,35 +401,54 @@ export function MatchmakerBoard({
   );
 }
 
+// Compute a human-readable tier so the UI can hint *why* a suggestion was made.
+function matchQuality(
+  mentee: MenteeCard,
+  mentor: MentorCard | undefined
+): null | { tier: "major" | "interest"; label: string } {
+  if (!mentor) return null;
+  if (mentee.major && mentor.major && mentee.major === mentor.major) {
+    return { tier: "major", label: "Same major" };
+  }
+  const interests = new Set((mentee.careerInterests ?? []).map((s) => s.toLowerCase()));
+  const overlap = mentor.topics.find((t) => interests.has(t.toLowerCase()));
+  if (overlap) return { tier: "interest", label: `Interest: ${overlap}` };
+  return null;
+}
+
 function MentorPool({ mentors }: { mentors: MentorCard[] }) {
   const { setNodeRef, isOver } = useDroppable({ id: "pool" });
   return (
+    // Sticky so the pool stays in view while the admin scrolls through
+    // mentee rows. top-0 sits flush under the sticky topbar which is also
+    // top-0; both are z-managed so the pool sits above the page content
+    // but below the topbar.
     <div
       ref={setNodeRef}
       className={
-        "rounded-2xl border-2 border-dashed p-4 transition " +
+        "sticky top-16 z-10 rounded-2xl bg-white p-3 shadow-soft ring-1 transition " +
         (isOver
-          ? "border-byui-blue bg-byui-blue-light/10"
-          : "border-slate-200 bg-slate-50")
+          ? "ring-2 ring-byui-blue"
+          : "ring-byui-blue-light/50")
       }
     >
-      <div className="mb-3 flex items-baseline justify-between">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+      <div className="mb-2 flex items-baseline justify-between">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
           Mentor pool
         </p>
-        <p className="text-xs text-slate-500">
-          Drag a mentor onto a mentee row. {mentors.length} available.
+        <p className="text-[11px] text-slate-500">
+          {mentors.length} available · drag onto a row
         </p>
       </div>
       {mentors.length === 0 ? (
-        <p className="text-sm text-slate-500">
+        <p className="rounded-lg bg-slate-50 px-3 py-4 text-center text-sm text-slate-500">
           No available mentors right now. Approve mentor applications to add to the
           pool.
         </p>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex gap-2 overflow-x-auto pb-1">
           {mentors.map((m) => (
-            <DraggableMentor key={m.id} mentor={m} dragId={`pool:${m.id}`} />
+            <DraggableMentor key={m.id} mentor={m} dragId={`pool:${m.id}`} compact />
           ))}
         </div>
       )}
@@ -414,54 +459,92 @@ function MentorPool({ mentors }: { mentors: MentorCard[] }) {
 function DraggableMentor({
   mentor,
   dragId,
+  compact = false,
 }: {
   mentor: MentorCard;
   dragId: string;
+  compact?: boolean;
 }) {
+  const disabled = mentor.slotsLeft <= 0;
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: dragId,
+    disabled,
   });
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
       className={
-        "cursor-grab touch-none select-none " +
-        (isDragging ? "opacity-30" : "")
+        (compact ? "w-60 shrink-0 " : "") +
+        (isDragging ? "opacity-30 " : "") +
+        "touch-none select-none"
       }
     >
-      <MentorCardView mentor={mentor} />
+      <MentorChip
+        mentor={mentor}
+        compact={compact}
+        disabled={disabled}
+        dragAttributes={attributes}
+        dragListeners={listeners}
+      />
     </div>
   );
 }
 
-function MentorCardView({
+function MentorChip({
   mentor,
   dragging = false,
+  compact = false,
+  disabled = false,
+  dragAttributes,
+  dragListeners,
 }: {
   mentor: MentorCard;
   dragging?: boolean;
+  compact?: boolean;
+  disabled?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dragAttributes?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dragListeners?: any;
 }) {
   return (
     <div
       className={
-        "flex items-start gap-3 rounded-xl border bg-white px-3 py-2.5 shadow-soft transition " +
-        (dragging ? "border-byui-blue ring-2 ring-byui-blue" : "border-slate-200")
+        "flex items-center gap-2 rounded-lg border bg-white px-2 py-2 transition " +
+        (dragging
+          ? "border-byui-blue shadow-lift ring-2 ring-byui-blue"
+          : disabled
+          ? "border-slate-200 opacity-50"
+          : "border-slate-200 hover:border-byui-blue-light")
       }
     >
+      <button
+        type="button"
+        {...(disabled ? {} : dragAttributes)}
+        {...(disabled ? {} : dragListeners)}
+        aria-label={disabled ? "Mentor at capacity" : "Drag mentor"}
+        disabled={disabled}
+        className={
+          "grid h-7 w-5 shrink-0 place-items-center rounded text-slate-400 " +
+          (disabled
+            ? "cursor-not-allowed"
+            : "cursor-grab active:cursor-grabbing hover:bg-slate-100 hover:text-slate-600")
+        }
+      >
+        <GripIcon className="h-4 w-4" />
+      </button>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={mentor.image || avatarUrl(mentor.name, mentor.email)}
         alt=""
-        className="h-9 w-9 shrink-0 rounded-full object-cover"
+        className="h-8 w-8 shrink-0 rounded-full object-cover"
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold text-byui-blue-dark">
+        <p className="truncate text-[13px] font-bold text-byui-blue-dark">
           {mentor.name ?? "Mentor"}
         </p>
         <p className="truncate text-[11px] text-slate-500">{mentor.major ?? "—"}</p>
-        {mentor.topics.length > 0 && (
+        {!compact && mentor.topics.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
             {mentor.topics.slice(0, 3).map((t) => (
               <span
@@ -474,18 +557,17 @@ function MentorCardView({
           </div>
         )}
       </div>
-      <div className="text-right">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-          Slots
-        </p>
-        <p
-          className={
-            "font-display text-sm font-bold " +
-            (mentor.slotsLeft === 0 ? "text-red-600" : "text-byui-blue-dark")
-          }
-        >
-          {mentor.slotsLeft}/{mentor.capacity}
-        </p>
+      <div
+        className={
+          "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold " +
+          (disabled
+            ? "bg-slate-100 text-slate-500"
+            : mentor.slotsLeft === 1
+            ? "bg-amber-50 text-amber-700"
+            : "bg-emerald-50 text-emerald-700")
+        }
+      >
+        {mentor.slotsLeft}/{mentor.capacity}
       </div>
     </div>
   );
@@ -529,10 +611,12 @@ function MenteeRow({ mentee }: { mentee: MenteeCard }) {
 function MentorSlot({
   menteeId,
   mentor,
+  matchTier,
   onClear,
 }: {
   menteeId: string;
   mentor: MentorCard | undefined;
+  matchTier: ReturnType<typeof matchQuality>;
   onClear: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `mentee:${menteeId}` });
@@ -540,24 +624,36 @@ function MentorSlot({
     <div
       ref={setNodeRef}
       className={
-        "min-h-[72px] rounded-xl border-2 border-dashed p-2 transition " +
+        "min-h-[72px] rounded-xl p-2 transition " +
         (isOver
-          ? "border-byui-blue bg-byui-blue-light/15"
+          ? "bg-byui-blue-light/30 ring-2 ring-byui-blue"
           : mentor
-          ? "border-byui-blue-light bg-byui-blue-light/10"
-          : "border-slate-200 bg-slate-50")
+          ? "bg-white ring-1 ring-slate-200"
+          : "bg-slate-50 ring-1 ring-dashed ring-slate-300")
       }
     >
       {mentor ? (
         <div className="flex items-start gap-2">
           <div className="flex-1">
             <DraggableMentor mentor={mentor} dragId={`slot:${menteeId}`} />
+            {matchTier && (
+              <p
+                className={
+                  "mt-1 px-1 text-[10px] font-semibold " +
+                  (matchTier.tier === "major"
+                    ? "text-byui-blue"
+                    : "text-slate-500")
+                }
+              >
+                ↳ {matchTier.label}
+              </p>
+            )}
           </div>
           <button
             type="button"
             onClick={onClear}
             aria-label="Remove mentor"
-            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-white hover:text-slate-700 cursor-pointer"
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
           >
             <svg
               viewBox="0 0 24 24"
