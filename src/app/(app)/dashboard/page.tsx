@@ -78,7 +78,6 @@ export default async function DashboardPage() {
     meetingsLogged: number;
     totalMinutes: number;
     careerAccomplishments: number;
-    avgRating: number | null;
     recentActivities: {
       id: string;
       menteeName: string | null;
@@ -106,12 +105,6 @@ export default async function DashboardPage() {
       })
       .from(sql`(select 1) as _t`);
 
-    const [ratingRow] = await db
-      .select({
-        avg: sql<number | null>`(select avg(rating)::numeric(10,2) from "monthly_feedback" fb where fb.submitted_by_role = 'mentee' and fb.match_id in (select id from "match" where mentor_id = ${me.id}))`,
-      })
-      .from(sql`(select 1) as _t`);
-
     const recentActivityMentee = alias(users, "recent_activity_mentee");
     const recentActivities = await db
       .select({
@@ -134,7 +127,6 @@ export default async function DashboardPage() {
       meetingsLogged: counts?.meetingsLogged ?? 0,
       totalMinutes: counts?.totalMinutes ?? 0,
       careerAccomplishments: counts?.careerAccomplishments ?? 0,
-      avgRating: ratingRow?.avg ? Number(ratingRow.avg) : null,
       recentActivities,
     };
   }
@@ -242,37 +234,28 @@ export default async function DashboardPage() {
 
       {impact && (
         <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-byui-blue-light/40 md:p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-byui-blue">Your impact</p>
-              <h2 className="mt-1 font-display text-2xl font-black text-byui-blue-dark">
-                {impact.menteesHelped === 0
-                  ? "Ready for your first mentee?"
-                  : (() => {
-                      const m = impact.menteesHelped;
-                      const a = impact.careerAccomplishments;
-                      if (a === 0) {
-                        return m === 1
-                          ? "You've helped 1 mentee so far."
-                          : `You've helped ${m} mentees so far.`;
-                      }
-                      const menteeWord = m === 1 ? "mentee" : "mentees";
-                      const accWord = a === 1 ? "career accomplishment" : "career accomplishments";
-                      return `You've helped ${m} ${menteeWord} and completed ${a} ${accWord} together.`;
-                    })()}
-              </h2>
-              <p className="mt-1 max-w-prose text-sm text-slate-600">
-                Every conversation, resume review, mock interview, and connection helps move a student
-                closer to their career goals.
-              </p>
-            </div>
-            {impact.avgRating !== null && (
-              <div className="rounded-2xl bg-byui-blue-light/20 px-5 py-4 text-center ring-1 ring-byui-blue-light/50">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-byui-blue-dark">Avg rating</p>
-                <p className="mt-1 font-display text-3xl font-black text-byui-blue-dark">{impact.avgRating.toFixed(1)}</p>
-                <p className="text-[10px] text-byui-blue">from mentee feedback</p>
-              </div>
-            )}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-byui-blue">Your impact</p>
+            <h2 className="mt-1 font-display text-2xl font-black text-byui-blue-dark">
+              {impact.menteesHelped === 0
+                ? "Ready for your first mentee?"
+                : (() => {
+                    const m = impact.menteesHelped;
+                    const a = impact.careerAccomplishments;
+                    if (a === 0) {
+                      return m === 1
+                        ? "You've helped 1 mentee so far."
+                        : `You've helped ${m} mentees so far.`;
+                    }
+                    const menteeWord = m === 1 ? "mentee" : "mentees";
+                    const accWord = a === 1 ? "career accomplishment" : "career accomplishments";
+                    return `You've helped ${m} ${menteeWord} and completed ${a} ${accWord} together.`;
+                  })()}
+            </h2>
+            <p className="mt-1 max-w-prose text-sm text-slate-600">
+              Every conversation, resume review, mock interview, and connection helps move a student
+              closer to their career goals.
+            </p>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-slate-100 p-3">

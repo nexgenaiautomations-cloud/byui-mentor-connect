@@ -7,6 +7,20 @@ import {
   OTHER_ACCOMPLISHMENT,
 } from "@/lib/possible-actions";
 
+const CELEBRATION_ACCOMPLISHMENTS = [
+  "My mentee got an internship offer",
+  "My mentee got a career-related, part-time job offer",
+  "My mentee got a career-related, full-time job offer",
+];
+
+async function celebrate() {
+  const confetti = (await import("canvas-confetti")).default;
+  confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+  setTimeout(() => {
+    confetti({ particleCount: 60, spread: 100, startVelocity: 35, origin: { y: 0.7 } });
+  }, 220);
+}
+
 type Match = {
   id: string;
   menteeName: string | null;
@@ -107,6 +121,9 @@ export function LogMeetingForm({
     setSubmitting(true);
     setError(null);
     const checked = [...accomplishments];
+    const shouldCelebrate = checked.some((a) =>
+      CELEBRATION_ACCOMPLISHMENTS.includes(a)
+    );
     // Replace the "Other" sentinel with the free-text the mentor typed so the
     // saved log carries the actual thing they did, not a placeholder.
     const accomplishmentList = checked.map((a) =>
@@ -142,6 +159,9 @@ export function LogMeetingForm({
     setNext("");
     setMeetingType("");
     setDuration("");
+    if (shouldCelebrate) {
+      void celebrate();
+    }
     router.refresh();
     setTimeout(() => setSaved(false), 2500);
   }
