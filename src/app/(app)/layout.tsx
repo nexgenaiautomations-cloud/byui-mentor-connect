@@ -9,15 +9,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user) redirect("/login");
   return (
     <div className="relative min-h-screen">
-      {/* Full-viewport clock tower bg. Anchored so the tower lands inside
-          the sidebar column (left). */}
+      {/* Full-viewport Grand Teton bg with a soft brand-blue overlay baked in.
+          Anchored toward the top so the summit clears the white content card. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/byui-bg.jpg"
+        src="/grand-teton.jpg"
         alt=""
         aria-hidden
         className="fixed inset-0 -z-10 h-full w-full object-cover"
-        style={{ objectPosition: "12% center" }}
+        style={{ objectPosition: "center top" }}
       />
 
       {user.isMentor && <PendingRequestBanner userId={user.id} />}
@@ -29,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen min-w-0 flex-col lg:pl-64">
         <TopBar user={user} />
         <main className="flex-1 p-2 pb-20 lg:p-6 lg:pb-8">
-          <div className="rounded-2xl bg-slate-50 px-4 py-5 ring-2 ring-gold-400 lg:rounded-3xl lg:px-8 lg:py-6 lg:ring-4">
+          <div className="rounded-2xl bg-slate-50 px-4 py-5 ring-1 ring-byui-blue-light/70 lg:rounded-3xl lg:px-8 lg:py-6 lg:ring-2">
             <div className="mx-auto max-w-6xl">{children}</div>
           </div>
         </main>
