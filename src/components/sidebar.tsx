@@ -63,8 +63,10 @@ export function Sidebar({ user }: { user: User }) {
 
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 z-10 h-screen w-64 flex-col text-white bg-gradient-to-b from-byui-blue-dark/55 via-byui-blue-dark/45 to-byui-blue-dark/40 backdrop-blur-[2px] border-r border-white/10">
-      <Link href="/dashboard" className="flex items-center gap-3 px-6 pt-5 pb-4 cursor-pointer">
-        <Logo size={40} />
+      {/* Logo block matches the topbar height (h-16) so the nav below lines
+          up with the white content card on the right. */}
+      <Link href="/dashboard" className="flex h-16 items-center gap-3 px-6 cursor-pointer">
+        <Logo size={52} />
         <div className="leading-tight">
           <p className="font-display text-sm font-black tracking-tight text-white">BYUI CAN</p>
           <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
@@ -73,7 +75,9 @@ export function Sidebar({ user }: { user: User }) {
         </div>
       </Link>
 
-      <nav className="flex-1 min-h-0 overflow-hidden px-6">
+      {/* pt-6 mirrors the main's lg:p-6 so the first nav item sits at the
+          same y as the top edge of the content card. */}
+      <nav className="flex-1 min-h-0 overflow-hidden px-6 pt-6">
         {primary.length > 0 && (
           <ul className="space-y-1">
             {primary.map((item) => (
