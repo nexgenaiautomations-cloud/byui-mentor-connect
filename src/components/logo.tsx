@@ -13,12 +13,12 @@ export function Logo({
     <span className={`inline-flex items-center gap-2 ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/byuican-icon.png"
+        src="/byuican-handshake-white.png"
         alt="BYUI CAN — Career Advancement Network"
         width={size}
         height={size}
         style={{ width: size, height: size }}
-        className="select-none rounded-xl shadow-sm ring-1 ring-white/20"
+        className="select-none"
       />
       {withText && (
         <span className="leading-tight">

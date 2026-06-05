@@ -17,7 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         alt=""
         aria-hidden
         className="fixed inset-0 -z-10 h-full w-full object-cover"
-        style={{ objectPosition: "center top" }}
+        style={{ objectPosition: "36% top" }}
       />
 
       {user.isMentor && <PendingRequestBanner userId={user.id} />}
@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Right column — offset for the pinned sidebar on lg+ */}
       <div className="flex min-h-screen min-w-0 flex-col lg:pl-64">
         <TopBar user={user} />
-        <main className="flex-1 px-2 pt-28 pb-20 lg:px-6 lg:pt-56 lg:pb-8">
+        <main className="flex-1 p-2 pb-20 lg:p-6 lg:pb-8">
           <div className="rounded-2xl bg-slate-50 px-4 py-5 shadow-lift ring-1 ring-byui-blue-light/70 lg:rounded-3xl lg:px-8 lg:py-6 lg:ring-2">
             <div className="mx-auto max-w-6xl">{children}</div>
           </div>
