@@ -99,12 +99,12 @@ export default async function LandingPage() {
               >
                 Get started →
               </Link>
-              <a
-                href="#why"
+              <Link
+                href="/login"
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/50 bg-white/15 px-6 py-3 text-base font-semibold text-white backdrop-blur hover:bg-white/25 cursor-pointer"
               >
-                Why BYUI CAN
-              </a>
+                Log in
+              </Link>
             </div>
             <p className="mt-4 text-xs font-medium text-white/80">Only @byui.edu addresses can register.</p>
           </div>

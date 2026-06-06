@@ -578,7 +578,7 @@ function MoMTile({
         {valueSuffix}
       </p>
       <div className="mt-1">
-        <MonthlyLine points={series} color={color} height={48} />
+        <MonthlyLine points={series} color={color} compact />
       </div>
     </div>
   );
