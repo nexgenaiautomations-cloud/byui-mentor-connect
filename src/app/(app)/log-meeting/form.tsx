@@ -43,11 +43,19 @@ type MentorProps = {
   mode: "mentor";
   matches: Match[];
   initialMatchId?: string;
+  // Controlled override: when present, the form is driven by the parent
+  // (used by MentorWorkspace so the activity panel and the form share
+  // a single selected mentee).
+  selectedMatchId?: string;
+  onMatchIdChange?: (id: string) => void;
+  // Fires after a successful save so the parent can refresh its own data.
+  onSaved?: () => void;
 };
 
 type MenteeProps = {
   mode: "mentee";
   hasMentor: boolean;
+  onSaved?: () => void;
 };
 
 export function LogActivityForm(props: MentorProps | MenteeProps) {
@@ -59,7 +67,13 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
       ? props.initialMatchId
       : matches[0]?.id ?? "";
 
-  const [matchId, setMatchId] = useState(preselect);
+  const [internalMatchId, setInternalMatchId] = useState(preselect);
+  const isControlled = isMentor && typeof props.selectedMatchId === "string";
+  const matchId = isControlled ? (props.selectedMatchId as string) : internalMatchId;
+  const setMatchId = (id: string) => {
+    if (isControlled && isMentor) props.onMatchIdChange?.(id);
+    else setInternalMatchId(id);
+  };
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [meetingType, setMeetingType] = useState<string>("");
   const [duration, setDuration] = useState<string>("");
@@ -164,6 +178,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
       void celebrate();
     }
     router.refresh();
+    props.onSaved?.();
     setTimeout(() => {
       setSaved(false);
       setNewlyEarned([]);

@@ -6,6 +6,7 @@ import { and, desc, eq, or } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { getStudentKpis } from "@/lib/kpis";
 import { LogActivityForm } from "./form";
+import { MentorWorkspace } from "./mentor-workspace";
 import { KpiStrip } from "@/components/kpi-strip";
 
 export default async function LogActivityPage({
@@ -36,23 +37,6 @@ export default async function LogActivityPage({
       .innerJoin(mentee, eq(mentee.id, matches.menteeId))
       .where(and(eq(matches.mentorId, me.id), eq(matches.status, "active")));
 
-    const recentMentee = alias(users, "recent_mentee_u");
-    const recent = await db
-      .select({
-        id: meetingLogs.id,
-        meetingDate: meetingLogs.meetingDate,
-        meetingType: meetingLogs.meetingType,
-        durationMinutes: meetingLogs.durationMinutes,
-        topicsDiscussed: meetingLogs.topicsDiscussed,
-        menteeName: recentMentee.name,
-        isSystemGenerated: meetingLogs.isSystemGenerated,
-      })
-      .from(meetingLogs)
-      .innerJoin(recentMentee, eq(recentMentee.id, meetingLogs.menteeId))
-      .where(eq(meetingLogs.mentorId, me.id))
-      .orderBy(desc(meetingLogs.meetingDate), desc(meetingLogs.createdAt))
-      .limit(5);
-
     return (
       <div className="space-y-8">
         <header>
@@ -63,28 +47,13 @@ export default async function LogActivityPage({
             Log an Activity
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            After every meeting, call, or career event together, capture what happened.
+            Capture a new session on the left. The panel on the right shows the
+            selected mentee&apos;s full activity history — including what they
+            logged themselves — and lets you edit any entry.
           </p>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <div className="card">
-            {myMatches.length === 0 ? (
-              <p className="text-sm text-slate-500">
-                You don&apos;t have any active mentees yet. Once a mentee&apos;s request
-                is accepted, log activities here.
-              </p>
-            ) : (
-              <LogActivityForm
-                mode="mentor"
-                matches={myMatches}
-                initialMatchId={preselectMatchId}
-              />
-            )}
-          </div>
-
-          <RecentList recent={recent} />
-        </div>
+        <MentorWorkspace matches={myMatches} initialMatchId={preselectMatchId} />
       </div>
     );
   }
