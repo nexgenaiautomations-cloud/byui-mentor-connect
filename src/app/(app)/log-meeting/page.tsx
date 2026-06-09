@@ -38,7 +38,7 @@ export default async function LogActivityPage({
       .where(and(eq(matches.mentorId, me.id), eq(matches.status, "active")));
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-6">
         <header>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Mentor tools
@@ -52,6 +52,8 @@ export default async function LogActivityPage({
             logged themselves — and lets you edit any entry.
           </p>
         </header>
+
+        <LoggingGuidance role="mentor" />
 
         <MentorWorkspace matches={myMatches} initialMatchId={preselectMatchId} />
       </div>
@@ -106,6 +108,8 @@ export default async function LogActivityPage({
 
       <KpiStrip kpis={kpis} />
 
+      <LoggingGuidance role="mentee" />
+
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="card">
           {activeMatch ? (
@@ -127,6 +131,42 @@ export default async function LogActivityPage({
 
         <RecentList recent={myRecent} showAuthor={false} />
       </div>
+    </div>
+  );
+}
+
+// Top-of-page bubble explaining who logs what. Slightly different copy per
+// role so the lead sentence is about the person reading it.
+function LoggingGuidance({ role }: { role: "mentor" | "mentee" }) {
+  return (
+    <div
+      role="note"
+      className="flex items-start gap-3 rounded-2xl border border-byui-blue-light/60 bg-byui-blue-light/15 p-3 sm:p-4"
+    >
+      <span
+        aria-hidden
+        className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-byui-blue text-white"
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 8.5h.01M11 12h1v4h1" />
+        </svg>
+      </span>
+      <p className="text-xs leading-snug text-byui-blue-dark sm:text-sm">
+        {role === "mentor" ? (
+          <>
+            <strong>Mentors log only what happens in a meeting</strong> with
+            their mentee. Your mentee logs everything they do on their own
+            outside of meetings.
+          </>
+        ) : (
+          <>
+            <strong>You log everything you do outside of meetings</strong> —
+            resumes, applications, career chats, conferences. Your mentor logs
+            anything you do together in a meeting.
+          </>
+        )}
+      </p>
     </div>
   );
 }

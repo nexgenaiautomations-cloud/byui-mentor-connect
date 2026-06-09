@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { matches, requests, users } from "@/db/schema";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
-import { RequestButton } from "./request-button";
 import { EmptyState } from "@/components/empty-state";
 import { MajorFilter } from "./major-filter";
+import { MentorProfileButton } from "./profile-modal";
 
 export default async function MentorsPage({
   searchParams,
@@ -56,6 +56,25 @@ export default async function MentorsPage({
     })
     .from(users)
     .where(and(...conditions));
+
+  // Pending requests I've already sent — surfaced on cards as "Requested".
+  const myReqs = await db
+    .select({ mentorId: requests.mentorId, status: requests.status })
+    .from(requests)
+    .where(
+      and(
+        eq(requests.menteeId, me.id),
+        inArray(requests.status, ["pending"])
+      )
+    );
+  const requestedSet = new Set(myReqs.map((r) => r.mentorId));
+
+  // Active matches — if a mentor is already mine, show "Already your mentor".
+  const myMatches = await db
+    .select({ mentorId: matches.mentorId })
+    .from(matches)
+    .where(and(eq(matches.menteeId, me.id), eq(matches.status, "active")));
+  const matchedSet = new Set(myMatches.map((r) => r.mentorId));
 
   const myInterests = new Set(me.careerInterests ?? []);
   const myMajor = me.major?.toLowerCase().trim() ?? "";
@@ -116,7 +135,18 @@ export default async function MentorsPage({
               </div>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {recommended.map((m) => (
-                  <MentorCard key={m.id} mentor={m} highlight />
+                  <MentorCard
+                    key={m.id}
+                    mentor={m}
+                    highlight
+                    myStatus={
+                      matchedSet.has(m.id)
+                        ? "accepted"
+                        : requestedSet.has(m.id)
+                          ? "pending"
+                          : undefined
+                    }
+                  />
                 ))}
               </div>
             </section>
@@ -129,7 +159,17 @@ export default async function MentorsPage({
               </h2>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {others.map((m) => (
-                  <MentorCard key={m.id} mentor={m} />
+                  <MentorCard
+                    key={m.id}
+                    mentor={m}
+                    myStatus={
+                      matchedSet.has(m.id)
+                        ? "accepted"
+                        : requestedSet.has(m.id)
+                          ? "pending"
+                          : undefined
+                    }
+                  />
                 ))}
               </div>
             </section>
@@ -182,7 +222,15 @@ type Mentor = {
   sameMajor: number;
 };
 
-function MentorCard({ mentor: m, highlight }: { mentor: Mentor; highlight?: boolean }) {
+function MentorCard({
+  mentor: m,
+  highlight,
+  myStatus,
+}: {
+  mentor: Mentor;
+  highlight?: boolean;
+  myStatus?: "pending" | "accepted";
+}) {
   return (
     <article
       className={
@@ -233,11 +281,29 @@ function MentorCard({ mentor: m, highlight }: { mentor: Mentor; highlight?: bool
         </div>
       )}
 
-      <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3">
-        <p className={`text-xs font-bold ${m.slotsLeft > 0 ? "text-emerald-700" : "text-slate-400"}`}>
-          {m.slotsLeft > 0 ? `${m.slotsLeft} of ${m.mentorCapacity} spots left` : "At capacity"}
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+        <p
+          className={
+            "text-xs font-bold " +
+            (m.slotsLeft > 0 ? "text-emerald-700" : "text-slate-400")
+          }
+        >
+          {m.slotsLeft > 0
+            ? `${m.slotsLeft} of ${m.mentorCapacity} spots left`
+            : "At capacity"}
         </p>
-        <RequestButton mentorId={m.id} mentorName={m.name} disabled={m.slotsLeft <= 0} />
+        <div className="flex flex-wrap items-center gap-2">
+          {myStatus === "accepted" ? (
+            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-200">
+              ✓ Already your mentor
+            </span>
+          ) : myStatus === "pending" ? (
+            <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-amber-800 ring-1 ring-amber-200">
+              ✓ Requested · waiting
+            </span>
+          ) : null}
+          <MentorProfileButton mentor={m} myStatus={myStatus} />
+        </div>
       </div>
     </article>
   );

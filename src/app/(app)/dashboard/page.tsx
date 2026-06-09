@@ -218,16 +218,17 @@ export default async function DashboardPage() {
             )}
           </div>
         </div>
-        <p className="mt-2 max-w-xl text-xs text-byui-blue-light">
-          {me.isMentor
-            ? "You're an approved mentor. Every conversation, resume review, and connection moves a student closer to their career."
-            : `${mentorCount?.count ?? 0} mentors are accepting requests right now.`}
-        </p>
+        {me.isMentor && (
+          <p className="mt-2 max-w-xl text-xs text-byui-blue-light">
+            You&apos;re an approved mentor. Every conversation, resume review, and
+            connection moves a student closer to their career.
+          </p>
+        )}
       </section>
 
       {studentKpis && <KpiStrip kpis={studentKpis} />}
 
-      {me.isMentor && impact ? (
+      {me.isMentor && impact && (
         <section className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
           <StatTile
             label="People Helped"
@@ -248,30 +249,6 @@ export default async function DashboardPage() {
             value={impact.meetingsLogged}
             hint="Career conversations recorded"
             href="/log-meeting"
-            tone="navy"
-          />
-        </section>
-      ) : (
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-          <StatTile
-            label="My mentors"
-            value={activeMatches.length}
-            hint={activeMatches.length ? "View contact info" : "Find your first mentor"}
-            href="/matches"
-            tone="emerald"
-          />
-          <StatTile
-            label="Pending requests"
-            value={sentByMe.filter((r) => r.status === "pending").length}
-            hint="See where each request stands"
-            href="/matches"
-            tone="navy"
-          />
-          <StatTile
-            label="Mentors available"
-            value={mentorCount?.count ?? 0}
-            hint="Filter by major and interest"
-            href="/mentors"
             tone="navy"
           />
         </section>
