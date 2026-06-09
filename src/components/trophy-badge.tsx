@@ -31,6 +31,7 @@ const ICON_BY_KEY: Record<string, Variant> = {
   conversation_builder: "chat",
   career_momentum: "star",
   industry_breakthrough: "briefcase",
+  profile_complete: "doc",
 };
 
 function pickVariant(key: string): Variant {

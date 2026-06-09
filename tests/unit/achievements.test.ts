@@ -14,7 +14,7 @@ function log(opts: Partial<LogForAchievement> = {}): LogForAchievement {
 }
 
 describe("ACHIEVEMENTS catalogue", () => {
-  it("has exactly the 14 keys spec'd", () => {
+  it("has exactly the 15 keys spec'd", () => {
     expect(ACHIEVEMENTS.map((a) => a.key).sort()).toEqual(
       [
         "first_career_task",
@@ -31,6 +31,7 @@ describe("ACHIEVEMENTS catalogue", () => {
         "conversation_builder",
         "career_momentum",
         "industry_breakthrough",
+        "profile_complete",
       ].sort()
     );
   });
@@ -185,5 +186,50 @@ describe("evaluateAchievementSet", () => {
       log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 9) }),
     ]);
     expect(both.has("career_momentum")).toBe(true);
+  });
+
+  it("profile_complete requires name + major + at least one career interest", () => {
+    const noProfile = evaluateAchievementSet([]);
+    expect(noProfile.has("profile_complete")).toBe(false);
+
+    const empty = evaluateAchievementSet([], {
+      firstName: null,
+      lastName: null,
+      major: null,
+      image: null,
+      bio: null,
+      careerInterests: null,
+    });
+    expect(empty.has("profile_complete")).toBe(false);
+
+    const partialName = evaluateAchievementSet([], {
+      firstName: "Mason",
+      lastName: null,
+      major: "Marketing",
+      image: null,
+      bio: null,
+      careerInterests: ["Brand Management — Consumer Marketing"],
+    });
+    expect(partialName.has("profile_complete")).toBe(false);
+
+    const noInterest = evaluateAchievementSet([], {
+      firstName: "Mason",
+      lastName: "Member",
+      major: "Marketing",
+      image: null,
+      bio: null,
+      careerInterests: [],
+    });
+    expect(noInterest.has("profile_complete")).toBe(false);
+
+    const filledOut = evaluateAchievementSet([], {
+      firstName: "Mason",
+      lastName: "Member",
+      major: "Marketing",
+      image: null,
+      bio: null,
+      careerInterests: ["Brand Management — Consumer Marketing"],
+    });
+    expect(filledOut.has("profile_complete")).toBe(true);
   });
 });

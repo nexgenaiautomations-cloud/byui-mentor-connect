@@ -22,6 +22,40 @@ function dicebearUrl(name: string) {
   return `https://api.dicebear.com/9.x/initials/svg?seed=${seed}&backgroundColor=1B3A6B&textColor=ffffff`;
 }
 
+// Resize an uploaded image to a square `size` × `size` thumbnail and return
+// it as a JPEG data URL. The image is cover-cropped: the shorter dimension
+// fills the square and the longer one is trimmed centered, like Instagram.
+async function resizeToDataUrl(file: File, size: number): Promise<string> {
+  const reader = new FileReader();
+  const blobUrl: string = await new Promise((resolve, reject) => {
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.readAsDataURL(file);
+  });
+  const img = new Image();
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("decode failed"));
+    img.src = blobUrl;
+  });
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("canvas unsupported");
+  const ratio = Math.max(size / img.width, size / img.height);
+  const drawWidth = img.width * ratio;
+  const drawHeight = img.height * ratio;
+  ctx.drawImage(
+    img,
+    (size - drawWidth) / 2,
+    (size - drawHeight) / 2,
+    drawWidth,
+    drawHeight
+  );
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
+
 const STEPS = ["Basics", "Profile", "Career"] as const;
 
 export function OnboardingForm({
@@ -54,18 +88,10 @@ export function OnboardingForm({
     }));
   }
 
+  // Every field is now optional — Next is always available. Skip jumps to
+  // submit with whatever's filled in (even nothing).
   function canAdvance() {
-    if (step === 0) {
-      return (
-        form.firstName.trim() &&
-        form.lastName.trim() &&
-        form.major.trim() &&
-        form.semesterLevel &&
-        form.expectedGraduation.trim()
-      );
-    }
-    if (step === 1) return !!form.preferredContactMethod;
-    return form.careerInterests.length > 0;
+    return true;
   }
 
   async function onSubmit() {
@@ -86,6 +112,28 @@ export function OnboardingForm({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setSubmitting(false);
+    }
+  }
+
+  // Read a file via FileReader → draw into a 256x256 canvas → toDataURL as
+  // JPEG at 0.85 quality. Keeps the uploaded image well under the 600KB
+  // server-side cap and avoids needing Vercel Blob storage.
+  async function handleFile(file: File | null) {
+    if (!file) return;
+    if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) {
+      setError("Please pick a PNG, JPG, or WEBP image.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setError("Photo must be under 8 MB before resizing.");
+      return;
+    }
+    setError(null);
+    try {
+      const dataUrl = await resizeToDataUrl(file, 256);
+      setForm((f) => ({ ...f, image: dataUrl }));
+    } catch {
+      setError("Could not read that image. Try a different file.");
     }
   }
 
@@ -180,9 +228,8 @@ export function OnboardingForm({
             )}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Major</label>
+                <label className="label">Major <span className="font-normal text-slate-400">(optional)</span></label>
                 <select
-                  required
                   className="input"
                   value={form.major}
                   onChange={(e) => setForm({ ...form, major: e.target.value })}
@@ -194,7 +241,7 @@ export function OnboardingForm({
                 </select>
               </div>
               <div>
-                <label className="label">Minor</label>
+                <label className="label">Minor <span className="font-normal text-slate-400">(optional)</span></label>
                 <select
                   className="input"
                   value={form.minor}
@@ -209,9 +256,8 @@ export function OnboardingForm({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Semester level</label>
+                <label className="label">Semester level <span className="font-normal text-slate-400">(optional)</span></label>
                 <select
-                  required
                   className="input"
                   value={form.semesterLevel}
                   onChange={(e) => setForm({ ...form, semesterLevel: e.target.value })}
@@ -223,9 +269,8 @@ export function OnboardingForm({
                 </select>
               </div>
               <div>
-                <label className="label">Expected Graduation Date</label>
+                <label className="label">Expected Graduation Date <span className="font-normal text-slate-400">(optional)</span></label>
                 <select
-                  required
                   className="input"
                   value={form.expectedGraduation}
                   onChange={(e) => setForm({ ...form, expectedGraduation: e.target.value })}
@@ -250,19 +295,34 @@ export function OnboardingForm({
                 className="h-16 w-16 rounded-full border border-slate-200 bg-slate-100 object-cover"
               />
               <div className="flex-1">
-                <label className="label">Profile photo URL (optional)</label>
+                <label htmlFor="onb-photo" className="label">
+                  Profile photo <span className="font-normal text-slate-400">(optional)</span>
+                </label>
                 <input
-                  type="url"
-                  className="input"
-                  placeholder="https://… (or leave blank for a generated avatar)"
-                  value={form.image}
-                  onChange={(e) => setForm({ ...form, image: e.target.value })}
+                  id="onb-photo"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-byui-blue file:px-3 file:py-2 file:text-xs file:font-bold file:text-white file:cursor-pointer hover:file:bg-byui-blue-dark"
+                  onChange={(e) => void handleFile(e.target.files?.[0] ?? null)}
                 />
+                {form.image ? (
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, image: "" })}
+                    className="mt-1 text-[11px] font-semibold text-rose-600 hover:underline cursor-pointer"
+                  >
+                    Remove photo
+                  </button>
+                ) : (
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    PNG, JPG, or WEBP. We crop to a square and shrink to 256px.
+                  </p>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Phone (optional)</label>
+                <label className="label">Phone <span className="font-normal text-slate-400">(optional)</span></label>
                 <input
                   type="tel"
                   className="input"
@@ -271,13 +331,13 @@ export function OnboardingForm({
                 />
               </div>
               <div>
-                <label className="label">Preferred contact method</label>
+                <label className="label">Preferred contact method <span className="font-normal text-slate-400">(optional)</span></label>
                 <select
-                  required
                   className="input"
                   value={form.preferredContactMethod}
                   onChange={(e) => setForm({ ...form, preferredContactMethod: e.target.value })}
                 >
+                  <option value="">Select…</option>
                   <option value="email">Email</option>
                   <option value="phone">Phone</option>
                   <option value="teams">Microsoft Teams</option>
@@ -285,7 +345,7 @@ export function OnboardingForm({
               </div>
             </div>
             <div>
-              <label className="label">Short bio</label>
+              <label className="label">Short bio <span className="font-normal text-slate-400">(optional)</span></label>
               <textarea
                 rows={3}
                 className="input"
@@ -300,7 +360,10 @@ export function OnboardingForm({
         {step === 2 && (
           <div>
             <label className="label">
-              Career interests <span className="font-normal text-slate-500">(choose all that apply)</span>
+              Career interests{" "}
+              <span className="font-normal text-slate-500">
+                (optional — choose all that apply)
+              </span>
             </label>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {careerOptions.map((opt) => {
@@ -333,7 +396,7 @@ export function OnboardingForm({
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5">
           <button
             type="button"
             onClick={() => setStep((s) => Math.max(0, s - 1))}
@@ -342,8 +405,20 @@ export function OnboardingForm({
           >
             ← Back
           </button>
-          <div className="flex items-center gap-3">
-            <p className="text-xs text-slate-500">Step {step + 1} of {STEPS.length}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-xs text-slate-500">
+              Step {step + 1} of {STEPS.length}
+            </p>
+            {/* Skip jumps straight to save — keeps whatever they've already
+                filled in. They can finish later from /settings. */}
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={submitting}
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+            >
+              Skip for now
+            </button>
             <button
               type="submit"
               disabled={!canAdvance() || submitting}

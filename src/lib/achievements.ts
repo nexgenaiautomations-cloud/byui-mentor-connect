@@ -4,7 +4,12 @@
 // Why pure: TDD-friendly and the entire catalogue runs in one pass over a
 // short in-memory array (one student's logs over their lifetime). No N+1 SQL.
 import { db } from "@/db/client";
-import { achievements, meetingLogs, type Achievement } from "@/db/schema";
+import {
+  achievements,
+  meetingLogs,
+  users,
+  type Achievement,
+} from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { weekRangeForDate, monthRangeForDate } from "./kpis";
 
@@ -14,12 +19,26 @@ export type LogForAchievement = {
   topicsDiscussed: string | null;
 };
 
+// Subset of the user row needed by profile-driven achievements (e.g.
+// profile_complete). Kept separate from the row type so future callers can
+// build a snapshot from any source.
+export type ProfileSnapshot = {
+  firstName: string | null;
+  lastName: string | null;
+  major: string | null;
+  image: string | null;
+  bio: string | null;
+  careerInterests: string[] | null;
+};
+
 export type AchievementDef = {
   key: string;
   title: string;
   description: string;
-  // True if the student has earned this achievement based on all logs.
-  check: (logs: LogForAchievement[]) => boolean;
+  // True if the student has earned this achievement. Some checks read logs,
+  // some read the profile snapshot, some read both — all three signatures are
+  // expressible via the optional second argument.
+  check: (logs: LogForAchievement[], profile?: ProfileSnapshot) => boolean;
 };
 
 // ---- helpers ----
@@ -216,16 +235,35 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     check: (logs) =>
       logs.some((l) => l.accomplishmentGroup === "industry_experiences"),
   },
+  {
+    key: "profile_complete",
+    title: "Profile Complete",
+    description:
+      "Filled out your profile — name, major, and at least one career interest — so mentors can find you.",
+    check: (_logs, profile) => {
+      if (!profile) return false;
+      const hasName = Boolean(
+        profile.firstName?.trim() && profile.lastName?.trim()
+      );
+      const hasMajor = Boolean(profile.major?.trim());
+      const hasInterest =
+        Array.isArray(profile.careerInterests) &&
+        profile.careerInterests.length > 0;
+      return hasName && hasMajor && hasInterest;
+    },
+  },
 ];
 
-// Pure aggregator — returns the set of earned keys for a given log array.
-// Exported for the unit tests; the DB-aware variants below call this.
+// Pure aggregator — returns the set of earned keys for a given log array and
+// optional profile snapshot. Exported for the unit tests; the DB-aware
+// variants below call this.
 export function evaluateAchievementSet(
-  logs: LogForAchievement[]
+  logs: LogForAchievement[],
+  profile?: ProfileSnapshot
 ): Set<string> {
   const earned = new Set<string>();
   for (const def of ACHIEVEMENTS) {
-    if (def.check(logs)) earned.add(def.key);
+    if (def.check(logs, profile)) earned.add(def.key);
   }
   return earned;
 }
@@ -237,16 +275,31 @@ export function evaluateAchievementSet(
 export async function evaluateAchievementsForStudent(
   studentId: string
 ): Promise<{ newlyEarned: AchievementDef[] }> {
-  const logs = await db
-    .select({
-      meetingDate: meetingLogs.meetingDate,
-      accomplishmentGroup: meetingLogs.accomplishmentGroup,
-      topicsDiscussed: meetingLogs.topicsDiscussed,
-    })
-    .from(meetingLogs)
-    .where(eq(meetingLogs.studentId, studentId));
+  const [logs, [userRow]] = await Promise.all([
+    db
+      .select({
+        meetingDate: meetingLogs.meetingDate,
+        accomplishmentGroup: meetingLogs.accomplishmentGroup,
+        topicsDiscussed: meetingLogs.topicsDiscussed,
+      })
+      .from(meetingLogs)
+      .where(eq(meetingLogs.studentId, studentId)),
+    db
+      .select({
+        firstName: users.firstName,
+        lastName: users.lastName,
+        major: users.major,
+        image: users.image,
+        bio: users.bio,
+        careerInterests: users.careerInterests,
+      })
+      .from(users)
+      .where(eq(users.id, studentId))
+      .limit(1),
+  ]);
 
-  const earnedKeys = evaluateAchievementSet(logs);
+  const profile: ProfileSnapshot | undefined = userRow ?? undefined;
+  const earnedKeys = evaluateAchievementSet(logs, profile);
   if (earnedKeys.size === 0) return { newlyEarned: [] };
 
   // Read what's already persisted so we only insert deltas (and so the toast
