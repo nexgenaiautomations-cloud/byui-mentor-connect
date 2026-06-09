@@ -92,6 +92,12 @@ export function OnboardingForm({
   const previewName = `${form.firstName} ${form.lastName}`.trim();
   const previewImage = form.image || dicebearUrl(previewName);
 
+  // If the user arrived from /signup, their name is already saved. Hide the
+  // name fields so we don't re-ask — they can still tweak it in /settings.
+  const nameAlreadySet = Boolean(
+    initial.firstName.trim() && initial.lastName.trim()
+  );
+
   return (
     <div className="space-y-8">
       {/* Stepper */}
@@ -141,26 +147,37 @@ export function OnboardingForm({
       >
         {step === 0 && (
           <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label">First name</label>
-                <input
-                  required
-                  className="input"
-                  value={form.firstName}
-                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                />
+            {nameAlreadySet ? (
+              <p className="rounded-lg bg-byui-blue-light/20 px-3 py-2 text-sm text-byui-blue-dark">
+                Hi, <strong>{form.firstName}</strong> — let&apos;s finish your
+                profile so we can match you with the right mentors.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">First name</label>
+                  <input
+                    required
+                    className="input"
+                    value={form.firstName}
+                    onChange={(e) =>
+                      setForm({ ...form, firstName: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="label">Last name</label>
+                  <input
+                    required
+                    className="input"
+                    value={form.lastName}
+                    onChange={(e) =>
+                      setForm({ ...form, lastName: e.target.value })
+                    }
+                  />
+                </div>
               </div>
-              <div>
-                <label className="label">Last name</label>
-                <input
-                  required
-                  className="input"
-                  value={form.lastName}
-                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                />
-              </div>
-            </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">Major</label>

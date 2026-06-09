@@ -25,10 +25,13 @@ export default async function AdminMembersPage() {
       isAdmin: users.isAdmin,
       mentorAvailable: users.mentorAvailable,
       mentorCapacity: users.mentorCapacity,
+      priorCareerChats: users.priorCareerChats,
+      priorInternshipExperience: users.priorInternshipExperience,
       onboardedAt: users.onboardedAt,
       createdAt: users.createdAt,
       activeMatches: sql<number>`(select count(*)::int from "match" where (mentor_id = "user".id or mentee_id = "user".id) and status = 'active')`,
-      recentActivityCount: sql<number>`(select count(*)::int from "meeting_log" where (mentor_id = "user".id or mentee_id = "user".id) and created_at > now() - interval '90 days')`,
+      recentActivityCount: sql<number>`(select count(*)::int from "meeting_log" where (student_id = "user".id or mentor_id = "user".id or mentee_id = "user".id) and created_at > now() - interval '90 days')`,
+      achievementsEarned: sql<number>`(select count(*)::int from "achievement" where student_id = "user".id)`,
     })
     .from(users)
     .orderBy(desc(users.createdAt));
@@ -70,10 +73,13 @@ export default async function AdminMembersPage() {
       isAdmin: u.isAdmin,
       mentorAvailable: u.mentorAvailable,
       mentorCapacity: u.mentorCapacity,
+      priorCareerChats: u.priorCareerChats,
+      priorInternshipExperience: u.priorInternshipExperience,
       onboardedAt: u.onboardedAt ? u.onboardedAt.toISOString() : null,
       createdAt: u.createdAt.toISOString(),
       activeMatches: u.activeMatches,
       recentActivityCount: u.recentActivityCount,
+      achievementsEarned: u.achievementsEarned,
       application: app
         ? {
             status: app.status,

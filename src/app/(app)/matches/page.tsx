@@ -9,6 +9,9 @@ import { INACTIVITY_WARN_DAYS, POSSIBLE_ACTIONS } from "@/lib/possible-actions";
 import { EmptyState } from "@/components/empty-state";
 import { CancelRequestButton } from "./cancel-request-button";
 import { CanTodosButton } from "./can-todos-button";
+import { KpiChips } from "@/components/kpi-chips";
+import { getStudentKpisBatch } from "@/lib/kpis";
+import { LogActions } from "./log-actions";
 
 function daysSince(d: Date) {
   return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
@@ -74,6 +77,9 @@ export default async function MatchesPage() {
           meetingType: meetingLogs.meetingType,
           durationMinutes: meetingLogs.durationMinutes,
           topicsDiscussed: meetingLogs.topicsDiscussed,
+          actionItems: meetingLogs.actionItems,
+          isSystemGenerated: meetingLogs.isSystemGenerated,
+          createdBy: meetingLogs.createdBy,
         })
         .from(meetingLogs)
         .where(inArray(meetingLogs.matchId, mentorMatchIds))
@@ -81,9 +87,47 @@ export default async function MatchesPage() {
     : [];
   const activitiesByMatch = new Map<string, typeof recentActivities>();
   for (const a of recentActivities) {
-    const list = activitiesByMatch.get(a.matchId) ?? [];
-    list.push(a);
-    activitiesByMatch.set(a.matchId, list);
+    if (a.matchId) {
+      const list = activitiesByMatch.get(a.matchId) ?? [];
+      list.push(a);
+      activitiesByMatch.set(a.matchId, list);
+    }
+  }
+
+  // Batch KPI fetch for the mentor's mentees. Single SQL round-trip even with
+  // a full mentor capacity.
+  const menteeStudentIds = rows
+    .filter((r) => r.mentorId === me.id)
+    .map((r) => r.menteeId);
+  const kpisByStudent = menteeStudentIds.length
+    ? await getStudentKpisBatch(menteeStudentIds)
+    : new Map();
+
+  // Days since each mentee's most recent career_tasks log — drives the
+  // amber "stale" tone on chips.
+  const lastCareerTaskDays = new Map<string, number | null>();
+  if (menteeStudentIds.length) {
+    const lastTaskRows = await db
+      .select({
+        studentId: meetingLogs.studentId,
+        meetingDate: meetingLogs.meetingDate,
+      })
+      .from(meetingLogs)
+      .where(
+        and(
+          inArray(meetingLogs.studentId, menteeStudentIds),
+          eq(meetingLogs.accomplishmentGroup, "career_tasks")
+        )
+      )
+      .orderBy(desc(meetingLogs.meetingDate));
+    for (const id of menteeStudentIds) lastCareerTaskDays.set(id, null);
+    for (const r of lastTaskRows) {
+      if (!r.studentId) continue;
+      const existing = lastCareerTaskDays.get(r.studentId);
+      if (existing == null) {
+        lastCareerTaskDays.set(r.studentId, daysSince(r.meetingDate));
+      }
+    }
   }
 
   // Pending outgoing requests are only relevant for members on this page —
@@ -341,6 +385,19 @@ export default async function MatchesPage() {
                   </div>
                 )}
 
+                {/* Mentee KPI chips — at-a-glance "is this student on pace?" */}
+                {iAmMentor && kpisByStudent.get(m.menteeId) && (
+                  <div>
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-byui-blue">
+                      Progress this week / month
+                    </p>
+                    <KpiChips
+                      kpis={kpisByStudent.get(m.menteeId)!}
+                      daysSinceLastCareerTask={lastCareerTaskDays.get(m.menteeId) ?? null}
+                    />
+                  </div>
+                )}
+
                 {/* Recent Activities — scrollable feed of logged activities
                     for this specific mentee. Shown only on the mentor's view. */}
                 {iAmMentor && (() => {
@@ -375,7 +432,12 @@ export default async function MatchesPage() {
                           {items.map((a) => (
                             <li
                               key={a.id}
-                              className="rounded-lg border border-slate-100 bg-white p-2.5"
+                              className={
+                                "rounded-lg border p-2.5 " +
+                                (a.isSystemGenerated
+                                  ? "border-emerald-200 bg-emerald-50/40"
+                                  : "border-slate-100 bg-white")
+                              }
                             >
                               <div className="flex flex-wrap items-center justify-between gap-1">
                                 <p className="text-xs font-bold text-byui-blue-dark">
@@ -384,8 +446,17 @@ export default async function MatchesPage() {
                                     day: "numeric",
                                   })}
                                 </p>
-                                <span className="inline-flex items-center rounded-full bg-byui-blue-light/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-byui-blue-dark">
-                                  {a.meetingType.replace("_", " ")}
+                                <span
+                                  className={
+                                    "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider " +
+                                    (a.isSystemGenerated
+                                      ? "bg-emerald-100 text-emerald-800"
+                                      : "bg-byui-blue-light/30 text-byui-blue-dark")
+                                  }
+                                >
+                                  {a.isSystemGenerated
+                                    ? "Goal met"
+                                    : a.meetingType.replace("_", " ")}
                                 </span>
                               </div>
                               {a.durationMinutes ? (
@@ -395,13 +466,32 @@ export default async function MatchesPage() {
                               ) : null}
                               {a.topicsDiscussed && (
                                 <p className="mt-1 text-xs leading-snug text-slate-700">
-                                  <span className="font-semibold text-slate-500">Accomplishments:</span>{" "}
-                                  {a.topicsDiscussed
-                                    .split(" · ")
-                                    .filter(Boolean)
-                                    .join(", ")}
+                                  {a.isSystemGenerated ? (
+                                    a.topicsDiscussed
+                                  ) : (
+                                    <>
+                                      <span className="font-semibold text-slate-500">
+                                        Accomplishments:
+                                      </span>{" "}
+                                      {a.topicsDiscussed
+                                        .split(" · ")
+                                        .filter(Boolean)
+                                        .join(", ")}
+                                    </>
+                                  )}
                                 </p>
                               )}
+                              <LogActions
+                                log={{
+                                  id: a.id,
+                                  meetingDate: new Date(a.meetingDate)
+                                    .toISOString()
+                                    .slice(0, 10),
+                                  topicsDiscussed: a.topicsDiscussed,
+                                  actionItems: a.actionItems,
+                                  isSystemGenerated: a.isSystemGenerated,
+                                }}
+                              />
                             </li>
                           ))}
                         </ul>

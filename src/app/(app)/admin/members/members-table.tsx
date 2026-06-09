@@ -16,10 +16,13 @@ export type MemberRow = {
   isAdmin: boolean;
   mentorAvailable: boolean;
   mentorCapacity: number | null;
+  priorCareerChats: string | null;
+  priorInternshipExperience: string | null;
   onboardedAt: string | null;
   createdAt: string;
   activeMatches: number;
   recentActivityCount: number;
+  achievementsEarned: number;
   application: {
     status: "pending" | "approved" | "rejected";
     submittedAt: string;
@@ -154,6 +157,7 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
                 <th className="px-3 py-3">Expected grad</th>
                 <th className="px-3 py-3">Role</th>
                 <th className="px-3 py-3">Active</th>
+                <th className="px-3 py-3">Trophies</th>
                 <th className="px-5 py-3">Joined</th>
               </tr>
             </thead>
@@ -204,6 +208,15 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
                     </div>
                   </td>
                   <td className="px-3 py-3 text-slate-700">{u.activeMatches}</td>
+                  <td className="px-3 py-3 text-slate-700">
+                    {u.achievementsEarned > 0 ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
+                        🏆 {u.achievementsEarned}
+                      </span>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
+                  </td>
                   <td className="px-5 py-3 text-xs text-slate-500">
                     {new Date(u.createdAt).toLocaleDateString()}
                   </td>
@@ -300,7 +313,24 @@ function MemberProfileModal({
               label="Recent activity (90d)"
               value={String(member.recentActivityCount)}
             />
+            <Field
+              label="Trophies earned"
+              value={String(member.achievementsEarned)}
+            />
           </Section>
+
+          {(member.priorCareerChats || member.priorInternshipExperience) && (
+            <Section title="Signup experience answers">
+              <Field
+                label="Prior career chats"
+                value={display(member.priorCareerChats)}
+              />
+              <Field
+                label="Prior internships / career-related work"
+                value={display(member.priorInternshipExperience)}
+              />
+            </Section>
+          )}
 
           {member.isMentor && (
             <Section title="Mentor">

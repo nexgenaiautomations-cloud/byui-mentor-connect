@@ -63,6 +63,23 @@ export default async function AdminPage() {
     .orderBy(desc(meetingLogs.createdAt))
     .limit(5);
 
+  // Signups in the last 7 days — surfaces growth + the new prior-experience
+  // answers so admin can spot incoming students who need a different mentor.
+  const recentSignups = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      image: users.image,
+      createdAt: users.createdAt,
+      priorCareerChats: users.priorCareerChats,
+      priorInternshipExperience: users.priorInternshipExperience,
+    })
+    .from(users)
+    .where(sql`${users.createdAt} > now() - interval '7 days'`)
+    .orderBy(desc(users.createdAt))
+    .limit(8);
+
   const pendingApps = apps.filter((a) => a.status === "pending");
   const reviewedApps = apps.filter((a) => a.status !== "pending");
 
@@ -171,6 +188,46 @@ export default async function AdminPage() {
                     {l.topicsDiscussed && (
                       <p className="mt-0.5 line-clamp-1 text-xs text-slate-600">{l.topicsDiscussed}</p>
                     )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="card">
+            <h2 className="font-display text-lg font-bold text-navy-800">
+              New signups (last 7 days)
+            </h2>
+            {recentSignups.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">No new signups this week.</p>
+            ) : (
+              <ul className="mt-3 space-y-2 text-sm">
+                {recentSignups.map((u) => (
+                  <li
+                    key={u.id}
+                    className="flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={
+                        u.image ||
+                        `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(u.name || u.email)}&backgroundColor=1B3A6B&textColor=ffffff`
+                      }
+                      alt=""
+                      className="h-8 w-8 shrink-0 rounded-full object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold text-navy-800">
+                        {u.name || u.email}
+                      </p>
+                      <p className="truncate text-[10px] text-slate-500">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                        {u.priorCareerChats &&
+                          ` · ${u.priorCareerChats} prior chats`}
+                        {u.priorInternshipExperience &&
+                          ` · ${u.priorInternshipExperience} prior internship${u.priorInternshipExperience === "1" ? "" : "s"}`}
+                      </p>
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -11,8 +11,11 @@ export default async function AdminActivityPage() {
   if (!me.isAdmin) redirect("/dashboard");
 
   const mentor = alias(users, "mentor_u");
-  const mentee = alias(users, "mentee_u");
+  const student = alias(users, "student_u");
 
+  // Mentor join LEFT so mentee-self-logs (no mentor) and system-generated
+  // events still show. Student join INNER on studentId — every row has one
+  // post-backfill.
   const recentLogs = await db
     .select({
       id: meetingLogs.id,
@@ -20,12 +23,14 @@ export default async function AdminActivityPage() {
       meetingType: meetingLogs.meetingType,
       durationMinutes: meetingLogs.durationMinutes,
       topicsDiscussed: meetingLogs.topicsDiscussed,
+      isSystemGenerated: meetingLogs.isSystemGenerated,
+      createdBy: meetingLogs.createdBy,
       mentorName: mentor.name,
-      menteeName: mentee.name,
+      studentName: student.name,
     })
     .from(meetingLogs)
-    .innerJoin(mentor, eq(mentor.id, meetingLogs.mentorId))
-    .innerJoin(mentee, eq(mentee.id, meetingLogs.menteeId))
+    .leftJoin(mentor, eq(mentor.id, meetingLogs.mentorId))
+    .innerJoin(student, eq(student.id, meetingLogs.studentId))
     .orderBy(desc(meetingLogs.createdAt))
     .limit(25);
 
@@ -63,24 +68,48 @@ export default async function AdminActivityPage() {
         <div className="card">
           <h2 className="font-display text-lg font-bold text-navy-800">Recent meeting logs</h2>
           {recentLogs.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">No meetings logged yet.</p>
+            <p className="mt-3 text-sm text-slate-500">No activity logged yet.</p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-100">
               {recentLogs.map((l) => (
-                <li key={l.id} className="py-3">
-                  <div className="flex items-center justify-between">
+                <li
+                  key={l.id}
+                  className={
+                    "py-3 " + (l.isSystemGenerated ? "opacity-90" : "")
+                  }
+                >
+                  <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-navy-800">
-                      {l.mentorName} → {l.menteeName}
+                      {l.studentName}
+                      {l.mentorName ? (
+                        <span className="text-slate-500"> · with {l.mentorName}</span>
+                      ) : (
+                        <span className="text-slate-400"> · no mentor</span>
+                      )}
                     </p>
                     <span className="text-xs text-slate-500">
                       {new Date(l.meetingDate).toLocaleDateString()}
                     </span>
                   </div>
                   <p className="mt-0.5 text-xs text-slate-500 capitalize">
-                    {l.meetingType.replace("_", " ")} · {l.durationMinutes ?? "—"} min
+                    {l.isSystemGenerated ? (
+                      <span className="font-bold text-emerald-700">Goal met</span>
+                    ) : (
+                      <>
+                        {l.meetingType.replace("_", " ")} ·{" "}
+                        {l.durationMinutes ?? "—"} min
+                        {l.createdBy === "mentee" && (
+                          <span className="ml-1 font-semibold text-violet-700">
+                            · self-logged
+                          </span>
+                        )}
+                      </>
+                    )}
                   </p>
                   {l.topicsDiscussed && (
-                    <p className="mt-1 line-clamp-1 text-xs text-slate-600">{l.topicsDiscussed}</p>
+                    <p className="mt-1 line-clamp-1 text-xs text-slate-600">
+                      {l.topicsDiscussed}
+                    </p>
                   )}
                 </li>
               ))}

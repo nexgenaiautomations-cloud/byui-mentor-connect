@@ -12,9 +12,13 @@ export default async function OnboardingPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  const headline = user.firstName
+    ? `Welcome, ${user.firstName}.`
+    : "Welcome aboard.";
+
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="font-display text-3xl font-bold text-navy-800">Welcome aboard.</h1>
+      <h1 className="font-display text-3xl font-bold text-navy-800">{headline}</h1>
       <p className="mt-2 text-slate-600">
         A few quick details so we can match you with the right people.
       </p>
