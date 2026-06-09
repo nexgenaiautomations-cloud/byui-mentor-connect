@@ -7,102 +7,147 @@ import {
   CAREER_TASKS_OPTIONS,
   INDUSTRY_EXPERIENCES_OPTIONS,
   CAREER_CHATS_OPTIONS,
-  ACCOMPLISHMENT_GROUPS,
-  ALL_ACCOMPLISHMENTS,
+  ALL_LABELS,
   CELEBRATION_ACCOMPLISHMENTS,
-  groupForAccomplishment,
+  CELEBRATION_KEYS,
+  ACTIONS,
+  groupsForRole,
+  groupForLabel,
+  keyForLabel,
   dominantGroup,
+  shouldCelebrate,
 } from "@/lib/possible-actions";
 
 describe("POSSIBLE_ACTIONS (legacy flat list)", () => {
-  it("matches the BYUI CAN list verbatim", () => {
+  it("still exposes the legacy 15 BYUI CAN actions for back-compat", () => {
     expect(POSSIBLE_ACTIONS).toContain("Explore Careers, Companies, Industries");
-    expect(POSSIBLE_ACTIONS).toContain("Help with LinkedIn or Other Platforms");
-    expect(POSSIBLE_ACTIONS).toContain("Work on Resumes");
-    expect(POSSIBLE_ACTIONS).toContain("Help with Grad School Preparation/Application");
-  });
-
-  it("has 15 actions", () => {
     expect(POSSIBLE_ACTIONS).toHaveLength(15);
-  });
-
-  it("includes Course planning", () => {
-    expect(POSSIBLE_ACTIONS).toContain("Course planning");
   });
 });
 
-describe("accomplishment groups (grouped form)", () => {
-  it("has 13 career tasks", () => {
+describe("ACTIONS stable-key catalog", () => {
+  it("has 19 actions across the three groups", () => {
+    expect(ACTIONS).toHaveLength(19);
+    expect(new Set(ACTIONS.map((a) => a.key)).size).toBe(19);
+  });
+
+  it("every action has both a mentee and a mentor label", () => {
+    for (const a of ACTIONS) {
+      expect(a.menteeLabel.length).toBeGreaterThan(0);
+      expect(a.mentorLabel.length).toBeGreaterThan(0);
+      expect(a.menteeLabel).not.toBe(a.mentorLabel);
+    }
+  });
+
+  it("group sizes match the spec (13 / 3 / 3)", () => {
+    expect(ACTIONS.filter((a) => a.group === "career_tasks")).toHaveLength(13);
+    expect(ACTIONS.filter((a) => a.group === "industry_experiences")).toHaveLength(3);
+    expect(ACTIONS.filter((a) => a.group === "career_chats")).toHaveLength(3);
+  });
+
+  it("CAREER_TASKS_OPTIONS legacy alias has 13 items", () => {
     expect(CAREER_TASKS_OPTIONS).toHaveLength(13);
   });
 
-  it("has 3 industry experiences (offers)", () => {
+  it("INDUSTRY + CAREER chat legacy aliases keep their counts", () => {
     expect(INDUSTRY_EXPERIENCES_OPTIONS).toHaveLength(3);
-    expect(INDUSTRY_EXPERIENCES_OPTIONS).toContain(
+    expect(CAREER_CHATS_OPTIONS).toHaveLength(3);
+  });
+});
+
+describe("CELEBRATION", () => {
+  it("celebrates the three industry offers", () => {
+    expect(CELEBRATION_KEYS).toEqual([
+      "internship_offer",
+      "part_time_offer",
+      "full_time_offer",
+    ]);
+    expect(CELEBRATION_ACCOMPLISHMENTS).toContain("I got an internship offer");
+    expect(CELEBRATION_ACCOMPLISHMENTS).toContain(
       "My mentee got an internship offer"
     );
-    expect(INDUSTRY_EXPERIENCES_OPTIONS).toContain(
-      "My mentee got a career-related, full-time job offer"
-    );
   });
 
-  it("has 2 career chats", () => {
-    expect(CAREER_CHATS_OPTIONS).toEqual([
-      "Help with Informational Interview preparation",
-      "Share professional connections and relationships",
-    ]);
+  it("shouldCelebrate fires on either role's wording", () => {
+    expect(shouldCelebrate(["I got an internship offer"])).toBe(true);
+    expect(shouldCelebrate(["My mentee got an internship offer"])).toBe(true);
+    expect(shouldCelebrate(["Worked on my resume"])).toBe(false);
   });
+});
 
-  it("ACCOMPLISHMENT_GROUPS exposes all three sections in display order", () => {
-    expect(ACCOMPLISHMENT_GROUPS.map((g) => g.key)).toEqual([
+describe("groupsForRole", () => {
+  it("returns mentee-side labels for mode=mentee", () => {
+    const groups = groupsForRole("mentee");
+    expect(groups.map((g) => g.key)).toEqual([
       "career_tasks",
       "industry_experiences",
       "career_chats",
     ]);
-    expect(ACCOMPLISHMENT_GROUPS[0].heading).toBe("1. Career Tasks — weekly");
+    expect(groups[0].options).toContain("Worked on my resume");
+    expect(groups[0].options).not.toContain("Helped with resumes");
+    expect(groups[1].options).toContain("I got an internship offer");
+    expect(groups[2].options).toContain(
+      "Completed an informational interview or career chat"
+    );
   });
 
-  it("ALL_ACCOMPLISHMENTS contains 18 unique entries", () => {
-    expect(ALL_ACCOMPLISHMENTS).toHaveLength(18);
-    expect(new Set(ALL_ACCOMPLISHMENTS).size).toBe(18);
-  });
-
-  it("CELEBRATION_ACCOMPLISHMENTS covers the three offer items", () => {
-    expect(CELEBRATION_ACCOMPLISHMENTS).toEqual(INDUSTRY_EXPERIENCES_OPTIONS);
+  it("returns mentor-side labels for mode=mentor", () => {
+    const groups = groupsForRole("mentor");
+    expect(groups[0].options).toContain("Helped with resumes");
+    expect(groups[0].options).not.toContain("Worked on my resume");
+    expect(groups[1].options).toContain("My mentee got an internship offer");
+    expect(groups[2].options).toContain(
+      "Helped with informational interview preparation"
+    );
   });
 });
 
-describe("groupForAccomplishment / dominantGroup", () => {
-  it("maps a career task to career_tasks", () => {
-    expect(groupForAccomplishment("Work on Resumes")).toBe("career_tasks");
+describe("groupForLabel + keyForLabel", () => {
+  it("resolves both mentee and mentor labels to the same key + group", () => {
+    expect(keyForLabel("Worked on my resume")).toBe("resume_work");
+    expect(keyForLabel("Helped with resumes")).toBe("resume_work");
+    expect(groupForLabel("Worked on my resume")).toBe("career_tasks");
+    expect(groupForLabel("Helped with resumes")).toBe("career_tasks");
   });
 
-  it("maps a career chat to career_chats", () => {
-    expect(groupForAccomplishment("Help with Informational Interview preparation")).toBe(
+  it("still resolves legacy labels (pre-refactor saved rows)", () => {
+    expect(groupForLabel("Work on Resumes")).toBe("career_tasks");
+    expect(groupForLabel("Help with Informational Interview preparation")).toBe(
       "career_chats"
     );
   });
 
   it("returns null for unknown strings", () => {
-    expect(groupForAccomplishment("Something else entirely")).toBeNull();
+    expect(groupForLabel("Something else")).toBeNull();
+    expect(keyForLabel("Something else")).toBeNull();
   });
+});
 
-  it("dominantGroup picks industry over chats over tasks", () => {
+describe("dominantGroup", () => {
+  it("picks industry > chats > tasks regardless of role labels", () => {
     expect(
       dominantGroup([
-        "Work on Resumes",
-        "Help with Informational Interview preparation",
-        "My mentee got an internship offer",
+        "Worked on my resume",
+        "Built or strengthened a professional connection",
+        "I got an internship offer",
       ])
     ).toBe("industry_experiences");
     expect(
       dominantGroup([
-        "Work on Resumes",
-        "Help with Informational Interview preparation",
+        "Helped with resumes",
+        "Helped with informational interview preparation",
       ])
     ).toBe("career_chats");
-    expect(dominantGroup(["Work on Resumes"])).toBe("career_tasks");
+    expect(dominantGroup(["Worked on my resume"])).toBe("career_tasks");
     expect(dominantGroup([])).toBeNull();
+  });
+});
+
+describe("ALL_LABELS validation set", () => {
+  it("contains every mentee + mentor label plus the legacy strings", () => {
+    expect(ALL_LABELS).toContain("Worked on my resume");
+    expect(ALL_LABELS).toContain("Helped with resumes");
+    expect(ALL_LABELS).toContain("Work on Resumes"); // legacy
   });
 });
 

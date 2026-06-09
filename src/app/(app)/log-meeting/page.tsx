@@ -135,39 +135,65 @@ export default async function LogActivityPage({
   );
 }
 
-// Top-of-page bubble explaining who logs what. Slightly different copy per
-// role so the lead sentence is about the person reading it.
+// Explanation panel at the top of each Log an Activity page. Copy lifted
+// from the spec — mentee = "report independent progress", mentor =
+// "record what happened in a meeting".
 function LoggingGuidance({ role }: { role: "mentor" | "mentee" }) {
   return (
-    <div
+    <section
       role="note"
-      className="flex items-start gap-3 rounded-2xl border border-byui-blue-light/60 bg-byui-blue-light/15 p-3 sm:p-4"
+      className="rounded-2xl border border-byui-blue-light/60 bg-byui-blue-light/15 p-4 sm:p-5"
     >
-      <span
-        aria-hidden
-        className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-byui-blue text-white"
-      >
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="9" />
-          <path d="M12 8.5h.01M11 12h1v4h1" />
-        </svg>
-      </span>
-      <p className="text-xs leading-snug text-byui-blue-dark sm:text-sm">
-        {role === "mentor" ? (
-          <>
-            <strong>Mentors log only what happens in a meeting</strong> with
-            their mentee. Your mentee logs everything they do on their own
-            outside of meetings.
-          </>
-        ) : (
-          <>
-            <strong>You log everything you do outside of meetings</strong> —
-            resumes, applications, career chats, conferences. Your mentor logs
-            anything you do together in a meeting.
-          </>
-        )}
-      </p>
-    </div>
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden
+          className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-byui-blue text-white"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 8.5h.01M11 12h1v4h1" />
+          </svg>
+        </span>
+        <div className="min-w-0 flex-1">
+          {role === "mentee" ? (
+            <>
+              <h2 className="font-display text-base font-bold text-byui-blue-dark sm:text-lg">
+                Report career progress you complete on your own.
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                Use this page to log activities you worked on outside of a
+                1-on-1 mentor meeting — like working on your resume, applying
+                to internships, attending a career event, or completing a
+                career chat.
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                If you did the activity during a meeting with your mentor, your
+                mentor can record that meeting from their dashboard.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="font-display text-base font-bold text-byui-blue-dark sm:text-lg">
+                Record what happened during a 1-on-1 mentoring meeting.
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                Use this page to log what you helped your mentee with during a
+                meeting, call, or career activity together. Mentees can log
+                independent career work from their own dashboard.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 

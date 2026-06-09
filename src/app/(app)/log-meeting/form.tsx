@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
-  ACCOMPLISHMENT_GROUPS,
-  CELEBRATION_ACCOMPLISHMENTS,
+  groupsForRole,
+  shouldCelebrate as shouldCelebrateLabels,
 } from "@/lib/possible-actions";
 
 async function celebrate() {
@@ -93,6 +93,13 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
     [matches, matchId]
   );
 
+  // Role-aware label groups. Mentees see "Worked on my resume", mentors see
+  // "Helped with resumes" — same stable key under the hood.
+  const roleGroups = useMemo(
+    () => groupsForRole(isMentor ? "mentor" : "mentee"),
+    [isMentor]
+  );
+
   function toggle(action: string) {
     setAccomplishments((prev) => {
       const next = new Set(prev);
@@ -140,9 +147,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
     setSubmitting(true);
     setError(null);
     const checked = [...accomplishments];
-    const shouldCelebrate = checked.some((a) =>
-      (CELEBRATION_ACCOMPLISHMENTS as readonly string[]).includes(a)
-    );
+    const shouldCelebrate = shouldCelebrateLabels(checked);
     const durationNum = duration ? Number(duration) : null;
     const payload: Record<string, unknown> = {
       activityDate: date,
@@ -226,8 +231,54 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
+        {isMentor ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label className="label">Activity date</label>
+              <input
+                type="date"
+                className="input"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="label">
+                Type <span className="font-normal text-slate-400">(optional)</span>
+              </label>
+              <select
+                className="input"
+                value={meetingType}
+                onChange={(e) => setMeetingType(e.target.value)}
+              >
+                <option value="">Select…</option>
+                {MEETING_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label">
+                Duration (min){" "}
+                <span className="font-normal text-slate-400">(optional)</span>
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={600}
+                className="input"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+              />
+            </div>
+          </div>
+        ) : (
+          // Mentees report independent work — Type and Duration don't apply
+          // (they're meeting-specific). Just an activity date.
+          <div className="max-w-xs">
             <label className="label">Activity date</label>
             <input
               type="date"
@@ -237,46 +288,18 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
               required
             />
           </div>
-          <div>
-            <label className="label">
-              Type <span className="font-normal text-slate-400">(optional)</span>
-            </label>
-            <select
-              className="input"
-              value={meetingType}
-              onChange={(e) => setMeetingType(e.target.value)}
-            >
-              <option value="">Select…</option>
-              {MEETING_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="label">
-              Duration (min){" "}
-              <span className="font-normal text-slate-400">(optional)</span>
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={600}
-              className="input"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-            />
-          </div>
-        </div>
+        )}
 
         <fieldset className="space-y-4">
-          <legend className="label">Accomplishments</legend>
+          <legend className="label">
+            {isMentor ? "Discussion topics" : "What you worked on"}
+          </legend>
           <p className="-mt-1 text-xs text-slate-500">
-            Check anything you covered. Each section maps to one of the BYUI
-            CAN program goals.
+            {isMentor
+              ? "Check anything you covered together. Each section maps to one of the BYUI CAN program goals."
+              : "Check anything you worked on. Each section maps to one of the BYUI CAN program goals."}
           </p>
-          {ACCOMPLISHMENT_GROUPS.map((group) => (
+          {roleGroups.map((group) => (
             <AccomplishmentGroupBlock
               key={group.key}
               heading={group.heading}
@@ -305,18 +328,20 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
           />
         </div>
 
-        <div>
-          <label className="label">
-            Next meeting{" "}
-            <span className="font-normal text-slate-400">(optional)</span>
-          </label>
-          <input
-            type="date"
-            className="input"
-            value={next}
-            onChange={(e) => setNext(e.target.value)}
-          />
-        </div>
+        {isMentor && (
+          <div>
+            <label className="label">
+              Next meeting{" "}
+              <span className="font-normal text-slate-400">(optional)</span>
+            </label>
+            <input
+              type="date"
+              className="input"
+              value={next}
+              onChange={(e) => setNext(e.target.value)}
+            />
+          </div>
+        )}
 
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

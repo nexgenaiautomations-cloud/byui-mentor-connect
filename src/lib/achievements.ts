@@ -45,8 +45,12 @@ export type AchievementDef = {
 
 function topicMatches(log: LogForAchievement, needles: string[]): boolean {
   if (!log.topicsDiscussed) return false;
-  const t = log.topicsDiscussed;
-  return needles.some((n) => t.includes(n));
+  // Case-insensitive substring match — labels differ across roles ("Worked
+  // on my resume" vs "Helped with resumes" vs legacy "Work on Resumes") so
+  // matching on lowercase root words ("resume", "interviewing") fires the
+  // trophy regardless of the wording.
+  const t = log.topicsDiscussed.toLowerCase();
+  return needles.some((n) => t.includes(n.toLowerCase()));
 }
 
 function weekKey(d: Date): number {
@@ -126,10 +130,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     key: "internship_win",
     title: "Internship Win",
     description: "Logged an internship offer.",
+    // Matches mentee ("I got an internship offer"), mentor ("My mentee got
+    // an internship offer"), and the legacy mentor phrasing.
     check: (logs) =>
-      logs.some((l) =>
-        topicMatches(l, ["My mentee got an internship offer"])
-      ),
+      logs.some((l) => topicMatches(l, ["internship offer"])),
   },
   {
     key: "part_time_win",
@@ -153,16 +157,16 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     key: "resume_builder",
     title: "Resume Builder",
     description: "Logged work on your resume.",
-    check: (logs) => logs.some((l) => topicMatches(l, ["Work on Resumes"])),
+    check: (logs) => logs.some((l) => topicMatches(l, ["resume"])),
   },
   {
     key: "interview_ready",
     title: "Interview Ready",
     description: "Logged interview practice or skill-building.",
+    // Matches "Practiced interviewing skills", "Helped with interviewing
+    // skills", "Role-played interview questions", legacy variants.
     check: (logs) =>
-      logs.some((l) =>
-        topicMatches(l, ["Work on Interviewing Skills", "Role Play Interviewing"])
-      ),
+      logs.some((l) => topicMatches(l, ["interviewing", "interview question"])),
   },
   {
     key: "can_standard_keeper",

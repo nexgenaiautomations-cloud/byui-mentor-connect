@@ -345,7 +345,7 @@ export default async function DashboardPage() {
         <div className="card">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-bold text-byui-blue-dark">
-              {me.isMentor ? "Your mentees" : "Your matches"}
+              {me.isMentor ? "Your mentees" : "Your Mentors"}
             </h2>
             <Link href="/matches" className="text-xs font-semibold text-byui-blue hover:underline">
               View all →

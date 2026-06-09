@@ -229,8 +229,8 @@ function ProfileModal({
             </p>
           ) : sent || myStatus === "pending" ? (
             <p className="text-sm font-semibold text-amber-700">
-              ✓ Request sent. Waiting on{" "}
-              {m.name?.split(" ")[0] ?? "the mentor"} to accept or decline.
+              ✓ Request sent. Waiting for{" "}
+              {m.name?.split(" ")[0] ?? "the mentor"} to respond.
             </p>
           ) : (
             <>

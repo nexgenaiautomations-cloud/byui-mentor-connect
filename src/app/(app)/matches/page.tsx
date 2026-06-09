@@ -175,12 +175,16 @@ export default async function MatchesPage() {
       {fresh.length > 0 && (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-byui-blue-dark to-byui-blue p-5 text-white ring-4 ring-byui-blue-light/60">
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-byui-blue-light">
-            ✨ Fresh match
+            {isMember ? "✨ New connection" : "✨ Fresh match"}
           </p>
           <p className="mt-1 font-display text-xl font-black">
-            {fresh.length === 1
-              ? "You just matched. Now what?"
-              : `${fresh.length} new matches. Pick one to start.`}
+            {isMember
+              ? fresh.length === 1
+                ? "You have a new mentor. Now what?"
+                : `${fresh.length} new mentors. Pick one to start.`
+              : fresh.length === 1
+                ? "You just matched. Now what?"
+                : `${fresh.length} new matches. Pick one to start.`}
           </p>
           <div className="mt-3">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-byui-blue-light">
@@ -354,27 +358,37 @@ export default async function MatchesPage() {
                   </div>
                 </dl>
 
-                {/* Student details — shown to mentors on their mentee cards. */}
-                {iAmMentor && (
-                  <dl className="grid gap-1.5 text-xs">
-                    <div className="flex flex-wrap gap-x-1.5">
-                      <dt className="font-semibold text-slate-500">Minor:</dt>
-                      <dd className="text-slate-700">{other.minor || "Not listed"}</dd>
-                    </div>
-                    <div className="flex flex-wrap gap-x-1.5">
-                      <dt className="font-semibold text-slate-500">Expected Graduation Date:</dt>
-                      <dd className="text-slate-700">{other.expectedGraduation || "Not listed"}</dd>
-                    </div>
-                    <div className="flex flex-wrap gap-x-1.5">
-                      <dt className="font-semibold text-slate-500 shrink-0">Career Interests:</dt>
-                      <dd className="text-slate-700">
-                        {other.careerInterests && other.careerInterests.length > 0
-                          ? other.careerInterests.join(", ")
-                          : "Not listed"}
-                      </dd>
-                    </div>
-                  </dl>
-                )}
+                {/* Profile details — shown for both sides of the match so the
+                    mentee sees the mentor's full profile too (per the spec). */}
+                <dl className="grid gap-1.5 text-xs">
+                  <div className="flex flex-wrap gap-x-1.5">
+                    <dt className="font-semibold text-slate-500">Minor:</dt>
+                    <dd className="text-slate-700">{other.minor || "Not listed"}</dd>
+                  </div>
+                  <div className="flex flex-wrap gap-x-1.5">
+                    <dt className="font-semibold text-slate-500">Expected Graduation Date:</dt>
+                    <dd className="text-slate-700">{other.expectedGraduation || "Not listed"}</dd>
+                  </div>
+                  <div className="flex flex-wrap gap-x-1.5">
+                    <dt className="font-semibold text-slate-500 shrink-0">Career Interests:</dt>
+                    <dd className="text-slate-700">
+                      {other.careerInterests && other.careerInterests.length > 0
+                        ? other.careerInterests.join(", ")
+                        : "Not listed"}
+                    </dd>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <dt className="font-semibold text-slate-500">Bio:</dt>
+                    <dd
+                      className={
+                        "whitespace-pre-wrap leading-snug " +
+                        (other.bio ? "text-slate-700" : "italic text-slate-400")
+                      }
+                    >
+                      {other.bio || "Bio not listed"}
+                    </dd>
+                  </div>
+                </dl>
 
                 {showInactivityWarn && (
                   <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
@@ -511,7 +525,7 @@ export default async function MatchesPage() {
           <header>
             <h2 className="font-display text-lg font-bold text-navy-800">Pending Requests</h2>
             <p className="mt-1 text-xs text-slate-500">
-              Waiting on the mentor to accept or decline. You can cancel any time.
+              Waiting for the mentor to respond. You can cancel any time.
             </p>
           </header>
           <ul className="space-y-3">
