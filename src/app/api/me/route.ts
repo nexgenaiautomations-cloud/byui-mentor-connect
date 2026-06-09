@@ -79,21 +79,28 @@ export async function PATCH(req: Request) {
     [firstName, lastName].filter((s) => s && s.trim()).join(" ").trim() ||
     user.name;
 
+  // `undefined` means the client didn't touch that field — keep existing.
+  // `null` or empty string means explicit clear. Same rule for arrays.
+  function keepOrSet<T>(incoming: T | undefined, existing: T): T {
+    return incoming === undefined ? existing : incoming;
+  }
   const [updated] = await db
     .update(users)
     .set({
       firstName,
       lastName,
       name: composedName,
-      major: data.major ?? null,
-      minor: data.minor ?? null,
-      semesterLevel: data.semesterLevel || null,
-      expectedGraduation: data.expectedGraduation ?? null,
-      phone: data.phone ?? null,
-      preferredContactMethod: data.preferredContactMethod || null,
-      bio: data.bio ?? null,
-      image: data.image ? data.image : null,
-      careerInterests: data.careerInterests ?? [],
+      major: keepOrSet(data.major, user.major),
+      minor: keepOrSet(data.minor, user.minor),
+      semesterLevel: keepOrSet(data.semesterLevel, user.semesterLevel) || null,
+      expectedGraduation: keepOrSet(data.expectedGraduation, user.expectedGraduation),
+      phone: keepOrSet(data.phone, user.phone),
+      preferredContactMethod:
+        keepOrSet(data.preferredContactMethod, user.preferredContactMethod) || null,
+      bio: keepOrSet(data.bio, user.bio),
+      image:
+        data.image === undefined ? user.image : data.image ? data.image : null,
+      careerInterests: keepOrSet(data.careerInterests, user.careerInterests),
       onboardedAt: user.onboardedAt ?? new Date(),
     })
     .where(eq(users.id, user.id))
