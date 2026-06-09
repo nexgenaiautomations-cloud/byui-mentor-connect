@@ -1,0 +1,97 @@
+import { NextResponse } from "next/server";
+import { headers } from "next/headers";
+import { z } from "zod";
+import { db } from "@/db/client";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { verifyPassword } from "@/lib/password";
+import { attachSessionCookie } from "@/lib/auth-cookie";
+import { limitPasswordSignIn } from "@/lib/rate-limit";
+
+const BYUI_DOMAIN = "@byui.edu";
+
+const schema = z.object({
+  email: z.string().trim().toLowerCase().email().max(200),
+  password: z.string().min(1).max(200),
+});
+
+export async function POST(req: Request) {
+  const h = await headers();
+  const ip =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    h.get("x-real-ip") ??
+    null;
+
+  const body = await req.json().catch(() => null);
+  const parsed = body ? schema.safeParse(body) : null;
+  if (!parsed || !parsed.success) {
+    // Generic error so we don't leak whether the email shape was OK.
+    return NextResponse.json(
+      { error: "Email and password are required." },
+      { status: 400 }
+    );
+  }
+  const { email, password } = parsed.data;
+  if (!email.endsWith(BYUI_DOMAIN)) {
+    return NextResponse.json(
+      { error: "Only @byui.edu emails are allowed." },
+      { status: 400 }
+    );
+  }
+
+  const rl = await limitPasswordSignIn(email, ip);
+  if (!rl.ok) {
+    return NextResponse.json(
+      {
+        error:
+          "Too many sign-in attempts. Wait a few minutes and try again, or reset your password.",
+      },
+      { status: 429 }
+    );
+  }
+
+  const [user] = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      passwordHash: users.passwordHash,
+      onboardedAt: users.onboardedAt,
+    })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
+  // Identical response for "no user" and "wrong password" — prevents account
+  // enumeration via response timing or wording.
+  if (!user || !user.passwordHash) {
+    return NextResponse.json(
+      {
+        error:
+          "That email and password don't match. Try again or use Forgot password.",
+      },
+      { status: 401 }
+    );
+  }
+
+  const ok = await verifyPassword(password, user.passwordHash);
+  if (!ok) {
+    return NextResponse.json(
+      {
+        error:
+          "That email and password don't match. Try again or use Forgot password.",
+      },
+      { status: 401 }
+    );
+  }
+
+  const res = NextResponse.json({
+    ok: true,
+    redirectTo: user.onboardedAt ? "/dashboard" : "/onboarding",
+  });
+  return attachSessionCookie(res, {
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+  });
+}

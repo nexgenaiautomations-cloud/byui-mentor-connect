@@ -1,24 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "../../../auth";
-import { DemoButtons } from "./demo-buttons";
 import { Logo } from "@/components/logo";
-import { LoginForm } from "./login-form";
+import { SignupForm } from "./signup-form";
 
 const CAMPUS_LOGIN = "/byui-campus.jpg";
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; next?: string; email?: string }>;
-}) {
+export default async function SignupPage() {
   const session = await auth();
   if (session?.user?.id) redirect("/dashboard");
-  const { error, next, email } = await searchParams;
 
   return (
     <main className="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
-      {/* Campus photo column — visible on lg+ */}
       <aside className="relative hidden lg:block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -39,12 +32,13 @@ export default async function LoginPage({
           </Link>
           <div>
             <p className="font-display text-3xl font-black leading-tight">
-              Find your mentor.
+              Start your
               <br />
-              <span className="text-sky-200">Skip the luck.</span>
+              <span className="text-sky-200">career action plan.</span>
             </p>
             <p className="mt-4 max-w-md text-sm text-white/80">
-              Peer mentorship that actually scales — built for BYU-Idaho students by BYU-Idaho students.
+              Find a mentor, log weekly progress, and earn trophies for keeping the
+              CAN standard.
             </p>
           </div>
           <p className="text-[11px] text-white/50">© BYU-Idaho Career Advancement Network</p>
@@ -53,37 +47,37 @@ export default async function LoginPage({
 
       <div className="grid place-items-center bg-[#F7F8FB] px-6 py-12">
         <div className="w-full max-w-md">
-          <Link href="/" className="mb-6 flex items-center justify-center gap-3 lg:hidden">
+          <Link
+            href="/"
+            className="mb-6 flex items-center justify-center gap-3 lg:hidden"
+          >
             <Logo size={36} />
-            <span className="font-display text-base font-black tracking-tight text-navy-800">BYUI CAN</span>
+            <span className="font-display text-base font-black tracking-tight text-navy-800">
+              BYUI CAN
+            </span>
           </Link>
           <div className="card">
-            <h1 className="font-display text-2xl font-bold text-navy-800">Sign in</h1>
+            <h1 className="font-display text-2xl font-bold text-navy-800">
+              Create your account
+            </h1>
             <p className="mt-1 text-sm text-slate-600">
-              Welcome back. Use your password or get a magic link.
+              Takes about a minute. We&apos;ll ask you about your goals on the
+              next screen.
             </p>
-
-            {error && (
-              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {error === "AccessDenied"
-                  ? "Only @byui.edu addresses are allowed."
-                  : error === "RateLimited"
-                    ? "Too many sign-in attempts. Please wait an hour and try again."
-                    : error === "CredentialsSignin"
-                      ? "That email and password don't match."
-                      : "Sign-in failed. Please try again."}
-              </div>
-            )}
 
             <div className="mt-5">
-              <LoginForm initialEmail={email ?? ""} next={next} />
+              <SignupForm />
             </div>
 
-            <p className="mt-6 text-center text-xs text-slate-500">
-              By signing in you agree to receive a one-time login link by email when you request one.
+            <p className="mt-6 text-center text-sm text-slate-600">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-semibold text-byui-blue hover:underline"
+              >
+                Sign in →
+              </Link>
             </p>
-
-            {process.env.DEMO_ENABLED === "true" && <DemoButtons />}
           </div>
         </div>
       </div>

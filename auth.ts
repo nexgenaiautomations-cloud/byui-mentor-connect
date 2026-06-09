@@ -1,9 +1,12 @@
 import NextAuth from "next-auth";
 import Resend from "next-auth/providers/resend";
+import Credentials from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/db/client";
 import { users, accounts, sessions, verificationTokens } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { buildMagicLinkEmail } from "@/lib/magic-link-email";
+import { verifyPassword } from "@/lib/password";
 
 const BYUI_DOMAIN = "@byui.edu";
 
@@ -26,7 +29,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
-  session: { strategy: "database" },
+  // JWT sessions so the Credentials (password) provider can coexist with the
+  // Resend magic-link provider. Both write to the same `users` table via the
+  // DrizzleAdapter; only the session storage differs.
+  session: { strategy: "jwt" },
+  // Pin the session cookie name to NODE_ENV. Auth.js would otherwise pick the
+  // `__Secure-` prefix whenever AUTH_URL is HTTPS — but in local dev (http on
+  // localhost) the browser silently refuses to STORE a `__Secure-` cookie, so
+  // auth() can never read it back. NODE_ENV-driven naming side-steps that.
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-authjs.session-token"
+          : "authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   pages: { signIn: "/login", verifyRequest: "/login/check-email" },
   providers: [
     Resend({
@@ -76,6 +100,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       },
     }),
+    Credentials({
+      name: "Email and password",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(rawCredentials) {
+        const email = String(rawCredentials?.email ?? "")
+          .trim()
+          .toLowerCase();
+        const password = String(rawCredentials?.password ?? "");
+        if (!email || !password) return null;
+        if (!email.endsWith(BYUI_DOMAIN)) return null;
+
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
+        if (!user || !user.passwordHash) return null;
+
+        const ok = await verifyPassword(password, user.passwordHash);
+        if (!ok) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
+      },
+    }),
   ],
   callbacks: {
     async signIn({ user }) {
@@ -84,9 +140,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!email.endsWith(BYUI_DOMAIN)) return false;
       return true;
     },
-    async session({ session, user }) {
-      if (session.user) {
-        (session.user as { id?: string }).id = user.id;
+    async jwt({ token, user }) {
+      // First call after sign-in: user is present, persist its id on the token.
+      if (user?.id) {
+        token.sub = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token.sub) {
+        (session.user as { id?: string }).id = token.sub;
       }
       return session;
     },

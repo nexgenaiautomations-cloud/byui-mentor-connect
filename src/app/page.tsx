@@ -94,7 +94,7 @@ export default async function LandingPage() {
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
               <Link
-                href="/login"
+                href="/signup"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-bold text-byui-blue-dark shadow-lift hover:bg-byui-blue-light/30 active:scale-[0.98] cursor-pointer"
               >
                 Get started →
@@ -103,7 +103,7 @@ export default async function LandingPage() {
                 href="/login"
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/50 bg-white/15 px-6 py-3 text-base font-semibold text-white backdrop-blur hover:bg-white/25 cursor-pointer"
               >
-                Log in
+                Sign in
               </Link>
             </div>
             <p className="mt-4 text-xs font-medium text-white/80">Only @byui.edu addresses can register.</p>
@@ -341,12 +341,20 @@ export default async function LandingPage() {
             BYUI CAN Mentor Connect is the digital backbone for the Career Advancement Network —
             peer mentorship that scales.
           </p>
-          <Link
-            href="/login"
-            className="mt-7 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-bold text-byui-blue-dark shadow-lift hover:bg-byui-blue-light/30 cursor-pointer"
-          >
-            Sign in with your BYU-I email →
-          </Link>
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/signup"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-bold text-byui-blue-dark shadow-lift hover:bg-byui-blue-light/30 cursor-pointer"
+            >
+              Create an account →
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/50 bg-white/15 px-6 py-3 text-base font-semibold text-white backdrop-blur hover:bg-white/25 cursor-pointer"
+            >
+              Sign in
+            </Link>
+          </div>
         </div>
       </section>
 

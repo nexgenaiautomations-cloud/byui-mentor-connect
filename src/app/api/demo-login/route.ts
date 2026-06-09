@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+// See lib/auth-cookie.ts for why we import from next-auth/jwt, not @auth/core/jwt.
+import { encode } from "next-auth/jwt";
 import { db } from "@/db/client";
-import { sessions, users } from "@/db/schema";
+import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { sessionCookieName } from "@/lib/auth-cookie";
 
 const DEMO_EMAILS: Record<string, string> = {
   admin: "admin.demo@byui.edu",
@@ -10,13 +12,18 @@ const DEMO_EMAILS: Record<string, string> = {
   member: "member.demo@byui.edu",
 };
 
-const SESSION_COOKIE = process.env.NODE_ENV === "production"
-  ? "__Secure-authjs.session-token"
-  : "authjs.session-token";
+const SESSION_TTL_SECONDS = 60 * 60; // 1h — demo sessions stay short-lived.
 
 export async function POST(req: Request) {
   if (process.env.DEMO_ENABLED !== "true") {
     return NextResponse.json({ error: "Demo login disabled" }, { status: 403 });
+  }
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) {
+    return NextResponse.json(
+      { error: "AUTH_SECRET not configured" },
+      { status: 500 }
+    );
   }
 
   const body = await req.json().catch(() => ({}));
@@ -31,25 +38,26 @@ export async function POST(req: Request) {
     );
   }
 
-  const token = crypto.randomUUID() + crypto.randomUUID().replace(/-/g, "");
-  // Short-lived (1h) — demo sessions shouldn't be persistent. Reduces the
-  // blast radius if DEMO_ENABLED leaks into a prod-like environment.
-  const expires = new Date(Date.now() + 1000 * 60 * 60);
-
-  await db.insert(sessions).values({
-    sessionToken: token,
-    userId: user.id,
-    expires,
+  // Cookie name + secure flag tracked by sessionCookieName() so we match
+  // Auth.js's own logic (which uses AUTH_URL's protocol, not NODE_ENV).
+  const cookieName = sessionCookieName();
+  const token = await encode({
+    token: { sub: user.id, email: user.email, name: user.name ?? undefined },
+    secret,
+    salt: cookieName,
+    maxAge: SESSION_TTL_SECONDS,
   });
 
-  const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, token, {
+  const res = NextResponse.json({ ok: true, redirectTo: "/dashboard" });
+  res.cookies.set({
+    name: cookieName,
+    value: token,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // Match secure flag to cookie name: __Secure- prefix requires Secure=true.
+    secure: cookieName.startsWith("__Secure-"),
     path: "/",
-    expires,
+    expires: new Date(Date.now() + SESSION_TTL_SECONDS * 1000),
   });
-
-  return NextResponse.json({ ok: true, redirectTo: "/dashboard" });
+  return res;
 }
