@@ -6,6 +6,8 @@ import { and, desc, eq, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getCurrentUser } from "@/lib/session";
 import { StatTile } from "@/components/stat-card";
+import { KpiStrip } from "@/components/kpi-strip";
+import { getStudentKpis } from "@/lib/kpis";
 
 export default async function DashboardPage() {
   const me = await getCurrentUser();
@@ -37,6 +39,9 @@ export default async function DashboardPage() {
   // Only pending — never declined — surfaces to members so the experience
   // stays encouraging.
   const sentByMe = allReqs.filter((r) => r.menteeId === me.id);
+
+  // Mentee KPI snapshot — drives the new strip and the welcome-panel logic.
+  const studentKpis = me.isMentor ? null : await getStudentKpis(me.id);
 
   const mentor = alias(users, "mentor_u");
   const mentee = alias(users, "mentee_u");
@@ -131,8 +136,46 @@ export default async function DashboardPage() {
     };
   }
 
+  // First-login welcome: no active matches, no pending requests. Computed
+  // from data so the card naturally disappears once the student takes action.
+  const showWelcome =
+    !me.isMentor &&
+    !me.isAdmin &&
+    activeMatches.length === 0 &&
+    sentByMe.length === 0;
+
   return (
     <div className="space-y-5 md:space-y-6">
+      {showWelcome && (
+        <section className="rounded-2xl border-2 border-byui-blue-light bg-gradient-to-r from-byui-blue-light/30 to-byui-blue-light/10 p-5 shadow-soft md:p-6">
+          <p className="text-xs font-bold uppercase tracking-wider text-byui-blue">
+            Welcome to BYUI CAN
+          </p>
+          <h2 className="mt-1 font-display text-2xl font-black tracking-tight text-byui-blue-dark md:text-3xl">
+            Let&apos;s find your mentor.
+          </h2>
+          <p className="mt-2 max-w-xl text-sm text-slate-700">
+            Search for mentors who align with your major, career interests, and
+            goals. You can also start logging activities right away — your progress
+            doesn&apos;t need to wait for a match.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              href="/mentors"
+              className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark cursor-pointer"
+            >
+              Find a Mentor
+            </Link>
+            <Link
+              href="/log-meeting"
+              className="inline-flex items-center justify-center rounded-lg border border-byui-blue/40 bg-white px-4 py-2 text-sm font-bold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+            >
+              Log an Activity
+            </Link>
+          </div>
+        </section>
+      )}
+
       <section className="rounded-2xl bg-gradient-to-r from-byui-blue-dark to-byui-blue p-5 text-white shadow-lift md:p-6">
         <p className="text-xs font-semibold uppercase tracking-wider text-byui-blue-light">
           {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
@@ -181,6 +224,8 @@ export default async function DashboardPage() {
             : `${mentorCount?.count ?? 0} mentors are accepting requests right now.`}
         </p>
       </section>
+
+      {studentKpis && <KpiStrip kpis={studentKpis} />}
 
       {me.isMentor && impact ? (
         <section className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">

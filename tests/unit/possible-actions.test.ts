@@ -4,9 +4,17 @@ import {
   CAN_CADENCE,
   INACTIVITY_WARN_DAYS,
   INACTIVITY_DISCONNECT_DAYS,
+  CAREER_TASKS_OPTIONS,
+  INDUSTRY_EXPERIENCES_OPTIONS,
+  CAREER_CHATS_OPTIONS,
+  ACCOMPLISHMENT_GROUPS,
+  ALL_ACCOMPLISHMENTS,
+  CELEBRATION_ACCOMPLISHMENTS,
+  groupForAccomplishment,
+  dominantGroup,
 } from "@/lib/possible-actions";
 
-describe("POSSIBLE_ACTIONS", () => {
+describe("POSSIBLE_ACTIONS (legacy flat list)", () => {
   it("matches the BYUI CAN list verbatim", () => {
     expect(POSSIBLE_ACTIONS).toContain("Explore Careers, Companies, Industries");
     expect(POSSIBLE_ACTIONS).toContain("Help with LinkedIn or Other Platforms");
@@ -20,6 +28,81 @@ describe("POSSIBLE_ACTIONS", () => {
 
   it("includes Course planning", () => {
     expect(POSSIBLE_ACTIONS).toContain("Course planning");
+  });
+});
+
+describe("accomplishment groups (grouped form)", () => {
+  it("has 13 career tasks", () => {
+    expect(CAREER_TASKS_OPTIONS).toHaveLength(13);
+  });
+
+  it("has 3 industry experiences (offers)", () => {
+    expect(INDUSTRY_EXPERIENCES_OPTIONS).toHaveLength(3);
+    expect(INDUSTRY_EXPERIENCES_OPTIONS).toContain(
+      "My mentee got an internship offer"
+    );
+    expect(INDUSTRY_EXPERIENCES_OPTIONS).toContain(
+      "My mentee got a career-related, full-time job offer"
+    );
+  });
+
+  it("has 2 career chats", () => {
+    expect(CAREER_CHATS_OPTIONS).toEqual([
+      "Help with Informational Interview preparation",
+      "Share professional connections and relationships",
+    ]);
+  });
+
+  it("ACCOMPLISHMENT_GROUPS exposes all three sections in display order", () => {
+    expect(ACCOMPLISHMENT_GROUPS.map((g) => g.key)).toEqual([
+      "career_tasks",
+      "industry_experiences",
+      "career_chats",
+    ]);
+    expect(ACCOMPLISHMENT_GROUPS[0].heading).toBe("1. Career Tasks — weekly");
+  });
+
+  it("ALL_ACCOMPLISHMENTS contains 18 unique entries", () => {
+    expect(ALL_ACCOMPLISHMENTS).toHaveLength(18);
+    expect(new Set(ALL_ACCOMPLISHMENTS).size).toBe(18);
+  });
+
+  it("CELEBRATION_ACCOMPLISHMENTS covers the three offer items", () => {
+    expect(CELEBRATION_ACCOMPLISHMENTS).toEqual(INDUSTRY_EXPERIENCES_OPTIONS);
+  });
+});
+
+describe("groupForAccomplishment / dominantGroup", () => {
+  it("maps a career task to career_tasks", () => {
+    expect(groupForAccomplishment("Work on Resumes")).toBe("career_tasks");
+  });
+
+  it("maps a career chat to career_chats", () => {
+    expect(groupForAccomplishment("Help with Informational Interview preparation")).toBe(
+      "career_chats"
+    );
+  });
+
+  it("returns null for unknown strings", () => {
+    expect(groupForAccomplishment("Something else entirely")).toBeNull();
+  });
+
+  it("dominantGroup picks industry over chats over tasks", () => {
+    expect(
+      dominantGroup([
+        "Work on Resumes",
+        "Help with Informational Interview preparation",
+        "My mentee got an internship offer",
+      ])
+    ).toBe("industry_experiences");
+    expect(
+      dominantGroup([
+        "Work on Resumes",
+        "Help with Informational Interview preparation",
+      ])
+    ).toBe("career_chats");
+    expect(dominantGroup(["Work on Resumes"])).toBe("career_tasks");
+    expect(dominantGroup([])).toBeNull();
   });
 });
 

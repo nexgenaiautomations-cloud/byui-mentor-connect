@@ -34,6 +34,21 @@ export const meetingType = pgEnum("meeting_type", [
   "phone",
   "other",
 ]);
+// Who recorded an activity log. "system" is for auto-logs generated when a
+// student crosses a KPI threshold (weekly/monthly goal met).
+export const logAuthor = pgEnum("log_author", [
+  "mentee",
+  "mentor",
+  "admin",
+  "system",
+]);
+// Grouping for accomplishment checkboxes on the Log an Activity form. Stored
+// alongside each log so KPI queries don't need to string-parse topics.
+export const accomplishmentGroup = pgEnum("accomplishment_group", [
+  "career_tasks",
+  "industry_experiences",
+  "career_chats",
+]);
 
 // Auth.js users table — also our "members". Everyone who registers is a member.
 export const users = pgTable("user", {
@@ -65,6 +80,18 @@ export const users = pgTable("user", {
 
   isAdmin: boolean("is_admin").notNull().default(false),
   onboardedAt: timestamp("onboarded_at", { mode: "date" }),
+
+  // Hashed password for Credentials provider (Phase 2). Null for magic-link
+  // and demo accounts.
+  passwordHash: text("password_hash"),
+
+  // Prior career-chat experience bucket — populated by Phase 2 signup.
+  // Values: "0" | "1-10" | "11-25" | "26-50" | "51-100" | "100+"
+  priorCareerChats: text("prior_career_chats"),
+  // Prior internship / career-related work bucket — populated by Phase 2.
+  // Values: "None" | "1" | "2" | "3 or more"
+  priorInternshipExperience: text("prior_internship_experience"),
+
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
@@ -180,19 +207,28 @@ export const matches = pgTable(
   })
 );
 
+// Renamed conceptually to "activity logs" — table name stays meeting_log to
+// avoid a destructive rename. The student is now the primary author; mentor
+// and match are optional so a student can log without a mentor.
 export const meetingLogs = pgTable(
   "meeting_log",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    matchId: uuid("match_id")
-      .notNull()
-      .references(() => matches.id, { onDelete: "cascade" }),
-    mentorId: text("mentor_id")
-      .notNull()
-      .references(() => users.id),
-    menteeId: text("mentee_id")
-      .notNull()
-      .references(() => users.id),
+    // Nullable so a student with no active match can still log activity.
+    matchId: uuid("match_id").references(() => matches.id, {
+      onDelete: "cascade",
+    }),
+    // Nullable for the same reason — set when a match exists.
+    mentorId: text("mentor_id").references(() => users.id),
+    // Legacy field kept in sync with studentId; older code paths still read it.
+    menteeId: text("mentee_id").references(() => users.id),
+    // The student this log belongs to. Required from now on; code always sets
+    // it. Old rows are backfilled by scripts/backfill-activity-logs.ts.
+    studentId: text("student_id").references(() => users.id),
+    createdBy: logAuthor("created_by").default("mentor"),
+    lastEditedBy: text("last_edited_by").references(() => users.id),
+    isSystemGenerated: boolean("is_system_generated").notNull().default(false),
+    accomplishmentGroup: accomplishmentGroup("accomplishment_group"),
     meetingDate: timestamp("meeting_date", { mode: "date" }).notNull(),
     meetingType: meetingType("meeting_type").notNull().default("video"),
     durationMinutes: integer("duration_minutes"),
@@ -202,10 +238,16 @@ export const meetingLogs = pgTable(
     mentorNotes: text("mentor_notes"),
     menteeConfirmed: boolean("mentee_confirmed").notNull().default(false),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }),
   },
   (t) => ({
     matchIdx: index("meeting_log_match_idx").on(t.matchId),
     mentorIdx: index("meeting_log_mentor_idx").on(t.mentorId),
+    studentIdx: index("meeting_log_student_idx").on(t.studentId),
+    studentDateIdx: index("meeting_log_student_date_idx").on(
+      t.studentId,
+      t.meetingDate
+    ),
   })
 );
 
@@ -237,10 +279,63 @@ export const monthlyFeedback = pgTable(
   })
 );
 
+// Password-reset tokens — stored hashed so a DB leak doesn't let an attacker
+// reset accounts. The plain token only lives in the email link.
+//
+// `tokenHash` is SHA-256(rawToken) hex. Lookups go through the hash, never
+// the raw token. `expiresAt` is enforced at consume time, not by a TTL trigger.
+// Tokens are deleted on consume (single-use).
+export const passwordResetTokens = pgTable(
+  "password_reset_token",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    tokenIdx: uniqueIndex("password_reset_token_hash_uniq").on(t.tokenHash),
+    userIdx: index("password_reset_token_user_idx").on(t.userId),
+  })
+);
+
+// Earned-achievement rows. Each (student, achievementKey) is unique — a
+// student earns each badge at most once.
+export const achievements = pgTable(
+  "achievement",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: text("student_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    achievementKey: text("achievement_key").notNull(),
+    earnedAt: timestamp("earned_at", { mode: "date" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    uniq: uniqueIndex("achievement_student_key_uniq").on(
+      t.studentId,
+      t.achievementKey
+    ),
+    studentIdx: index("achievement_student_idx").on(t.studentId),
+  })
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type MentorApplication = typeof mentorApplications.$inferSelect;
 export type Request = typeof requests.$inferSelect;
 export type Match = typeof matches.$inferSelect;
 export type MeetingLog = typeof meetingLogs.$inferSelect;
+export type NewMeetingLog = typeof meetingLogs.$inferInsert;
 export type MonthlyFeedback = typeof monthlyFeedback.$inferSelect;
+export type Achievement = typeof achievements.$inferSelect;
+export type NewAchievement = typeof achievements.$inferInsert;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;

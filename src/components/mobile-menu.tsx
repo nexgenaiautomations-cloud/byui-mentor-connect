@@ -16,17 +16,19 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/matches", label: "My Mentees" },
-      { href: "/log-meeting", label: "Log an activity" }
+      { href: "/log-meeting", label: "Log an Activity" },
+      { href: "/check-in", label: "Monthly Check-in" }
     );
   } else if (!user.isAdmin) {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
-      { href: "/mentors", label: "Find a mentor" },
+      { href: "/mentors", label: "Find a Mentor" },
       { href: "/matches", label: "My Mentors" },
-      { href: "/apply-mentor", label: "Apply to mentor" }
+      { href: "/log-meeting", label: "Log an Activity" },
+      { href: "/trophy-case", label: "Trophy Case" }
     );
   }
-  primary.push({ href: "/profile", label: "Profile" });
+  primary.push({ href: "/settings", label: "Settings" });
 
   const admin: NavItem[] = [];
   if (user.isAdmin) {

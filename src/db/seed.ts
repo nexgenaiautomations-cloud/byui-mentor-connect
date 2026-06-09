@@ -7,9 +7,12 @@ import {
   matches,
   meetingLogs,
   monthlyFeedback,
+  achievements,
   type NewUser,
 } from "./schema";
 import { eq } from "drizzle-orm";
+import { evaluateAchievementsForStudent } from "@/lib/achievements";
+import { dominantGroup } from "@/lib/possible-actions";
 
 const photo = (id: string) =>
   `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=200&h=200&q=80`;
@@ -313,6 +316,7 @@ async function upsertUser(u: NewUser) {
 }
 
 async function clearActivity() {
+  await db.delete(achievements);
   await db.delete(monthlyFeedback);
   await db.delete(meetingLogs);
   await db.delete(matches);
@@ -502,12 +506,48 @@ export async function seedDemo() {
       matchId: mt.matchId,
       mentorId: mt.mentorId,
       menteeId: mt.menteeId,
+      studentId: mt.menteeId,
+      createdBy: "mentor",
+      // Legacy seed topics are free-form prose — they describe career task
+      // work, so tag them as career_tasks for KPI purposes.
+      accomplishmentGroup: "career_tasks",
       meetingDate: daysAgo(mt.daysAgo),
       meetingType: mt.type,
       durationMinutes: mt.duration,
       topicsDiscussed: TOPICS[mt.topic],
       actionItems: ACTIONS[mt.action],
       nextMeetingDate: daysAgo(mt.daysAgo - 14),
+    });
+  }
+
+  // Extra self-logs for the demo mentee (Mason) so the dashboard KPI strip
+  // shows a populated state: weekly 1/1, monthly 3/3, multi-week streak.
+  const masonLogs: Array<{
+    daysAgo: number;
+    group: "career_tasks" | "career_chats";
+    accomplishments: string[];
+  }> = [
+    // This week — career task
+    { daysAgo: 2, group: "career_tasks", accomplishments: ["Work on Resumes"] },
+    // Three weeks of streak history
+    { daysAgo: 9, group: "career_tasks", accomplishments: ["Work on Interviewing Skills"] },
+    { daysAgo: 16, group: "career_tasks", accomplishments: ["Work on Elevator Pitch"] },
+    // This month — three career chats so monthly KPI = 3/3
+    { daysAgo: 4, group: "career_chats", accomplishments: ["Help with Informational Interview preparation"] },
+    { daysAgo: 11, group: "career_chats", accomplishments: ["Share professional connections and relationships"] },
+    { daysAgo: 18, group: "career_chats", accomplishments: ["Help with Informational Interview preparation"] },
+  ];
+  for (const ml of masonLogs) {
+    await db.insert(meetingLogs).values({
+      matchId: m4, // Mason ↔ Morgan
+      mentorId: morgan,
+      menteeId: mason,
+      studentId: mason,
+      createdBy: "mentee",
+      accomplishmentGroup: dominantGroup(ml.accomplishments),
+      meetingDate: daysAgo(ml.daysAgo),
+      meetingType: "other",
+      topicsDiscussed: ml.accomplishments.join(" · "),
     });
   }
 
@@ -539,10 +579,31 @@ export async function seedDemo() {
     });
   }
 
+  // Evaluate achievements for every mentee so the Trophy Case has earned
+  // rows on demo reset. Failures here are non-fatal — the seed is still
+  // useful even if the achievement pass blows up.
+  const studentIds = [
+    olivia,
+    liam,
+    sophia,
+    noah,
+    mia,
+    ava,
+    james,
+    mason,
+  ];
+  for (const id of studentIds) {
+    try {
+      await evaluateAchievementsForStudent(id);
+    } catch (e) {
+      console.warn(`achievement eval failed for ${id}:`, e);
+    }
+  }
+
   console.log("Seeded:");
   console.log(`  users:         ${Object.keys(ids).length}`);
   console.log(`  matches:       ${matchIds.length}`);
-  console.log(`  meeting_logs:  ${meetings.length}`);
+  console.log(`  meeting_logs:  ${meetings.length + masonLogs.length}`);
   console.log(`  pending for mentor.demo: ${pendingForMorgan?.id ? "yes" : "no"}`);
 }
 

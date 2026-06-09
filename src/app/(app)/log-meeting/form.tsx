@@ -3,21 +3,20 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
-  LOG_ACCOMPLISHMENT_OPTIONS,
-  OTHER_ACCOMPLISHMENT,
+  ACCOMPLISHMENT_GROUPS,
+  CELEBRATION_ACCOMPLISHMENTS,
 } from "@/lib/possible-actions";
-
-const CELEBRATION_ACCOMPLISHMENTS = [
-  "My mentee got an internship offer",
-  "My mentee got a career-related, part-time job offer",
-  "My mentee got a career-related, full-time job offer",
-];
 
 async function celebrate() {
   const confetti = (await import("canvas-confetti")).default;
   confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
   setTimeout(() => {
-    confetti({ particleCount: 60, spread: 100, startVelocity: 35, origin: { y: 0.7 } });
+    confetti({
+      particleCount: 60,
+      spread: 100,
+      startVelocity: 35,
+      origin: { y: 0.7 },
+    });
   }, 220);
 }
 
@@ -40,30 +39,40 @@ function avatarFor(name: string | null) {
   return `https://api.dicebear.com/9.x/initials/svg?seed=${seed}&backgroundColor=006EB6&textColor=ffffff`;
 }
 
-export function LogMeetingForm({
-  matches,
-  initialMatchId,
-}: {
+type MentorProps = {
+  mode: "mentor";
   matches: Match[];
   initialMatchId?: string;
-}) {
+};
+
+type MenteeProps = {
+  mode: "mentee";
+  hasMentor: boolean;
+};
+
+export function LogActivityForm(props: MentorProps | MenteeProps) {
   const router = useRouter();
+  const isMentor = props.mode === "mentor";
+  const matches = isMentor ? props.matches : [];
   const preselect =
-    initialMatchId && matches.some((m) => m.id === initialMatchId)
-      ? initialMatchId
+    isMentor && props.initialMatchId && matches.some((m) => m.id === props.initialMatchId)
+      ? props.initialMatchId
       : matches[0]?.id ?? "";
+
   const [matchId, setMatchId] = useState(preselect);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [meetingType, setMeetingType] = useState<string>("");
   const [duration, setDuration] = useState<string>("");
   const [accomplishments, setAccomplishments] = useState<Set<string>>(new Set());
-  const [otherText, setOtherText] = useState("");
   const [actions, setActions] = useState("");
   const [next, setNext] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [newlyEarned, setNewlyEarned] = useState<
+    { key: string; title: string }[]
+  >([]);
 
   const selectedMatch = useMemo(
     () => matches.find((m) => m.id === matchId),
@@ -80,14 +89,10 @@ export function LogMeetingForm({
   }
 
   function validate(): string | null {
-    if (!matchId) return "Please select a mentee.";
+    if (isMentor && !matchId) return "Please select a mentee.";
     if (!date) return "Please choose an activity date.";
-    if (accomplishments.size === 0) {
+    if (accomplishments.size === 0)
       return "Please check at least one accomplishment.";
-    }
-    if (accomplishments.has(OTHER_ACCOMPLISHMENT) && !otherText.trim()) {
-      return "Please describe the Other accomplishment.";
-    }
     return null;
   }
 
@@ -122,27 +127,22 @@ export function LogMeetingForm({
     setError(null);
     const checked = [...accomplishments];
     const shouldCelebrate = checked.some((a) =>
-      CELEBRATION_ACCOMPLISHMENTS.includes(a)
+      (CELEBRATION_ACCOMPLISHMENTS as readonly string[]).includes(a)
     );
-    // Replace the "Other" sentinel with the free-text the mentor typed so the
-    // saved log carries the actual thing they did, not a placeholder.
-    const accomplishmentList = checked.map((a) =>
-      a === OTHER_ACCOMPLISHMENT ? `Other: ${otherText.trim()}` : a
-    );
-    const topics = accomplishmentList.join(" · ");
     const durationNum = duration ? Number(duration) : null;
+    const payload: Record<string, unknown> = {
+      activityDate: date,
+      accomplishments: checked,
+      meetingType: meetingType || null,
+      durationMinutes: durationNum,
+      actionItems: actions || null,
+      nextMeetingDate: next || null,
+    };
+    if (isMentor) payload.matchId = matchId;
     const res = await fetch("/api/meeting-logs", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        matchId,
-        meetingDate: date,
-        meetingType: meetingType || null,
-        durationMinutes: durationNum,
-        topicsDiscussed: topics || null,
-        actionItems: actions || null,
-        nextMeetingDate: next || null,
-      }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -150,65 +150,68 @@ export function LogMeetingForm({
       setSubmitting(false);
       return;
     }
+    const body = await res.json();
+    setNewlyEarned(body.newlyEarned ?? []);
     setSaved(true);
     setSubmitting(false);
     setConfirmOpen(false);
     setAccomplishments(new Set());
-    setOtherText("");
     setActions("");
     setNext("");
     setMeetingType("");
     setDuration("");
-    if (shouldCelebrate) {
+    if (shouldCelebrate || (body.newlyEarned ?? []).length > 0) {
       void celebrate();
     }
     router.refresh();
-    setTimeout(() => setSaved(false), 2500);
+    setTimeout(() => {
+      setSaved(false);
+      setNewlyEarned([]);
+    }, 4500);
   }
-
-  const accomplishmentSummary = useMemo(() => {
-    return [...accomplishments].map((a) =>
-      a === OTHER_ACCOMPLISHMENT ? `Other: ${otherText.trim() || "—"}` : a
-    );
-  }, [accomplishments, otherText]);
 
   return (
     <>
       <form onSubmit={onReview} className="space-y-5">
-        <div>
-          <label className="label">Mentee</label>
-          <div className="flex flex-wrap items-center gap-3">
-            <select
-              className="input w-auto min-w-[180px] flex-none"
-              value={matchId}
-              onChange={(e) => setMatchId(e.target.value)}
-              required
-            >
-              {matches.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.menteeName ?? "Mentee"}
-                </option>
-              ))}
-            </select>
-            {selectedMatch && (
-              <div className="flex items-center gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={selectedMatch.menteeImage || avatarFor(selectedMatch.menteeName)}
-                  alt=""
-                  className="h-10 w-10 shrink-0 rounded-full border border-byui-blue-light/40 object-cover"
-                />
-                <p className="text-sm font-medium text-slate-700">
-                  {selectedMatch.menteeMajor || (
-                    <span className="text-slate-400">Major not listed</span>
-                  )}
-                </p>
-              </div>
-            )}
+        {isMentor && matches.length > 0 && (
+          <div>
+            <label className="label">Mentee</label>
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                className="input w-auto min-w-[180px] flex-none"
+                value={matchId}
+                onChange={(e) => setMatchId(e.target.value)}
+                required
+              >
+                {matches.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.menteeName ?? "Mentee"}
+                  </option>
+                ))}
+              </select>
+              {selectedMatch && (
+                <div className="flex items-center gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={
+                      selectedMatch.menteeImage ||
+                      avatarFor(selectedMatch.menteeName)
+                    }
+                    alt=""
+                    className="h-10 w-10 shrink-0 rounded-full border border-byui-blue-light/40 object-cover"
+                  />
+                  <p className="text-sm font-medium text-slate-700">
+                    {selectedMatch.menteeMajor || (
+                      <span className="text-slate-400">Major not listed</span>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className="label">Activity date</label>
             <input
@@ -238,7 +241,8 @@ export function LogMeetingForm({
           </div>
           <div>
             <label className="label">
-              Duration (min) <span className="font-normal text-slate-400">(optional)</span>
+              Duration (min){" "}
+              <span className="font-normal text-slate-400">(optional)</span>
             </label>
             <input
               type="number"
@@ -251,60 +255,36 @@ export function LogMeetingForm({
           </div>
         </div>
 
-        <fieldset>
+        <fieldset className="space-y-4">
           <legend className="label">Accomplishments</legend>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Check anything you covered in this activity.
+          <p className="-mt-1 text-xs text-slate-500">
+            Check anything you covered. Each section maps to one of the BYUI
+            CAN program goals.
           </p>
-          <div className="mt-2 grid gap-1 rounded-xl border border-byui-blue-light/40 bg-slate-50 p-2 sm:grid-cols-2">
-            {LOG_ACCOMPLISHMENT_OPTIONS.map((a) => {
-              const checked = accomplishments.has(a);
-              return (
-                <label
-                  key={a}
-                  className={
-                    "flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs leading-snug transition " +
-                    (checked
-                      ? "bg-byui-blue/10 text-byui-blue-dark ring-1 ring-byui-blue/40"
-                      : "text-slate-700 hover:bg-white")
-                  }
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggle(a)}
-                    className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer accent-byui-blue"
-                  />
-                  <span>{a}</span>
-                </label>
-              );
-            })}
-          </div>
-          {accomplishments.has(OTHER_ACCOMPLISHMENT) && (
-            <div className="mt-2">
-              <label htmlFor="other-accomplishment" className="sr-only">
-                Other accomplishment
-              </label>
-              <input
-                id="other-accomplishment"
-                className="input"
-                placeholder="Other accomplishment"
-                value={otherText}
-                onChange={(e) => setOtherText(e.target.value)}
-                required
-              />
-            </div>
-          )}
+          {ACCOMPLISHMENT_GROUPS.map((group) => (
+            <AccomplishmentGroupBlock
+              key={group.key}
+              heading={group.heading}
+              options={group.options}
+              checked={accomplishments}
+              onToggle={toggle}
+            />
+          ))}
         </fieldset>
 
         <div>
           <label className="label">
-            Action items <span className="font-normal text-slate-400">(optional)</span>
+            Action items{" "}
+            <span className="font-normal text-slate-400">(optional)</span>
           </label>
           <textarea
             rows={2}
             className="input"
-            placeholder="What's the mentee doing before next time?"
+            placeholder={
+              isMentor
+                ? "What's the mentee doing before next time?"
+                : "What's your next step?"
+            }
             value={actions}
             onChange={(e) => setActions(e.target.value)}
           />
@@ -312,7 +292,8 @@ export function LogMeetingForm({
 
         <div>
           <label className="label">
-            Next meeting <span className="font-normal text-slate-400">(optional)</span>
+            Next meeting{" "}
+            <span className="font-normal text-slate-400">(optional)</span>
           </label>
           <input
             type="date"
@@ -328,8 +309,14 @@ export function LogMeetingForm({
           </div>
         )}
         {saved && (
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-            Logged ✓
+          <div className="space-y-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            <p className="font-semibold">Logged ✓</p>
+            {newlyEarned.length > 0 && (
+              <p className="text-xs">
+                🏆 New trophy earned:{" "}
+                {newlyEarned.map((a) => a.title).join(", ")}
+              </p>
+            )}
           </div>
         )}
 
@@ -387,14 +374,16 @@ export function LogMeetingForm({
             </p>
 
             <dl className="mt-4 max-h-[60vh] space-y-2 overflow-y-auto pr-1 text-sm">
-              <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-                <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Mentee
-                </dt>
-                <dd className="mt-0.5 text-slate-800">
-                  {selectedMatch?.menteeName ?? "—"}
-                </dd>
-              </div>
+              {isMentor && (
+                <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Mentee
+                  </dt>
+                  <dd className="mt-0.5 text-slate-800">
+                    {selectedMatch?.menteeName ?? "—"}
+                  </dd>
+                </div>
+              )}
               <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
                 <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Activity Date
@@ -433,9 +422,9 @@ export function LogMeetingForm({
                   Accomplishments
                 </dt>
                 <dd className="mt-0.5 text-slate-800">
-                  {accomplishmentSummary.length > 0 ? (
+                  {accomplishments.size > 0 ? (
                     <ul className="list-disc space-y-0.5 pl-4">
-                      {accomplishmentSummary.map((a, i) => (
+                      {[...accomplishments].map((a, i) => (
                         <li key={i}>{a}</li>
                       ))}
                     </ul>
@@ -500,3 +489,50 @@ export function LogMeetingForm({
     </>
   );
 }
+
+function AccomplishmentGroupBlock({
+  heading,
+  options,
+  checked,
+  onToggle,
+}: {
+  heading: string;
+  options: readonly string[];
+  checked: Set<string>;
+  onToggle: (s: string) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-byui-blue-light/40 bg-slate-50 p-3">
+      <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-byui-blue-dark">
+        {heading}
+      </p>
+      <div className="grid gap-1 sm:grid-cols-2">
+        {options.map((a) => {
+          const isChecked = checked.has(a);
+          return (
+            <label
+              key={a}
+              className={
+                "flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs leading-snug transition " +
+                (isChecked
+                  ? "bg-byui-blue/10 text-byui-blue-dark ring-1 ring-byui-blue/40"
+                  : "text-slate-700 hover:bg-white")
+              }
+            >
+              <input
+                type="checkbox"
+                checked={isChecked}
+                onChange={() => onToggle(a)}
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer accent-byui-blue"
+              />
+              <span>{a}</span>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Retain the old export name so any stale imports keep compiling.
+export const LogMeetingForm = LogActivityForm;

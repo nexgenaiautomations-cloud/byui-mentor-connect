@@ -18,22 +18,28 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
   const primary: NavItem[] = [];
 
   // Mentors don't browse for a mentor — their nav is focused on managing
-  // mentees. Members get the browse + apply flow.
+  // mentees. Members get the browse + trophy + settings flow.
   if (user.isMentor) {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/matches", label: "My Mentees" },
-      { href: "/log-meeting", label: "Log an activity" }
+      { href: "/log-meeting", label: "Log an Activity" },
+      { href: "/check-in", label: "Monthly Check-in" },
+      { href: "/settings", label: "Settings" }
     );
   } else if (!user.isAdmin) {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
-      { href: "/mentors", label: "Find a mentor" },
+      { href: "/mentors", label: "Find a Mentor" },
       { href: "/matches", label: "My Mentors" },
-      { href: "/apply-mentor", label: "Apply to mentor" }
+      { href: "/log-meeting", label: "Log an Activity" },
+      { href: "/trophy-case", label: "Trophy Case" },
+      { href: "/settings", label: "Settings" }
     );
   }
   // Pure admins skip the member/mentor primary nav entirely.
+  // Apply-to-mentor moved into /settings — keeps the sidebar focused on the
+  // student's core flow.
 
   const admin: NavItem[] = [];
   if (user.isAdmin) {
@@ -235,13 +241,14 @@ export function MobileBar({ user }: { user: User }) {
       { href: "/dashboard", label: "Home", icon: "home" },
       { href: "/matches", label: "Mentees", icon: "mentees" },
       { href: "/log-meeting", label: "Activity", icon: "meetings" },
+      { href: "/check-in", label: "Check-in", icon: "review" },
     ];
   } else {
     items = [
       { href: "/dashboard", label: "Home", icon: "home" },
       { href: "/mentors", label: "Find", icon: "mentors" },
-      { href: "/matches", label: "My Mentors", icon: "mentees" },
-      { href: "/apply-mentor", label: "Apply", icon: "review" },
+      { href: "/log-meeting", label: "Activity", icon: "meetings" },
+      { href: "/trophy-case", label: "Trophies", icon: "matches" },
     ];
   }
   return (
