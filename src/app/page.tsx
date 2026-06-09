@@ -182,8 +182,8 @@ export default async function LandingPage() {
             <div className="relative overflow-hidden rounded-3xl shadow-lift ring-1 ring-byui-blue-light/40">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/campus-students.jpg"
-                alt="BYU-Idaho students mentoring and encouraging each other"
+                src="/students-mentoring.png"
+                alt="Two BYU-Idaho students sitting at a study table talking through career and coursework"
                 className="h-full min-h-[360px] w-full object-cover"
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-byui-blue-dark/95 via-byui-blue-dark/40 to-transparent p-6">
