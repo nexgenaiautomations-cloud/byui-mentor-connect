@@ -197,7 +197,7 @@ export default async function DashboardPage() {
                   href="/log-meeting"
                   className="rounded-lg border border-white/40 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur hover:bg-white/25 cursor-pointer"
                 >
-                  Log an activity →
+                  Log a meeting →
                 </Link>
               </>
             ) : (
@@ -394,7 +394,7 @@ export default async function DashboardPage() {
             {(me.isMentor
               ? [
                   { href: "/matches", title: "Your mentees", body: "Contact info and meeting history." },
-                  { href: "/log-meeting", title: "Log an activity", body: "Track what you did together and next steps." },
+                  { href: "/log-meeting", title: "Log a meeting", body: "Track what you did together and next steps." },
                   { href: "/profile", title: "Update profile", body: "Photo, bio, career interests." },
                 ]
               : [

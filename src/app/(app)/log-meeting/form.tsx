@@ -362,7 +362,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
 
         <div className="flex items-center justify-end">
           <button type="submit" disabled={submitting} className="btn-primary">
-            Log activity
+            {isMentor ? "Log meeting" : "Log activity"}
           </button>
         </div>
       </form>
@@ -407,7 +407,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
               id="confirm-log-title"
               className="mt-1 font-display text-xl font-black leading-tight text-byui-blue-dark"
             >
-              Confirm Activity Log
+              {isMentor ? "Confirm Meeting" : "Confirm Activity Log"}
             </h2>
             <p className="mt-1 text-xs text-slate-600">
               Please review what you recorded before submitting.

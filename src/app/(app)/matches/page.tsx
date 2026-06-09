@@ -9,13 +9,44 @@ import { INACTIVITY_WARN_DAYS, POSSIBLE_ACTIONS } from "@/lib/possible-actions";
 import { EmptyState } from "@/components/empty-state";
 import { CancelRequestButton } from "./cancel-request-button";
 import { CanTodosButton } from "./can-todos-button";
-import { KpiChips } from "@/components/kpi-chips";
+import { ProgressBlock } from "@/components/progress-block";
 import { getStudentKpisBatch } from "@/lib/kpis";
 import { LogActions } from "./log-actions";
 
 function daysSince(d: Date) {
   return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
 }
+
+// History row typing — derived from log.createdBy + isSystemGenerated so the
+// type is stable even if labels change.
+type HistoryEventType = "mentee_activity" | "mentor_meeting" | "system_goal";
+
+function recordTypeOf(
+  createdBy: string | null,
+  isSystemGenerated: boolean
+): HistoryEventType {
+  if (isSystemGenerated || createdBy === "system") return "system_goal";
+  if (createdBy === "mentee") return "mentee_activity";
+  return "mentor_meeting";
+}
+
+const RECORD_LABEL: Record<HistoryEventType, string> = {
+  mentee_activity: "Mentee Activity",
+  mentor_meeting: "Mentor Meeting",
+  system_goal: "Goal Met",
+};
+
+const RECORD_BG: Record<HistoryEventType, string> = {
+  mentee_activity: "border-byui-blue-light/40 bg-byui-blue-light/15",
+  mentor_meeting: "border-emerald-200 bg-emerald-50/50",
+  system_goal: "border-slate-200 bg-slate-100/60",
+};
+
+const RECORD_PILL: Record<HistoryEventType, string> = {
+  mentee_activity: "bg-byui-blue-light/40 text-byui-blue-dark",
+  mentor_meeting: "bg-emerald-100 text-emerald-800",
+  system_goal: "bg-slate-200 text-slate-700",
+};
 
 export default async function MatchesPage() {
   const me = await getCurrentUser();
@@ -302,44 +333,55 @@ export default async function MatchesPage() {
                   </div>
                 </div>
 
-                {/* Primary action + 3 contact buttons */}
-                <div className="flex flex-col gap-2">
-                  {iAmMentor && (
-                    <Link
-                      href={`/log-meeting?matchId=${m.id}`}
-                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white shadow-soft transition hover:bg-byui-blue-dark active:scale-[0.98] cursor-pointer"
+                {/* Primary action — only the mentor logs meetings from here */}
+                {iAmMentor && (
+                  <Link
+                    href={`/log-meeting?matchId=${m.id}`}
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-byui-blue px-4 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-byui-blue-dark active:scale-[0.98] cursor-pointer"
+                  >
+                    Log a Meeting
+                  </Link>
+                )}
+
+                {/* Bigger Progress This Week / Month block — mentor's
+                    at-a-glance view of whether this mentee is on pace. */}
+                {iAmMentor && kpisByStudent.get(m.menteeId) && (
+                  <ProgressBlock
+                    kpis={kpisByStudent.get(m.menteeId)!}
+                    daysSinceLastCareerTask={
+                      lastCareerTaskDays.get(m.menteeId) ?? null
+                    }
+                  />
+                )}
+
+                {/* Contact buttons row — Email / Call / Teams */}
+                <div className="grid grid-cols-3 gap-2">
+                  <a
+                    href={`mailto:${other.email}`}
+                    className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                  >
+                    Email
+                  </a>
+                  {other.phone ? (
+                    <a
+                      href={`tel:${other.phone}`}
+                      className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
                     >
-                      Log an Activity
-                    </Link>
+                      Call
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold text-slate-300 pointer-events-none">
+                      Call
+                    </span>
                   )}
-                  <div className="grid grid-cols-3 gap-2">
-                    <a
-                      href={`mailto:${other.email}`}
-                      className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
-                    >
-                      Email
-                    </a>
-                    {other.phone ? (
-                      <a
-                        href={`tel:${other.phone}`}
-                        className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
-                      >
-                        Call
-                      </a>
-                    ) : (
-                      <span className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold text-slate-300 pointer-events-none">
-                        Call
-                      </span>
-                    )}
-                    <a
-                      href={teamsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
-                    >
-                      Teams
-                    </a>
-                  </div>
+                  <a
+                    href={teamsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                  >
+                    Teams
+                  </a>
                 </div>
 
                 {/* Contact info */}
@@ -399,28 +441,15 @@ export default async function MatchesPage() {
                   </div>
                 )}
 
-                {/* Mentee KPI chips — at-a-glance "is this student on pace?" */}
-                {iAmMentor && kpisByStudent.get(m.menteeId) && (
-                  <div>
-                    <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-byui-blue">
-                      Progress this week / month
-                    </p>
-                    <KpiChips
-                      kpis={kpisByStudent.get(m.menteeId)!}
-                      daysSinceLastCareerTask={lastCareerTaskDays.get(m.menteeId) ?? null}
-                    />
-                  </div>
-                )}
-
-                {/* Recent Activities — scrollable feed of logged activities
-                    for this specific mentee. Shown only on the mentor's view. */}
+                {/* History — typed feed of mentee activities, mentor
+                    meetings, and goal-met system events for this mentee. */}
                 {iAmMentor && (() => {
                   const items = activitiesByMatch.get(m.id) ?? [];
                   return (
                     <div className="mt-auto">
                       <div className="flex items-center justify-between">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-byui-blue">
-                          Recent Activities
+                          {(other.name?.split(" ")[0] ?? "Mentee")}&apos;s History
                         </p>
                         {items.length > 0 && (
                           <Link
@@ -438,76 +467,74 @@ export default async function MatchesPage() {
                             href={`/log-meeting?matchId=${m.id}`}
                             className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-byui-blue hover:underline"
                           >
-                            Log an Activity →
+                            Log a Meeting →
                           </Link>
                         </div>
                       ) : (
-                        <ul className="mt-2 max-h-[180px] space-y-2 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-2 pr-1">
-                          {items.map((a) => (
-                            <li
-                              key={a.id}
-                              className={
-                                "rounded-lg border p-2.5 " +
-                                (a.isSystemGenerated
-                                  ? "border-emerald-200 bg-emerald-50/40"
-                                  : "border-slate-100 bg-white")
-                              }
-                            >
-                              <div className="flex flex-wrap items-center justify-between gap-1">
-                                <p className="text-xs font-bold text-byui-blue-dark">
-                                  {new Date(a.meetingDate).toLocaleDateString(undefined, {
-                                    month: "short",
-                                    day: "numeric",
-                                  })}
-                                </p>
-                                <span
-                                  className={
-                                    "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider " +
-                                    (a.isSystemGenerated
-                                      ? "bg-emerald-100 text-emerald-800"
-                                      : "bg-byui-blue-light/30 text-byui-blue-dark")
-                                  }
-                                >
-                                  {a.isSystemGenerated
-                                    ? "Goal met"
-                                    : a.meetingType.replace("_", " ")}
-                                </span>
-                              </div>
-                              {a.durationMinutes ? (
-                                <p className="mt-0.5 text-[11px] text-slate-500">
-                                  {a.durationMinutes} minutes
-                                </p>
-                              ) : null}
-                              {a.topicsDiscussed && (
-                                <p className="mt-1 text-xs leading-snug text-slate-700">
-                                  {a.isSystemGenerated ? (
-                                    a.topicsDiscussed
-                                  ) : (
-                                    <>
-                                      <span className="font-semibold text-slate-500">
-                                        Accomplishments:
-                                      </span>{" "}
-                                      {a.topicsDiscussed
-                                        .split(" · ")
-                                        .filter(Boolean)
-                                        .join(", ")}
-                                    </>
-                                  )}
-                                </p>
-                              )}
-                              <LogActions
-                                log={{
-                                  id: a.id,
-                                  meetingDate: new Date(a.meetingDate)
-                                    .toISOString()
-                                    .slice(0, 10),
-                                  topicsDiscussed: a.topicsDiscussed,
-                                  actionItems: a.actionItems,
-                                  isSystemGenerated: a.isSystemGenerated,
-                                }}
-                              />
-                            </li>
-                          ))}
+                        <ul className="mt-2 max-h-[220px] space-y-2 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-2 pr-1">
+                          {items.map((a) => {
+                            const t = recordTypeOf(a.createdBy, a.isSystemGenerated);
+                            return (
+                              <li
+                                key={a.id}
+                                className={
+                                  "rounded-lg border p-2.5 " + RECORD_BG[t]
+                                }
+                              >
+                                <div className="flex flex-wrap items-center justify-between gap-1">
+                                  <p className="text-xs font-bold text-byui-blue-dark">
+                                    {new Date(a.meetingDate).toLocaleDateString(
+                                      undefined,
+                                      { month: "short", day: "numeric" }
+                                    )}
+                                  </p>
+                                  <span
+                                    className={
+                                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider " +
+                                      RECORD_PILL[t]
+                                    }
+                                  >
+                                    {RECORD_LABEL[t]}
+                                  </span>
+                                </div>
+                                {t === "mentor_meeting" && a.durationMinutes ? (
+                                  <p className="mt-0.5 text-[11px] text-slate-500">
+                                    {a.durationMinutes} minutes
+                                  </p>
+                                ) : null}
+                                {a.topicsDiscussed && (
+                                  <p className="mt-1 text-xs leading-snug text-slate-700">
+                                    {t === "system_goal" ? (
+                                      a.topicsDiscussed
+                                    ) : (
+                                      <>
+                                        <span className="font-semibold text-slate-500">
+                                          {t === "mentor_meeting"
+                                            ? "Topics:"
+                                            : "Accomplishments:"}
+                                        </span>{" "}
+                                        {a.topicsDiscussed
+                                          .split(" · ")
+                                          .filter(Boolean)
+                                          .join(", ")}
+                                      </>
+                                    )}
+                                  </p>
+                                )}
+                                <LogActions
+                                  log={{
+                                    id: a.id,
+                                    meetingDate: new Date(a.meetingDate)
+                                      .toISOString()
+                                      .slice(0, 10),
+                                    topicsDiscussed: a.topicsDiscussed,
+                                    actionItems: a.actionItems,
+                                    isSystemGenerated: a.isSystemGenerated,
+                                  }}
+                                />
+                              </li>
+                            );
+                          })}
                         </ul>
                       )}
                     </div>

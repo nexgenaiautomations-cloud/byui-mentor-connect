@@ -44,12 +44,12 @@ export default async function LogActivityPage({
             Mentor tools
           </p>
           <h1 className="mt-1 font-display text-3xl font-black text-byui-blue-dark">
-            Log an Activity
+            Log a Meeting
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Capture a new session on the left. The panel on the right shows the
-            selected mentee&apos;s full activity history — including what they
-            logged themselves — and lets you edit any entry.
+            Capture a new meeting on the left. The panel on the right is the
+            selected mentee&apos;s history — both their independent activities
+            and the meetings you&apos;ve recorded — and lets you edit any entry.
           </p>
         </header>
 

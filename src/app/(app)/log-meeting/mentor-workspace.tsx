@@ -103,11 +103,12 @@ export function MentorWorkspace({
           <div>
             <h2 className="font-display text-lg font-bold text-byui-blue-dark">
               {selectedMatch?.menteeName
-                ? `${selectedMatch.menteeName}'s activity`
-                : "Recent activity"}
+                ? `${selectedMatch.menteeName}'s history`
+                : "Mentee history"}
             </h2>
             <p className="text-xs text-slate-500">
-              Includes self-logged, mentor-logged, and goal-met system events.
+              Includes mentee activities, mentor meetings, and goal-met system
+              events.
             </p>
           </div>
           <button
@@ -134,83 +135,75 @@ export function MentorWorkspace({
           </p>
         ) : (
           <ul className="mt-3 space-y-2 overflow-y-auto pr-1">
-            {menteeLogs.slice(0, 50).map((l) => (
-              <li
-                key={l.id}
-                className={
-                  "rounded-xl border p-3 " +
-                  (l.isSystemGenerated
-                    ? "border-emerald-200 bg-emerald-50/40"
-                    : "border-slate-100 bg-white")
-                }
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs font-bold text-byui-blue-dark">
-                    {new Date(l.meetingDate).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <AuthorBadge createdBy={l.createdBy} />
+            {menteeLogs.slice(0, 50).map((l) => {
+              const t = recordTypeOf(l.createdBy, l.isSystemGenerated);
+              return (
+                <li
+                  key={l.id}
+                  className={"rounded-xl border p-3 " + RECORD_BG[t]}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-bold text-byui-blue-dark">
+                      {new Date(l.meetingDate).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
                     <span
                       className={
                         "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider " +
-                        (l.isSystemGenerated
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-byui-blue-light/30 text-byui-blue-dark")
+                        RECORD_PILL[t]
                       }
                     >
-                      {l.isSystemGenerated
-                        ? "Goal met"
-                        : l.meetingType.replace("_", " ")}
+                      {RECORD_LABEL[t]}
                     </span>
                   </div>
-                </div>
-                {l.durationMinutes ? (
-                  <p className="mt-0.5 text-[11px] text-slate-500">
-                    {l.durationMinutes} minutes
-                  </p>
-                ) : null}
-                {l.topicsDiscussed && (
-                  <p className="mt-1 text-xs leading-snug text-slate-700">
-                    {l.isSystemGenerated ? (
-                      l.topicsDiscussed
-                    ) : (
-                      <>
-                        <span className="font-semibold text-slate-500">
-                          Accomplishments:
-                        </span>{" "}
-                        {l.topicsDiscussed
-                          .split(" · ")
-                          .filter(Boolean)
-                          .join(", ")}
-                      </>
-                    )}
-                  </p>
-                )}
-                {l.actionItems && (
-                  <p className="mt-1 text-xs leading-snug text-slate-600">
-                    <span className="font-semibold text-slate-500">
-                      Next steps:
-                    </span>{" "}
-                    {l.actionItems}
-                  </p>
-                )}
-                <LogActions
-                  log={{
-                    id: l.id,
-                    meetingDate: new Date(l.meetingDate)
-                      .toISOString()
-                      .slice(0, 10),
-                    topicsDiscussed: l.topicsDiscussed,
-                    actionItems: l.actionItems,
-                    isSystemGenerated: l.isSystemGenerated,
-                  }}
-                />
-              </li>
-            ))}
+                  {/* Duration only makes sense on a mentor meeting */}
+                  {t === "mentor_meeting" && l.durationMinutes ? (
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      {l.durationMinutes} minutes
+                    </p>
+                  ) : null}
+                  {l.topicsDiscussed && (
+                    <p className="mt-1 text-xs leading-snug text-slate-700">
+                      {t === "system_goal" ? (
+                        l.topicsDiscussed
+                      ) : (
+                        <>
+                          <span className="font-semibold text-slate-500">
+                            {t === "mentor_meeting" ? "Topics:" : "Accomplishments:"}
+                          </span>{" "}
+                          {l.topicsDiscussed
+                            .split(" · ")
+                            .filter(Boolean)
+                            .join(", ")}
+                        </>
+                      )}
+                    </p>
+                  )}
+                  {l.actionItems && (
+                    <p className="mt-1 text-xs leading-snug text-slate-600">
+                      <span className="font-semibold text-slate-500">
+                        Next steps:
+                      </span>{" "}
+                      {l.actionItems}
+                    </p>
+                  )}
+                  <LogActions
+                    log={{
+                      id: l.id,
+                      meetingDate: new Date(l.meetingDate)
+                        .toISOString()
+                        .slice(0, 10),
+                      topicsDiscussed: l.topicsDiscussed,
+                      actionItems: l.actionItems,
+                      isSystemGenerated: l.isSystemGenerated,
+                    }}
+                  />
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -218,23 +211,32 @@ export function MentorWorkspace({
   );
 }
 
-function AuthorBadge({ createdBy }: { createdBy: string | null }) {
-  if (!createdBy || createdBy === "mentor") return null;
-  const map: Record<string, { label: string; cls: string }> = {
-    mentee: { label: "Self-logged", cls: "bg-violet-100 text-violet-800" },
-    admin: { label: "Admin", cls: "bg-slate-200 text-slate-800" },
-    system: { label: "System", cls: "bg-emerald-100 text-emerald-800" },
-  };
-  const entry = map[createdBy];
-  if (!entry) return null;
-  return (
-    <span
-      className={
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider " +
-        entry.cls
-      }
-    >
-      {entry.label}
-    </span>
-  );
+// Stable history-event type derived from createdBy + isSystemGenerated.
+type HistoryEventType = "mentee_activity" | "mentor_meeting" | "system_goal";
+
+function recordTypeOf(
+  createdBy: string | null,
+  isSystemGenerated: boolean
+): HistoryEventType {
+  if (isSystemGenerated || createdBy === "system") return "system_goal";
+  if (createdBy === "mentee") return "mentee_activity";
+  return "mentor_meeting";
 }
+
+const RECORD_LABEL: Record<HistoryEventType, string> = {
+  mentee_activity: "Mentee Activity",
+  mentor_meeting: "Mentor Meeting",
+  system_goal: "Goal Met",
+};
+
+const RECORD_BG: Record<HistoryEventType, string> = {
+  mentee_activity: "border-byui-blue-light/40 bg-byui-blue-light/15",
+  mentor_meeting: "border-emerald-200 bg-emerald-50/50",
+  system_goal: "border-slate-200 bg-slate-100/60",
+};
+
+const RECORD_PILL: Record<HistoryEventType, string> = {
+  mentee_activity: "bg-byui-blue-light/40 text-byui-blue-dark",
+  mentor_meeting: "bg-emerald-100 text-emerald-800",
+  system_goal: "bg-slate-200 text-slate-700",
+};

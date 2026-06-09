@@ -6,6 +6,7 @@ import { signOutAction } from "@/lib/actions";
 import type { User } from "@/db/schema";
 import { Logo } from "./logo";
 import { InstallButton } from "./install-button";
+import { ReportIssueButton } from "./report-issue-button";
 
 function initials(name: string | null | undefined, fallback: string) {
   if (!name) return fallback;
@@ -23,7 +24,7 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/matches", label: "My Mentees" },
-      { href: "/log-meeting", label: "Log an Activity" },
+      { href: "/log-meeting", label: "Log a Meeting" },
       { href: "/check-in", label: "Monthly Check-in" },
       { href: "/settings", label: "Settings" }
     );
@@ -128,6 +129,7 @@ export function Sidebar({ user }: { user: User }) {
             </p>
           </div>
         </Link>
+        <ReportIssueButton variant="sidebar" />
         <InstallButton variant="sidebar" />
         <form action={signOutAction} className="mt-2">
           <button
@@ -240,7 +242,7 @@ export function MobileBar({ user }: { user: User }) {
     items = [
       { href: "/dashboard", label: "Home", icon: "home" },
       { href: "/matches", label: "Mentees", icon: "mentees" },
-      { href: "/log-meeting", label: "Activity", icon: "meetings" },
+      { href: "/log-meeting", label: "Meeting", icon: "meetings" },
       { href: "/check-in", label: "Check-in", icon: "review" },
     ];
   } else {

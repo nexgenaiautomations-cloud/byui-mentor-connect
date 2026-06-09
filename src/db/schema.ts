@@ -304,6 +304,29 @@ export const passwordResetTokens = pgTable(
   })
 );
 
+// User-submitted issue reports — the in-sidebar "Report an issue" button
+// drops a row here (and optionally emails ISSUE_REPORT_TO via Resend).
+// userId can be null if a logged-out user ever submits (none today; gated to
+// signed-in users by the route handler).
+export const issueReports = pgTable(
+  "issue_report",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    category: text("category").notNull(), // "it" | "mentor" | "mentee" | "other"
+    message: text("message").notNull(),
+    contactEmail: text("contact_email"),
+    createdAt: timestamp("created_at", { mode: "date" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    createdIdx: index("issue_report_created_idx").on(t.createdAt),
+  })
+);
+
 // Earned-achievement rows. Each (student, achievementKey) is unique — a
 // student earns each badge at most once.
 export const achievements = pgTable(
@@ -337,5 +360,7 @@ export type NewMeetingLog = typeof meetingLogs.$inferInsert;
 export type MonthlyFeedback = typeof monthlyFeedback.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
 export type NewAchievement = typeof achievements.$inferInsert;
+export type IssueReport = typeof issueReports.$inferSelect;
+export type NewIssueReport = typeof issueReports.$inferInsert;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;
