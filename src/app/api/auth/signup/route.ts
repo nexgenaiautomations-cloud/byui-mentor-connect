@@ -10,8 +10,34 @@ import { limitSignup } from "@/lib/rate-limit";
 
 const BYUI_DOMAIN = "@byui.edu";
 
-const PRIOR_CHATS_OPTIONS = ["0", "1-10", "11-25", "26-50", "51-100", "100+"];
 const PRIOR_INTERNSHIPS_OPTIONS = ["None", "1", "2", "3 or more"];
+
+// priorCareerChats is now a typed whole number. Accept either a number or a
+// numeric string from the client (the form sends a string from a number
+// input). Stored as a string in the DB to avoid a schema migration — the
+// parsePriorCareerChats helper handles read-time conversion.
+const priorChatsSchema = z
+  .union([z.number().int().min(0).max(10_000), z.string()])
+  .transform((v, ctx) => {
+    if (typeof v === "number") return v;
+    const trimmed = v.trim();
+    if (!/^\d+$/.test(trimmed)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Career chats must be a whole number 0 or greater.",
+      });
+      return z.NEVER;
+    }
+    const n = Number(trimmed);
+    if (n < 0 || n > 10_000) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Career chats must be between 0 and 10000.",
+      });
+      return z.NEVER;
+    }
+    return n;
+  });
 
 const signupSchema = z.object({
   email: z
@@ -26,7 +52,7 @@ const signupSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   major: z.string().trim().max(120).optional().nullable(),
-  priorCareerChats: z.enum(PRIOR_CHATS_OPTIONS as [string, ...string[]]),
+  priorCareerChats: priorChatsSchema,
   priorInternshipExperience: z.enum(
     PRIOR_INTERNSHIPS_OPTIONS as [string, ...string[]]
   ),
@@ -96,7 +122,10 @@ export async function POST(req: Request) {
       name: `${data.firstName} ${data.lastName}`.trim(),
       major: data.major ?? null,
       passwordHash,
-      priorCareerChats: data.priorCareerChats,
+      // Stored as a string in the DB (column type is text) but always a
+      // clean numeric value moving forward. Trophy Case math reads it via
+      // parsePriorCareerChats which also accepts legacy range strings.
+      priorCareerChats: String(data.priorCareerChats),
       priorInternshipExperience: data.priorInternshipExperience,
       // We trust the BYU-I email gate (@byui.edu only) and mark verified.
       // A future change could send a confirmation email; the column exists.

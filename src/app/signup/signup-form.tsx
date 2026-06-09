@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { passwordIssues } from "@/lib/password-validation";
 
-const PRIOR_CHATS = ["0", "1-10", "11-25", "26-50", "51-100", "100+"] as const;
 const PRIOR_INTERNSHIPS = ["None", "1", "2", "3 or more"] as const;
 
 export function SignupForm() {
@@ -14,6 +13,8 @@ export function SignupForm() {
   const [confirm, setConfirm] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  // Typed number now — stored as a string locally so an empty input is
+  // distinguishable from 0 ("" = unanswered, "0" = "I've done none yet").
   const [priorChats, setPriorChats] = useState<string>("");
   const [priorInternships, setPriorInternships] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +31,13 @@ export function SignupForm() {
     const pw = passwordIssues(password);
     if (pw.length) return pw[0];
     if (password !== confirm) return "Passwords don't match.";
-    if (!priorChats) return "Please select a prior career-chats answer.";
+    if (priorChats === "") {
+      return "Please enter how many career chats you've done.";
+    }
+    const n = Number(priorChats);
+    if (!Number.isInteger(n) || n < 0) {
+      return "Career chat count must be a whole number, 0 or greater.";
+    }
     if (!priorInternships) {
       return "Please select a prior internship-experience answer.";
     }
@@ -150,20 +157,31 @@ export function SignupForm() {
           <label htmlFor="prior-chats" className="label">
             How many informational interviews or career chats have you done?
           </label>
-          <select
+          <input
             id="prior-chats"
+            type="number"
+            min={0}
+            step={1}
             required
+            inputMode="numeric"
+            placeholder="Example: 5"
             className="input"
             value={priorChats}
-            onChange={(e) => setPriorChats(e.target.value)}
-          >
-            <option value="">Select…</option>
-            {PRIOR_CHATS.map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ))}
-          </select>
+            onChange={(e) => {
+              // Block negatives + non-integers at the input layer too, in
+              // addition to the validate() guard.
+              const raw = e.target.value;
+              if (raw === "") {
+                setPriorChats("");
+                return;
+              }
+              if (!/^\d+$/.test(raw)) return;
+              setPriorChats(raw);
+            }}
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            Enter the total number you have completed before joining BYUI CAN.
+          </p>
         </div>
         <div>
           <label htmlFor="prior-intern" className="label">

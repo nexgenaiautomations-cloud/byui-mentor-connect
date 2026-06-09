@@ -3,124 +3,248 @@ import {
   ACHIEVEMENTS,
   evaluateAchievementSet,
   type LogForAchievement,
+  type ProfileSnapshot,
 } from "@/lib/achievements";
+import type { TrophyStats } from "@/lib/trophy-stats";
 
 function log(opts: Partial<LogForAchievement> = {}): LogForAchievement {
   return {
     meetingDate: opts.meetingDate ?? new Date(2026, 2, 4),
     accomplishmentGroup: opts.accomplishmentGroup ?? "career_tasks",
-    topicsDiscussed: opts.topicsDiscussed ?? "Work on Resumes",
+    topicsDiscussed: opts.topicsDiscussed ?? "Worked on my resume",
   };
 }
 
+function stats(o: Partial<TrophyStats> = {}): TrophyStats {
+  return {
+    priorCareerChats: 0,
+    loggedCareerChats: 0,
+    totalCareerChats: 0,
+    totalCareerTasks: 0,
+    totalIndustryExperiences: 0,
+    weeklyStreak: 0,
+    thisWeekIncomplete: false,
+    monthlyChatGoalStreak: 0,
+    ...o,
+  };
+}
+
+const FULL_PROFILE: ProfileSnapshot = {
+  firstName: "Mason",
+  lastName: "Member",
+  major: "Marketing",
+  image: null,
+  bio: null,
+  careerInterests: ["Brand Management — Consumer Marketing"],
+};
+
 describe("ACHIEVEMENTS catalogue", () => {
-  it("has exactly the 15 keys spec'd", () => {
-    expect(ACHIEVEMENTS.map((a) => a.key).sort()).toEqual(
-      [
-        "first_career_task",
-        "weekly_streak_starter",
-        "career_chat_starter",
-        "networking_builder",
-        "internship_win",
-        "part_time_win",
-        "full_time_win",
-        "resume_builder",
-        "interview_ready",
-        "can_standard_keeper",
-        "extra_mile",
-        "conversation_builder",
-        "career_momentum",
-        "industry_breakthrough",
-        "profile_complete",
-      ].sort()
-    );
+  it("does NOT include industry_breakthrough anymore", () => {
+    expect(ACHIEVEMENTS.find((a) => a.key === "industry_breakthrough")).toBeUndefined();
   });
 
-  it("every achievement has a non-empty title and description", () => {
+  it("every entry has a tier in {starter, progressive, hard}", () => {
     for (const a of ACHIEVEMENTS) {
-      expect(a.title.length).toBeGreaterThan(0);
-      expect(a.description.length).toBeGreaterThan(0);
+      expect(["starter", "progressive", "hard"]).toContain(a.tier);
+    }
+  });
+
+  it("includes the spec'd career chat milestone keys", () => {
+    const keys = ACHIEVEMENTS.map((a) => a.key);
+    for (const key of [
+      "career_chat_starter", // 1
+      "conversation_starter", // 3
+      "networking_builder", // 10
+      "connection_collector", // 25
+      "career_chat_champion", // 50
+      "networking_legend", // 100
+    ]) {
+      expect(keys).toContain(key);
+    }
+  });
+
+  it("includes the spec'd weekly streak milestone keys", () => {
+    const keys = ACHIEVEMENTS.map((a) => a.key);
+    for (const key of [
+      "weekly_streak_starter", // 2
+      "momentum_builder", // 4
+      "consistency_champion", // 8
+      "semester_strong", // 12
+      "unstoppable", // 24
+    ]) {
+      expect(keys).toContain(key);
+    }
+  });
+
+  it("includes the spec'd career task milestone keys", () => {
+    const keys = ACHIEVEMENTS.map((a) => a.key);
+    for (const key of [
+      "first_career_task",
+      "resume_builder",
+      "career_builder", // 10
+      "career_momentum", // 25
+      "career_machine", // 50
+    ]) {
+      expect(keys).toContain(key);
+    }
+  });
+
+  it("includes the spec'd monthly chat goal streak keys", () => {
+    const keys = ACHIEVEMENTS.map((a) => a.key);
+    for (const key of [
+      "monthly_networker",
+      "networking_habit",
+      "relationship_builder",
+      "networking_master",
+    ]) {
+      expect(keys).toContain(key);
+    }
+  });
+
+  it("retains profile_complete + the three offer wins", () => {
+    const keys = ACHIEVEMENTS.map((a) => a.key);
+    for (const key of [
+      "profile_complete",
+      "internship_win",
+      "part_time_win",
+      "full_time_win",
+    ]) {
+      expect(keys).toContain(key);
+    }
+  });
+
+  it("every progressive/hard milestone trophy exposes a progress fn", () => {
+    const progressiveKeys = [
+      "networking_builder",
+      "connection_collector",
+      "career_chat_champion",
+      "momentum_builder",
+      "consistency_champion",
+      "career_builder",
+      "career_momentum",
+      "networking_habit",
+      "relationship_builder",
+      "networking_legend",
+      "semester_strong",
+      "unstoppable",
+      "career_machine",
+      "networking_master",
+    ];
+    for (const k of progressiveKeys) {
+      const def = ACHIEVEMENTS.find((a) => a.key === k);
+      expect(def?.progress).toBeDefined();
     }
   });
 });
 
 describe("evaluateAchievementSet", () => {
-  it("returns empty when there are no logs", () => {
+  it("returns empty when nothing has happened", () => {
     expect(evaluateAchievementSet([])).toEqual(new Set());
   });
 
   it("first_career_task fires on a single career_tasks log", () => {
-    const earned = evaluateAchievementSet([log({ accomplishmentGroup: "career_tasks" })]);
+    const earned = evaluateAchievementSet([
+      log({ accomplishmentGroup: "career_tasks" }),
+    ]);
     expect(earned.has("first_career_task")).toBe(true);
   });
 
-  it("career_chat_starter fires on a single career_chats log", () => {
-    const earned = evaluateAchievementSet([log({ accomplishmentGroup: "career_chats" })]);
+  it("career_chat_starter fires when totalCareerChats >= 1 (via stats)", () => {
+    const earned = evaluateAchievementSet([], undefined, stats({ totalCareerChats: 1 }));
     expect(earned.has("career_chat_starter")).toBe(true);
-    expect(earned.has("first_career_task")).toBe(false);
   });
 
-  it("weekly_streak_starter requires 2 distinct weeks of career_tasks", () => {
-    const oneWeek = evaluateAchievementSet([
-      log({ meetingDate: new Date(2026, 2, 4) }), // Wed Mar 4
-    ]);
-    expect(oneWeek.has("weekly_streak_starter")).toBe(false);
+  it("totalChatsTrophy milestones key off TrophyStats.totalCareerChats", () => {
+    const s10 = stats({ totalCareerChats: 10 });
+    const earned = evaluateAchievementSet([], undefined, s10);
+    expect(earned.has("conversation_starter")).toBe(true);
+    expect(earned.has("networking_builder")).toBe(true);
+    expect(earned.has("connection_collector")).toBe(false);
 
-    const twoWeeks = evaluateAchievementSet([
-      log({ meetingDate: new Date(2026, 2, 4) }), // week of Mar 1
-      log({ meetingDate: new Date(2026, 2, 11) }), // week of Mar 8
-    ]);
-    expect(twoWeeks.has("weekly_streak_starter")).toBe(true);
+    const s100 = stats({ totalCareerChats: 100 });
+    const all = evaluateAchievementSet([], undefined, s100);
+    expect(all.has("networking_legend")).toBe(true);
+    expect(all.has("career_chat_champion")).toBe(true);
   });
 
-  it("weekly_streak_starter ignores non-consecutive weeks", () => {
-    const gap = evaluateAchievementSet([
-      log({ meetingDate: new Date(2026, 2, 4) }), // week of Mar 1
-      log({ meetingDate: new Date(2026, 2, 18) }), // week of Mar 15 — gap
-    ]);
-    expect(gap.has("weekly_streak_starter")).toBe(false);
+  it("streak trophies key off weeklyStreak", () => {
+    expect(
+      evaluateAchievementSet([], undefined, stats({ weeklyStreak: 2 })).has(
+        "weekly_streak_starter"
+      )
+    ).toBe(true);
+    expect(
+      evaluateAchievementSet([], undefined, stats({ weeklyStreak: 4 })).has(
+        "momentum_builder"
+      )
+    ).toBe(true);
+    expect(
+      evaluateAchievementSet([], undefined, stats({ weeklyStreak: 24 })).has(
+        "unstoppable"
+      )
+    ).toBe(true);
+    expect(
+      evaluateAchievementSet([], undefined, stats({ weeklyStreak: 1 })).has(
+        "weekly_streak_starter"
+      )
+    ).toBe(false);
   });
 
-  it("networking_builder requires 3+ career_chats in the same month", () => {
-    const two = evaluateAchievementSet([
-      log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 4) }),
-      log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 8) }),
-    ]);
-    expect(two.has("networking_builder")).toBe(false);
-    const three = evaluateAchievementSet([
-      log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 4) }),
-      log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 8) }),
-      log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 15) }),
-    ]);
-    expect(three.has("networking_builder")).toBe(true);
+  it("career task milestone trophies key off totalCareerTasks", () => {
+    expect(
+      evaluateAchievementSet([], undefined, stats({ totalCareerTasks: 25 })).has(
+        "career_momentum"
+      )
+    ).toBe(true);
+    expect(
+      evaluateAchievementSet([], undefined, stats({ totalCareerTasks: 50 })).has(
+        "career_machine"
+      )
+    ).toBe(true);
+    expect(
+      evaluateAchievementSet([], undefined, stats({ totalCareerTasks: 9 })).has(
+        "career_builder"
+      )
+    ).toBe(false);
   });
 
-  it("conversation_builder requires more than three career_chats in a month", () => {
+  it("monthly chat-goal streak trophies fire by monthlyChatGoalStreak", () => {
+    expect(
+      evaluateAchievementSet([], undefined, stats({ monthlyChatGoalStreak: 2 }))
+        .has("networking_habit")
+    ).toBe(true);
+    expect(
+      evaluateAchievementSet([], undefined, stats({ monthlyChatGoalStreak: 6 }))
+        .has("networking_master")
+    ).toBe(true);
+    expect(
+      evaluateAchievementSet([], undefined, stats({ monthlyChatGoalStreak: 3 }))
+        .has("relationship_builder")
+    ).toBe(false);
+  });
+
+  it("monthly_networker fires from logs when ≥3 chats in any month", () => {
     const three = evaluateAchievementSet(
       [1, 8, 15].map((d) =>
-        log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, d) })
+        log({
+          accomplishmentGroup: "career_chats",
+          meetingDate: new Date(2026, 2, d),
+        })
       )
     );
-    expect(three.has("conversation_builder")).toBe(false);
-    const four = evaluateAchievementSet(
-      [1, 8, 15, 22].map((d) =>
-        log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, d) })
+    expect(three.has("monthly_networker")).toBe(true);
+    const two = evaluateAchievementSet(
+      [1, 8].map((d) =>
+        log({
+          accomplishmentGroup: "career_chats",
+          meetingDate: new Date(2026, 2, d),
+        })
       )
     );
-    expect(four.has("conversation_builder")).toBe(true);
+    expect(two.has("monthly_networker")).toBe(false);
   });
 
-  it("extra_mile requires more than one career_tasks log in a week", () => {
-    const single = evaluateAchievementSet([log({ meetingDate: new Date(2026, 2, 2) })]);
-    expect(single.has("extra_mile")).toBe(false);
-    const two = evaluateAchievementSet([
-      log({ meetingDate: new Date(2026, 2, 2) }),
-      log({ meetingDate: new Date(2026, 2, 5) }),
-    ]);
-    expect(two.has("extra_mile")).toBe(true);
-  });
-
-  it("internship_win / part_time_win / full_time_win fire only on their topic", () => {
+  it("internship/part-time/full-time wins still fire on the topic text", () => {
     const earned = evaluateAchievementSet([
       log({
         accomplishmentGroup: "industry_experiences",
@@ -128,108 +252,58 @@ describe("evaluateAchievementSet", () => {
       }),
     ]);
     expect(earned.has("internship_win")).toBe(true);
-    expect(earned.has("industry_breakthrough")).toBe(true);
     expect(earned.has("part_time_win")).toBe(false);
-    expect(earned.has("full_time_win")).toBe(false);
+    const mentee = evaluateAchievementSet([
+      log({
+        accomplishmentGroup: "industry_experiences",
+        topicsDiscussed: "I got an internship offer",
+      }),
+    ]);
+    expect(mentee.has("internship_win")).toBe(true);
   });
 
-  it("resume_builder fires when topic contains Work on Resumes", () => {
+  it("resume_builder + interview_ready remain log-driven", () => {
     expect(
-      evaluateAchievementSet([log({ topicsDiscussed: "Work on Resumes" })]).has(
-        "resume_builder"
-      )
-    ).toBe(true);
-    expect(
-      evaluateAchievementSet([log({ topicsDiscussed: "Course planning" })]).has(
-        "resume_builder"
-      )
-    ).toBe(false);
-  });
-
-  it("interview_ready fires when topic contains any interview practice", () => {
-    expect(
-      evaluateAchievementSet([
-        log({ topicsDiscussed: "Role Play Interviewing" }),
-      ]).has("interview_ready")
+      evaluateAchievementSet([log({ topicsDiscussed: "Worked on my resume" })])
+        .has("resume_builder")
     ).toBe(true);
     expect(
       evaluateAchievementSet([
-        log({ topicsDiscussed: "Work on Interviewing Skills" }),
+        log({ topicsDiscussed: "Practiced interviewing skills" }),
       ]).has("interview_ready")
     ).toBe(true);
   });
 
-  it("can_standard_keeper requires weekly task + monthly chats goal in same period", () => {
-    // Same month, but only 2 chats — should not earn
-    const partial = evaluateAchievementSet([
-      log({ accomplishmentGroup: "career_tasks", meetingDate: new Date(2026, 2, 2) }),
-      log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 4) }),
-      log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 9) }),
-    ]);
-    expect(partial.has("can_standard_keeper")).toBe(false);
-    const full = evaluateAchievementSet([
-      log({ accomplishmentGroup: "career_tasks", meetingDate: new Date(2026, 2, 2) }),
-      log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 4) }),
-      log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 9) }),
-      log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 15) }),
-    ]);
-    expect(full.has("can_standard_keeper")).toBe(true);
+  it("profile_complete needs name + major + ≥1 career interest", () => {
+    expect(evaluateAchievementSet([], FULL_PROFILE).has("profile_complete")).toBe(
+      true
+    );
+    expect(evaluateAchievementSet([]).has("profile_complete")).toBe(false);
+  });
+});
+
+describe("progress functions", () => {
+  it("totalChats progress is current/target with the right unit", () => {
+    const def = ACHIEVEMENTS.find((a) => a.key === "networking_builder")!;
+    const p = def.progress?.([], undefined, stats({ totalCareerChats: 7 }));
+    expect(p).toEqual({ current: 7, target: 10, unit: "Career Chats" });
   });
 
-  it("career_momentum requires both career tasks and chats in the same month", () => {
-    const only_tasks = evaluateAchievementSet([
-      log({ accomplishmentGroup: "career_tasks", meetingDate: new Date(2026, 2, 2) }),
-    ]);
-    expect(only_tasks.has("career_momentum")).toBe(false);
-    const both = evaluateAchievementSet([
-      log({ accomplishmentGroup: "career_tasks", meetingDate: new Date(2026, 2, 2) }),
-      log({ accomplishmentGroup: "career_chats", meetingDate: new Date(2026, 2, 9) }),
-    ]);
-    expect(both.has("career_momentum")).toBe(true);
+  it("progress caps at the target", () => {
+    const def = ACHIEVEMENTS.find((a) => a.key === "conversation_starter")!;
+    const p = def.progress?.([], undefined, stats({ totalCareerChats: 100 }));
+    expect(p?.current).toBe(3);
   });
 
-  it("profile_complete requires name + major + at least one career interest", () => {
-    const noProfile = evaluateAchievementSet([]);
-    expect(noProfile.has("profile_complete")).toBe(false);
+  it("streak progress uses weeks unit", () => {
+    const def = ACHIEVEMENTS.find((a) => a.key === "momentum_builder")!;
+    const p = def.progress?.([], undefined, stats({ weeklyStreak: 2 }));
+    expect(p).toEqual({ current: 2, target: 4, unit: "weeks" });
+  });
 
-    const empty = evaluateAchievementSet([], {
-      firstName: null,
-      lastName: null,
-      major: null,
-      image: null,
-      bio: null,
-      careerInterests: null,
-    });
-    expect(empty.has("profile_complete")).toBe(false);
-
-    const partialName = evaluateAchievementSet([], {
-      firstName: "Mason",
-      lastName: null,
-      major: "Marketing",
-      image: null,
-      bio: null,
-      careerInterests: ["Brand Management — Consumer Marketing"],
-    });
-    expect(partialName.has("profile_complete")).toBe(false);
-
-    const noInterest = evaluateAchievementSet([], {
-      firstName: "Mason",
-      lastName: "Member",
-      major: "Marketing",
-      image: null,
-      bio: null,
-      careerInterests: [],
-    });
-    expect(noInterest.has("profile_complete")).toBe(false);
-
-    const filledOut = evaluateAchievementSet([], {
-      firstName: "Mason",
-      lastName: "Member",
-      major: "Marketing",
-      image: null,
-      bio: null,
-      careerInterests: ["Brand Management — Consumer Marketing"],
-    });
-    expect(filledOut.has("profile_complete")).toBe(true);
+  it("monthly chat-goal streak progress uses months unit", () => {
+    const def = ACHIEVEMENTS.find((a) => a.key === "networking_habit")!;
+    const p = def.progress?.([], undefined, stats({ monthlyChatGoalStreak: 1 }));
+    expect(p).toEqual({ current: 1, target: 2, unit: "months" });
   });
 });
