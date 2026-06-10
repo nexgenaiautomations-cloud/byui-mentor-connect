@@ -79,6 +79,10 @@ export const users = pgTable("user", {
   mentorAvailable: boolean("mentor_available").notNull().default(true),
 
   isAdmin: boolean("is_admin").notNull().default(false),
+  // Single user at a time — enforced in code, not the DB, so transferring is
+  // a single UPDATE. The head admin can promote/demote other admins and
+  // elect a successor.
+  isHeadAdmin: boolean("is_head_admin").notNull().default(false),
   onboardedAt: timestamp("onboarded_at", { mode: "date" }),
 
   // Hashed password for Credentials provider (Phase 2). Null for magic-link

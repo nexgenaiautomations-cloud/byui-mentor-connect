@@ -1,25 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { signOutAction } from "@/lib/actions";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
+import { setActiveRoleAction, signOutAction } from "@/lib/actions";
 import type { User } from "@/db/schema";
+import { ROLE_LABELS, type ActiveRole } from "@/lib/roles";
 import { Logo } from "./logo";
 
 type NavItem = { href: string; label: string };
 
-function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
+function buildNav(
+  activeRole: ActiveRole,
+  isHeadAdmin: boolean
+): { primary: NavItem[]; admin: NavItem[] } {
   const primary: NavItem[] = [];
 
-  if (user.isMentor) {
+  if (activeRole === "mentor") {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/matches", label: "My Mentees" },
       { href: "/log-meeting", label: "Log a Meeting" },
       { href: "/check-in", label: "Monthly Check-in" }
     );
-  } else if (!user.isAdmin) {
+  } else if (activeRole === "member") {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/mentors", label: "Find a Mentor" },
@@ -28,10 +32,12 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
       { href: "/trophy-case", label: "Trophy Case" }
     );
   }
-  primary.push({ href: "/settings", label: "Settings" });
+  if (activeRole !== "admin") {
+    primary.push({ href: "/settings", label: "Settings" });
+  }
 
   const admin: NavItem[] = [];
-  if (user.isAdmin) {
+  if (activeRole === "admin") {
     admin.push(
       { href: "/admin", label: "Overview" },
       { href: "/admin/analytics", label: "Analytics" },
@@ -42,6 +48,10 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
       { href: "/admin/matchmaker", label: "Matchmaker" },
       { href: "/admin/meetings", label: "Meetings" }
     );
+    if (isHeadAdmin) {
+      admin.push({ href: "/admin/admins", label: "Manage admins" });
+    }
+    admin.push({ href: "/settings", label: "Settings" });
   }
   return { primary, admin };
 }
@@ -52,10 +62,20 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-export function MobileMenu({ user }: { user: User }) {
+export function MobileMenu({
+  user,
+  activeRole,
+  availableRoles,
+}: {
+  user: User;
+  activeRole: ActiveRole;
+  availableRoles: ActiveRole[];
+}) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const [switching, startSwitch] = useTransition();
   const pathname = usePathname() || "/";
-  const { primary, admin } = buildNav(user);
+  const { primary, admin } = buildNav(activeRole, user.isHeadAdmin);
 
   // Close on route change
   useEffect(() => {
@@ -120,6 +140,36 @@ export function MobileMenu({ user }: { user: User }) {
             </div>
 
             <nav className="flex-1 overflow-y-auto px-6">
+              {availableRoles.length > 1 && (
+                <div className="mb-4">
+                  <label
+                    htmlFor="mobile-role-switcher"
+                    className="block text-[10px] font-bold uppercase tracking-wider text-white/60"
+                  >
+                    Active role
+                  </label>
+                  <select
+                    id="mobile-role-switcher"
+                    value={activeRole}
+                    disabled={switching}
+                    onChange={(e) => {
+                      const next = e.target.value as ActiveRole;
+                      startSwitch(async () => {
+                        await setActiveRoleAction(next);
+                        router.refresh();
+                        setOpen(false);
+                      });
+                    }}
+                    className="mt-1 w-full rounded-lg border border-white/30 bg-white/10 px-2 py-1.5 text-sm font-semibold text-white outline-none disabled:opacity-50 cursor-pointer"
+                  >
+                    {availableRoles.map((r) => (
+                      <option key={r} value={r} className="text-slate-800">
+                        {ROLE_LABELS[r]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <ul className="space-y-1.5">
                 {primary.map((item) => (
                   <DrawerLink key={item.href} item={item} active={isActive(pathname, item.href)} />
@@ -143,7 +193,9 @@ export function MobileMenu({ user }: { user: User }) {
             <div className="border-t border-white/15 px-6 py-5">
               <p className="truncate text-sm font-semibold text-white">{user.name || "Member"}</p>
               <p className="text-[11px] font-medium uppercase tracking-wider text-byui-blue-light">
-                {user.isAdmin ? "Admin" : user.isMentor ? "Mentor" : "Member"}
+                {user.isHeadAdmin
+                  ? `Head Admin · ${ROLE_LABELS[activeRole]}`
+                  : `Viewing as ${ROLE_LABELS[activeRole]}`}
               </p>
               <form action={signOutAction} className="mt-3">
                 <button

@@ -3,10 +3,14 @@ import { Sidebar, MobileBar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
 import { PendingRequestBanner } from "@/components/pending-request-banner";
 import { getCurrentUser } from "@/lib/session";
+import { availableRoles } from "@/lib/roles";
+import { readActiveRole } from "@/lib/roles-server";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  const activeRole = await readActiveRole(user);
+  const roles = availableRoles(user);
   return (
     <div className="relative min-h-screen">
       {/* Full-viewport Grand Teton bg with a soft brand-blue overlay baked in.
@@ -20,14 +24,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         style={{ objectPosition: "36% top" }}
       />
 
-      {user.isMentor && <PendingRequestBanner userId={user.id} />}
+      {user.isMentor && activeRole === "mentor" && (
+        <PendingRequestBanner userId={user.id} />
+      )}
 
       {/* Sidebar — pinned to viewport so sign out is always reachable */}
-      <Sidebar user={user} />
+      <Sidebar user={user} activeRole={activeRole} availableRoles={roles} />
 
       {/* Right column — offset for the pinned sidebar on lg+ */}
       <div className="flex min-h-screen min-w-0 flex-col lg:pl-64">
-        <TopBar user={user} />
+        <TopBar user={user} activeRole={activeRole} availableRoles={roles} />
         <main className="flex-1 p-2 pb-24 lg:p-6 lg:pb-8">
           <div className="rounded-2xl bg-slate-50 px-4 py-5 shadow-lift lg:rounded-3xl lg:px-8 lg:py-6">
             <div className="mx-auto max-w-6xl">{children}</div>
@@ -35,7 +41,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </main>
       </div>
 
-      <MobileBar user={user} />
+      <MobileBar activeRole={activeRole} />
     </div>
   );
 }

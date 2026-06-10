@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { User } from "@/db/schema";
+import { ROLE_LABELS, type ActiveRole } from "@/lib/roles";
 import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
 import { ResetDemoButton } from "./reset-demo-button";
@@ -9,7 +10,17 @@ function initials(name: string | null | undefined, fallback: string) {
   return name.split(" ").map((s) => s[0]).join("").toUpperCase().slice(0, 2);
 }
 
-export function TopBar({ user, title }: { user: User; title?: string }) {
+export function TopBar({
+  user,
+  title,
+  activeRole,
+  availableRoles,
+}: {
+  user: User;
+  title?: string;
+  activeRole: ActiveRole;
+  availableRoles: ActiveRole[];
+}) {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-white/15 bg-transparent px-4 lg:px-10">
       <div className="flex items-center gap-2">
@@ -26,7 +37,9 @@ export function TopBar({ user, title }: { user: User; title?: string }) {
       <div className="flex items-center gap-2 sm:gap-3">
         {process.env.DEMO_ENABLED === "true" && <ResetDemoButton />}
         <span className="hidden sm:inline-flex items-center rounded-full bg-byui-blue/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-byui-blue-light ring-1 ring-byui-blue/40">
-          {user.isAdmin ? "Admin" : user.isMentor ? "Mentor" : "Member"}
+          {user.isHeadAdmin
+            ? `Head Admin · ${ROLE_LABELS[activeRole]}`
+            : ROLE_LABELS[activeRole]}
         </span>
         <Link
           href="/profile"
@@ -40,7 +53,11 @@ export function TopBar({ user, title }: { user: User; title?: string }) {
             initials(user.name, "?")
           )}
         </Link>
-        <MobileMenu user={user} />
+        <MobileMenu
+          user={user}
+          activeRole={activeRole}
+          availableRoles={availableRoles}
+        />
       </div>
     </header>
   );

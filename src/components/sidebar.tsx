@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOutAction } from "@/lib/actions";
+import { usePathname, useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { setActiveRoleAction, signOutAction } from "@/lib/actions";
 import type { User } from "@/db/schema";
+import { ROLE_LABELS, type ActiveRole } from "@/lib/roles";
 import { Logo } from "./logo";
 import { InstallButton } from "./install-button";
 import { ReportIssueButton } from "./report-issue-button";
@@ -15,12 +17,15 @@ function initials(name: string | null | undefined, fallback: string) {
 
 type NavItem = { href: string; label: string };
 
-function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
+// Nav per active role. The user's available roles + the active one are
+// computed server-side and passed in via props.
+function buildNav(
+  activeRole: ActiveRole,
+  isHeadAdmin: boolean
+): { primary: NavItem[]; admin: NavItem[] } {
   const primary: NavItem[] = [];
 
-  // Mentors don't browse for a mentor — their nav is focused on managing
-  // mentees. Members get the browse + trophy + settings flow.
-  if (user.isMentor) {
+  if (activeRole === "mentor") {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/matches", label: "My Mentees" },
@@ -28,7 +33,7 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
       { href: "/check-in", label: "Monthly Check-in" },
       { href: "/settings", label: "Settings" }
     );
-  } else if (!user.isAdmin) {
+  } else if (activeRole === "member") {
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/mentors", label: "Find a Mentor" },
@@ -38,12 +43,10 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
       { href: "/settings", label: "Settings" }
     );
   }
-  // Pure admins skip the member/mentor primary nav entirely.
-  // Apply-to-mentor moved into /settings — keeps the sidebar focused on the
-  // student's core flow.
+  // activeRole === "admin": skip primary, render the admin section below.
 
   const admin: NavItem[] = [];
-  if (user.isAdmin) {
+  if (activeRole === "admin") {
     admin.push(
       { href: "/admin", label: "Overview" },
       { href: "/admin/analytics", label: "Analytics" },
@@ -54,6 +57,10 @@ function buildNav(user: User): { primary: NavItem[]; admin: NavItem[] } {
       { href: "/admin/matchmaker", label: "Matchmaker" },
       { href: "/admin/meetings", label: "Meetings" }
     );
+    if (isHeadAdmin) {
+      admin.push({ href: "/admin/admins", label: "Manage admins" });
+    }
+    admin.push({ href: "/settings", label: "Settings" });
   }
   return { primary, admin };
 }
@@ -64,9 +71,17 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-export function Sidebar({ user }: { user: User }) {
+export function Sidebar({
+  user,
+  activeRole,
+  availableRoles,
+}: {
+  user: User;
+  activeRole: ActiveRole;
+  availableRoles: ActiveRole[];
+}) {
   const pathname = usePathname() || "/";
-  const { primary, admin } = buildNav(user);
+  const { primary, admin } = buildNav(activeRole, user.isHeadAdmin);
 
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 z-10 h-screen w-64 flex-col text-white bg-gradient-to-b from-byui-blue-dark/55 via-byui-blue-dark/45 to-byui-blue-dark/40 backdrop-blur-[2px] border-r border-white/10">
@@ -85,6 +100,14 @@ export function Sidebar({ user }: { user: User }) {
       {/* pt-6 mirrors the main's lg:p-6 so the first nav tab sits at the
           same y as the top edge of the white content card on the right. */}
       <nav className="flex-1 min-h-0 overflow-hidden px-6 pt-6">
+        {/* Role switcher — only shown when the user has more than one role */}
+        {availableRoles.length > 1 && (
+          <RoleSwitcher
+            activeRole={activeRole}
+            availableRoles={availableRoles}
+          />
+        )}
+
         {primary.length > 0 && (
           <ul className="space-y-1">
             {primary.map((item) => (
@@ -125,7 +148,9 @@ export function Sidebar({ user }: { user: User }) {
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-sm font-semibold text-white">{user.name || "Member"}</p>
             <p className="truncate text-[11px] font-medium uppercase tracking-wider text-byui-blue-light">
-              {user.isAdmin ? "Admin" : user.isMentor ? "Mentor" : "Member"}
+              {user.isHeadAdmin
+                ? `Head Admin · viewing as ${ROLE_LABELS[activeRole]}`
+                : `Viewing as ${ROLE_LABELS[activeRole]}`}
             </p>
           </div>
         </Link>
@@ -141,6 +166,46 @@ export function Sidebar({ user }: { user: User }) {
         </form>
       </div>
     </aside>
+  );
+}
+
+function RoleSwitcher({
+  activeRole,
+  availableRoles,
+}: {
+  activeRole: ActiveRole;
+  availableRoles: ActiveRole[];
+}) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  return (
+    <div className="mb-4">
+      <label
+        htmlFor="role-switcher"
+        className="block text-[10px] font-bold uppercase tracking-wider text-white/70"
+      >
+        Active role
+      </label>
+      <select
+        id="role-switcher"
+        value={activeRole}
+        disabled={pending}
+        onChange={(e) => {
+          const next = e.target.value as ActiveRole;
+          startTransition(async () => {
+            await setActiveRoleAction(next);
+            router.refresh();
+          });
+        }}
+        className="mt-1 w-full rounded-lg border border-white/30 bg-white/10 px-2 py-1.5 text-xs font-semibold text-white outline-none ring-byui-blue-light focus:ring-2 disabled:opacity-50 cursor-pointer"
+      >
+        {availableRoles.map((r) => (
+          <option key={r} value={r} className="text-slate-800">
+            {ROLE_LABELS[r]}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 
@@ -226,19 +291,26 @@ function BarIcon({ name }: { name: BarKey }) {
   }
 }
 
-export function MobileBar({ user }: { user: User }) {
+export function MobileBar({
+  activeRole,
+}: {
+  // Picks the bottom-bar items based on the active role rather than the
+  // user's flag soup. Lets the same person flip between Mentor + Member
+  // views on mobile without re-onboarding.
+  activeRole: ActiveRole;
+}) {
   const pathname = usePathname() || "/";
   // 4 destinations per role. Profile lives in the topbar avatar (per spec),
   // and the hamburger surfaces secondary items + sign out.
   let items: { href: string; label: string; icon: BarKey }[];
-  if (user.isAdmin && !user.isMentor) {
+  if (activeRole === "admin") {
     items = [
       { href: "/admin", label: "Overview", icon: "home" },
       { href: "/admin/members", label: "Members", icon: "users" },
       { href: "/admin/applications", label: "Review", icon: "review" },
       { href: "/admin/matches", label: "Matches", icon: "matches" },
     ];
-  } else if (user.isMentor) {
+  } else if (activeRole === "mentor") {
     items = [
       { href: "/dashboard", label: "Home", icon: "home" },
       { href: "/matches", label: "Mentees", icon: "mentees" },
