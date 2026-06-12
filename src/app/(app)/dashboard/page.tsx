@@ -417,30 +417,31 @@ export default async function DashboardPage() {
                   >
                     <div className="h-12 bg-gradient-to-r from-byui-blue-dark via-byui-blue to-byui-blue-mid" />
                     <div className="px-3 pb-3">
-                      <div className="-mt-8 flex items-end gap-2.5">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={
-                            m.mentorImage ||
-                            `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
-                              m.mentorName || ""
-                            )}&backgroundColor=006EB6&textColor=ffffff`
-                          }
-                          alt=""
-                          className="h-14 w-14 shrink-0 rounded-xl border-2 border-white bg-white object-cover shadow-lift"
-                        />
-                        <div className="min-w-0 flex-1 pb-0.5">
-                          <p className="truncate font-display text-sm font-black leading-tight text-byui-blue-dark">
-                            {m.mentorName}
-                          </p>
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-byui-blue">
-                            Matched{" "}
-                            {new Date(m.startedAt).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </p>
-                        </div>
+                      {/* Avatar peeks into the gradient. Name + matched date
+                          sit on the white surface below so the dark-navy
+                          type stays readable. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={
+                          m.mentorImage ||
+                          `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
+                            m.mentorName || ""
+                          )}&backgroundColor=006EB6&textColor=ffffff`
+                        }
+                        alt=""
+                        className="-mt-8 h-14 w-14 shrink-0 rounded-xl border-2 border-white bg-white object-cover shadow-lift"
+                      />
+                      <div className="mt-2">
+                        <p className="truncate font-display text-base font-black leading-tight text-byui-blue-dark">
+                          {m.mentorName}
+                        </p>
+                        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-byui-blue">
+                          Matched{" "}
+                          {new Date(m.startedAt).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
                       </div>
 
                       <div className="mt-2.5 flex flex-wrap gap-1">
