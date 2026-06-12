@@ -17,27 +17,29 @@ import { dominantGroup } from "@/lib/possible-actions";
 const photo = (id: string) =>
   `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=200&h=200&q=80`;
 
-// -------- Main demo accounts --------
+// -------- Core program accounts (real users, not demo) --------
+// The head admin is the only flagged staff member seeded. Other admins are
+// promoted in the app via the Manage admins page, not hard-coded here. The
+// mentor + mentee accounts below are real-looking starter rows the
+// production system needs so the dashboard isn't empty out of the gate.
 const DEMO: NewUser[] = [
   {
-    email: "admin.demo@byui.edu",
-    name: "Avery Admin",
-    firstName: "Avery",
-    lastName: "Admin",
-    image: photo("1494790108377-be9c29b29330"),
-    major: "Computer Science",
-    semesterLevel: "Senior",
-    expectedGraduation: "Spring 2026",
-    phone: "(208) 555-0100",
+    email: "harrelld@byui.edu",
+    name: "Harrelld",
+    firstName: "",
+    lastName: "Harrelld",
+    major: "Business Management",
+    semesterLevel: "Graduate",
+    expectedGraduation: "",
     preferredContactMethod: "email",
-    bio: "Run the Career Action Network on the admin side. Spent two semesters as a peer mentor before this. Always trying to make the match flow less awkward.",
-    careerInterests: ["Organizational Leadership / Human Resources", "Entrepreneurship"],
+    bio: "Head admin for BYUI CAN. Runs the program day-to-day and promotes new admins from the Manage admins page.",
     isAdmin: true,
+    isHeadAdmin: true,
     isMentor: false,
     onboardedAt: new Date(),
   },
   {
-    email: "mentor.demo@byui.edu",
+    email: "morgan.mentor@byui.edu",
     name: "Morgan Mentor",
     firstName: "Morgan",
     lastName: "Mentor",
@@ -58,7 +60,7 @@ const DEMO: NewUser[] = [
     onboardedAt: new Date(),
   },
   {
-    email: "member.demo@byui.edu",
+    email: "mason.member@byui.edu",
     name: "Mason Member",
     firstName: "Mason",
     lastName: "Member",
@@ -330,7 +332,7 @@ function daysAgo(n: number) {
   return d;
 }
 
-export async function seedDemo() {
+export async function seedStarterData() {
   await clearActivity();
 
   const ids: Record<string, string> = {};
@@ -362,7 +364,7 @@ export async function seedDemo() {
     },
   ]);
 
-  // Pending requests for mentor.demo (banner!)
+  // Pending request that surfaces on Morgan's dashboard banner.
   const olivia = ids["olivia.brown@byui.edu"];
   const liam = ids["liam.anderson@byui.edu"];
   const sophia = ids["sophia.martinez@byui.edu"];
@@ -370,20 +372,20 @@ export async function seedDemo() {
   const mia = ids["mia.rodriguez@byui.edu"];
   const ava = ids["ava.thompson@byui.edu"];
   const james = ids["james.lee@byui.edu"];
-  const mason = ids["member.demo@byui.edu"];
+  const mason = ids["mason.member@byui.edu"];
 
-  const morgan = ids["mentor.demo@byui.edu"];
+  const morgan = ids["morgan.mentor@byui.edu"];
   const jordan = ids["jordan.chen@byui.edu"];
   const emma = ids["emma.davis@byui.edu"];
   const marcus = ids["marcus.johnson@byui.edu"];
   const sarah = ids["sarah.patel@byui.edu"];
   const david = ids["david.kim@byui.edu"];
 
-  // Mia is the one headline pending example for the demo. We intentionally
-  // seed exactly ONE pending request for mentor.demo so the dashboard shows
-  // "1 pending" cleanly and the Accept/Decline popup has a single, focused
-  // story. James's pending was moved to Jordan below as a second-mentor
-  // story so the admin overview still has activity to show.
+  // Mia is the headline pending example. We seed exactly ONE pending
+  // request for Morgan so the dashboard shows "1 pending" cleanly and the
+  // Accept/Decline popup has a single, focused story. James's pending was
+  // moved to Jordan below as a second-mentor story so the admin overview
+  // still has activity to show.
   const [pendingForMorgan] = await db
     .insert(requests)
     .values({
@@ -397,7 +399,7 @@ export async function seedDemo() {
     .returning();
 
   // Pending for Jordan (a different mentor) — keeps the admin activity feed
-  // honest without polluting mentor.demo's headline.
+  // honest without polluting Morgan's headline.
   await db.insert(requests).values({
     mentorId: jordan,
     menteeId: james,
@@ -520,7 +522,7 @@ export async function seedDemo() {
     });
   }
 
-  // Extra self-logs for the demo mentee (Mason) so the dashboard KPI strip
+  // Extra self-logs for Mason so the dashboard KPI strip
   // shows a populated state: weekly 1/1, monthly 3/3, multi-week streak.
   const masonLogs: Array<{
     daysAgo: number;
@@ -580,7 +582,7 @@ export async function seedDemo() {
   }
 
   // Evaluate achievements for every mentee so the Trophy Case has earned
-  // rows on demo reset. Failures here are non-fatal — the seed is still
+  // rows after seeding. Failures here are non-fatal — the seed is still
   // useful even if the achievement pass blows up.
   const studentIds = [
     olivia,
@@ -604,13 +606,13 @@ export async function seedDemo() {
   console.log(`  users:         ${Object.keys(ids).length}`);
   console.log(`  matches:       ${matchIds.length}`);
   console.log(`  meeting_logs:  ${meetings.length + masonLogs.length}`);
-  console.log(`  pending for mentor.demo: ${pendingForMorgan?.id ? "yes" : "no"}`);
+  console.log(`  pending for Morgan: ${pendingForMorgan?.id ? "yes" : "no"}`);
 }
 
 // Run as a CLI only when invoked directly (npm run db:seed). Importing this
 // file from an API route should not re-run the seed on import.
 if (process.argv[1] && process.argv[1].includes("seed.ts")) {
-  seedDemo().catch((e) => {
+  seedStarterData().catch((e) => {
     console.error(e);
     process.exit(1);
   });

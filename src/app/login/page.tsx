@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "../../../auth";
-import { DemoButtons } from "./demo-buttons";
 import { Logo } from "@/components/logo";
 import { LoginForm } from "./login-form";
 
@@ -114,8 +113,6 @@ export default async function LoginPage({
             <p className="mt-6 text-center text-xs text-slate-500">
               By signing in you agree to receive a one-time login link by email when you request one.
             </p>
-
-            {process.env.DEMO_ENABLED === "true" && <DemoButtons />}
           </div>
         </div>
       </div>

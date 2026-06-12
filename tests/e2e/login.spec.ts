@@ -31,13 +31,6 @@ test.describe("Login page", () => {
     await expect(page.locator("input[type='password']")).toHaveCount(0);
   });
 
-  test("shows demo login buttons when DEMO_ENABLED is true", async ({ page }) => {
-    await page.goto("/login");
-    await expect(page.getByRole("button", { name: /Sign in as Admin/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Sign in as Mentor/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Sign in as Member/i })).toBeVisible();
-  });
-
   test("password sign-in rejects bad credentials", async ({ page }) => {
     await page.goto("/login");
     await page.locator("input[type='email']").fill("nobody@byui.edu");

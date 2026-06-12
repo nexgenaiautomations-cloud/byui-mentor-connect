@@ -3,7 +3,6 @@ import type { User } from "@/db/schema";
 import { ROLE_LABELS, type ActiveRole } from "@/lib/roles";
 import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
-import { ResetDemoButton } from "./reset-demo-button";
 
 function initials(name: string | null | undefined, fallback: string) {
   if (!name) return fallback;
@@ -35,7 +34,6 @@ export function TopBar({
         )}
       </div>
       <div className="flex items-center gap-2 sm:gap-3">
-        {process.env.DEMO_ENABLED === "true" && <ResetDemoButton />}
         <span className="hidden sm:inline-flex items-center rounded-full bg-byui-blue/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-byui-blue-light ring-1 ring-byui-blue/40">
           {user.isHeadAdmin
             ? `Head Admin · ${ROLE_LABELS[activeRole]}`
