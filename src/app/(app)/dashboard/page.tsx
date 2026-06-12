@@ -54,7 +54,10 @@ export default async function DashboardPage() {
       mentorName: mentor.name,
       mentorImage: mentor.image,
       mentorMajor: mentor.major,
+      mentorMinor: mentor.minor,
       mentorBio: mentor.bio,
+      mentorInterests: mentor.careerInterests,
+      mentorGraduation: mentor.expectedGraduation,
       menteeName: mentee.name,
       menteeImage: mentee.image,
       menteeMajor: mentee.major,
@@ -345,59 +348,201 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-        <div className="card">
+      {!me.isMentor && (
+        <section className="card">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-bold text-byui-blue-dark">
-              {me.isMentor ? "Your mentees" : "Your Mentors"}
-            </h2>
-            <Link href="/matches" className="text-xs font-semibold text-byui-blue hover:underline">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-byui-blue">
+                Your Mentors
+              </p>
+              <h2 className="mt-0.5 font-display text-xl font-black text-byui-blue-dark">
+                {recentMatches.length === 0
+                  ? "Find your first mentor"
+                  : recentMatches.length === 1
+                    ? "The mentor cheering you on"
+                    : "The mentors cheering you on"}
+              </h2>
+            </div>
+            <Link
+              href="/matches"
+              className="text-xs font-semibold text-byui-blue hover:underline"
+            >
               View all →
             </Link>
           </div>
           {recentMatches.length === 0 ? (
             <p className="mt-4 text-sm text-slate-500">
-              {me.isMentor
-                ? "No active mentees yet. Your impact starts with your first match."
-                : "No active matches yet. Browse mentors and send a request."}
+              No active matches yet. Browse mentors and send a request — your
+              future self will thank you.
             </p>
           ) : (
-            <ul className="mt-4 divide-y divide-slate-100">
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
               {recentMatches.map((m) => {
-                const iAmMentor = m.mentorId === me.id;
-                const other = iAmMentor
-                  ? {
-                      name: m.menteeName,
-                      image: m.menteeImage,
-                      major: m.menteeMajor,
-                      bio: m.menteeBio,
-                    }
-                  : {
-                      name: m.mentorName,
-                      image: m.mentorImage,
-                      major: m.mentorMajor,
-                      bio: m.mentorBio,
-                    };
+                const interests = Array.isArray(m.mentorInterests)
+                  ? m.mentorInterests.filter(Boolean).slice(0, 4)
+                  : [];
                 return (
+                  <article
+                    key={m.id}
+                    className="overflow-hidden rounded-2xl border border-byui-blue-light/40 bg-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift"
+                  >
+                    <div className="h-20 bg-gradient-to-r from-byui-blue-dark via-byui-blue to-byui-blue-mid" />
+                    <div className="px-5 pb-5">
+                      <div className="-mt-12 flex items-end gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={
+                            m.mentorImage ||
+                            `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
+                              m.mentorName || ""
+                            )}&backgroundColor=006EB6&textColor=ffffff`
+                          }
+                          alt=""
+                          className="h-20 w-20 shrink-0 rounded-2xl border-4 border-white bg-white object-cover shadow-lift"
+                        />
+                        <div className="min-w-0 flex-1 pb-1">
+                          <p className="truncate font-display text-lg font-black leading-tight text-byui-blue-dark">
+                            {m.mentorName}
+                          </p>
+                          <p className="text-[11px] font-semibold uppercase tracking-wider text-byui-blue">
+                            Mentor · matched{" "}
+                            {new Date(m.startedAt).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-1.5">
+                        {m.mentorMajor?.trim() ? (
+                          <span className="inline-flex items-center rounded-full bg-byui-blue-light/40 px-2.5 py-0.5 text-[11px] font-bold text-byui-blue-dark">
+                            {m.mentorMajor}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500">
+                            Major not listed
+                          </span>
+                        )}
+                        {m.mentorMinor?.trim() &&
+                          m.mentorMinor.toLowerCase() !== "none" && (
+                            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">
+                              Minor: {m.mentorMinor}
+                            </span>
+                          )}
+                        {m.mentorGraduation?.trim() && (
+                          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">
+                            Grad {m.mentorGraduation}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          Bio
+                        </p>
+                        <p className="mt-1 whitespace-pre-line text-sm leading-snug text-slate-700">
+                          {m.mentorBio?.trim() || (
+                            <span className="text-slate-400">
+                              Bio not listed
+                            </span>
+                          )}
+                        </p>
+                      </div>
+
+                      {interests.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            Interested in
+                          </p>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {interests.map((i) => (
+                              <span
+                                key={i}
+                                className="inline-flex items-center rounded-full border border-byui-blue/30 bg-white px-2.5 py-0.5 text-[11px] font-semibold text-byui-blue-dark"
+                              >
+                                {i}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <Link
+                          href="/matches"
+                          className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-3.5 py-2 text-xs font-bold text-white transition hover:bg-byui-blue-dark cursor-pointer"
+                        >
+                          Open mentor →
+                        </Link>
+                        <Link
+                          href="/log-meeting"
+                          className="inline-flex items-center justify-center rounded-lg border border-byui-blue/30 bg-white px-3.5 py-2 text-xs font-bold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                        >
+                          Log an activity
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      <section
+        className={
+          me.isMentor
+            ? "grid gap-4 lg:grid-cols-[1.4fr_1fr]"
+            : "card"
+        }
+      >
+        {me.isMentor && (
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+                Your mentees
+              </h2>
+              <Link
+                href="/matches"
+                className="text-xs font-semibold text-byui-blue hover:underline"
+              >
+                View all →
+              </Link>
+            </div>
+            {recentMatches.length === 0 ? (
+              <p className="mt-4 text-sm text-slate-500">
+                No active mentees yet. Your impact starts with your first match.
+              </p>
+            ) : (
+              <ul className="mt-4 divide-y divide-slate-100">
+                {recentMatches.map((m) => (
                   <li key={m.id} className="flex items-start gap-3 py-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={other.image || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(other.name || "")}&backgroundColor=006EB6&textColor=ffffff`}
+                      src={
+                        m.menteeImage ||
+                        `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
+                          m.menteeName || ""
+                        )}&backgroundColor=006EB6&textColor=ffffff`
+                      }
                       alt=""
                       className="h-12 w-12 shrink-0 rounded-full object-cover"
                     />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-byui-blue-dark">
-                        {other.name}
+                        {m.menteeName}
                       </p>
                       <p className="truncate text-xs text-slate-600">
-                        {other.major?.trim() || (
+                        {m.menteeMajor?.trim() || (
                           <span className="text-slate-400">Major not listed</span>
                         )}
                       </p>
                       <p className="mt-1 line-clamp-2 text-xs leading-snug text-slate-500">
                         <span className="font-semibold text-slate-600">Bio:</span>{" "}
-                        {other.bio?.trim() || (
+                        {m.menteeBio?.trim() || (
                           <span className="text-slate-400">Bio not listed</span>
                         )}
                       </p>
@@ -409,15 +554,22 @@ export default async function DashboardPage() {
                       Open
                     </Link>
                   </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
-        <div className="card">
-          <h2 className="font-display text-lg font-bold text-byui-blue-dark">Quick actions</h2>
-          <div className="mt-4 space-y-2">
+        <div className={me.isMentor ? "card" : ""}>
+          <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+            Quick actions
+          </h2>
+          <div
+            className={
+              "mt-4 " +
+              (me.isMentor ? "space-y-2" : "grid gap-2 sm:grid-cols-2")
+            }
+          >
             {(me.isMentor
               ? [
                   { href: "/matches", title: "Your mentees", body: "Contact info and meeting history." },
