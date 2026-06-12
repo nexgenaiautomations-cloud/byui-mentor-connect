@@ -65,12 +65,19 @@ export default async function SettingsPage() {
               bio: user.bio ?? "",
               image: user.image ?? "",
               careerInterests: user.careerInterests ?? [],
+              priorCareerChats: (() => {
+                const v = user.priorCareerChats ?? "";
+                // Show numeric values directly; legacy range strings stay
+                // editable too so the student can replace them.
+                return /^\d+$/.test(v) ? v : v;
+              })(),
             }}
             careerOptions={[...CAREER_OPTIONS]}
             semesterLevels={[...SEMESTER_LEVELS]}
             majorOptions={[...MAJOR_OPTIONS]}
             minorOptions={[...MINOR_OPTIONS]}
             graduationOptions={[...GRADUATION_OPTIONS]}
+            showCareerChats
           />
         </div>
       </section>

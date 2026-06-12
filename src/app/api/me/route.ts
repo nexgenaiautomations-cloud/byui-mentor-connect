@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
-import { CAREER_OPTIONS, SEMESTER_LEVELS } from "@/lib/careers";
+import { SEMESTER_LEVELS } from "@/lib/careers";
 import { toSafeMe } from "@/lib/safe-user";
 import { evaluateAchievementsForStudent } from "@/lib/achievements";
 
@@ -44,11 +44,27 @@ const profileSchema = z.object({
     )
     .optional()
     .nullable(),
+  // Career interests accept any non-empty string — students can type a
+  // custom "Other" value, so we can't lock this to the canonical enum any
+  // more. Cap each entry's length to keep abuse bounded.
   careerInterests: z
-    .array(z.enum(CAREER_OPTIONS as unknown as [string, ...string[]]))
-    .max(CAREER_OPTIONS.length)
+    .array(z.string().trim().min(1).max(200))
+    .max(60)
     .optional()
     .nullable(),
+  // Optional editable signup answer — drives Trophy Case totals.
+  priorCareerChats: z
+    .union([z.string().trim(), z.number().int().min(0).max(10_000)])
+    .optional()
+    .nullable()
+    .refine(
+      (v) => {
+        if (v === undefined || v === null || v === "") return true;
+        if (typeof v === "number") return Number.isInteger(v) && v >= 0;
+        return /^\d+$/.test(v);
+      },
+      { message: "Career chats must be a whole number, 0 or greater." }
+    ),
 });
 
 export async function GET() {
@@ -101,6 +117,12 @@ export async function PATCH(req: Request) {
       image:
         data.image === undefined ? user.image : data.image ? data.image : null,
       careerInterests: keepOrSet(data.careerInterests, user.careerInterests),
+      priorCareerChats:
+        data.priorCareerChats === undefined
+          ? user.priorCareerChats
+          : data.priorCareerChats === null || data.priorCareerChats === ""
+            ? user.priorCareerChats
+            : String(data.priorCareerChats),
       onboardedAt: user.onboardedAt ?? new Date(),
     })
     .where(eq(users.id, user.id))

@@ -153,7 +153,8 @@ function IssueModal({ onClose }: { onClose: () => void }) {
               </label>
               <select
                 id="issue-category"
-                className="input"
+                className="input text-slate-900"
+                style={{ color: "#13294B" }}
                 value={category}
                 onChange={(e) =>
                   setCategory(e.target.value as typeof category)
@@ -174,7 +175,8 @@ function IssueModal({ onClose }: { onClose: () => void }) {
               <textarea
                 id="issue-message"
                 rows={5}
-                className="input"
+                className="input text-slate-900"
+                style={{ color: "#13294B" }}
                 placeholder="Describe what happened and what you'd like us to do about it."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}

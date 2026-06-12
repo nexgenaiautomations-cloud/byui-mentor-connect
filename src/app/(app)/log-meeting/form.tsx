@@ -6,19 +6,12 @@ import {
   groupsForRole,
   shouldCelebrate as shouldCelebrateLabels,
 } from "@/lib/possible-actions";
-
-async function celebrate() {
-  const confetti = (await import("canvas-confetti")).default;
-  confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-  setTimeout(() => {
-    confetti({
-      particleCount: 60,
-      spread: 100,
-      startVelocity: 35,
-      origin: { y: 0.7 },
-    });
-  }, 220);
-}
+import {
+  AchievementToast,
+  fireConfetti,
+  GoldCongratulations,
+  type TrophyToast,
+} from "@/components/celebration";
 
 type Match = {
   id: string;
@@ -87,6 +80,13 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
   const [newlyEarned, setNewlyEarned] = useState<
     { key: string; title: string }[]
   >([]);
+  // Achievement toast surfaces *all* newly-earned trophies in a single
+  // Xbox-style banner. Cleared when the toast auto-dismisses.
+  const [toastTrophies, setToastTrophies] = useState<TrophyToast[]>([]);
+  // Gold full-screen "Congratulations!" overlay for the three offer
+  // celebrations. Independent from confetti so we can keep the regular
+  // navy-themed app untouched the rest of the time.
+  const [goldOpen, setGoldOpen] = useState(false);
 
   const selectedMatch = useMemo(
     () => matches.find((m) => m.id === matchId),
@@ -170,7 +170,8 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
       return;
     }
     const body = await res.json();
-    setNewlyEarned(body.newlyEarned ?? []);
+    const earned: { key: string; title: string }[] = body.newlyEarned ?? [];
+    setNewlyEarned(earned);
     setSaved(true);
     setSubmitting(false);
     setConfirmOpen(false);
@@ -179,8 +180,15 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
     setNext("");
     setMeetingType("");
     setDuration("");
-    if (shouldCelebrate || (body.newlyEarned ?? []).length > 0) {
-      void celebrate();
+    // Confetti on every successful submission — small, fun, hard to miss.
+    void fireConfetti();
+    // Gold full-screen takeover only for offer accomplishments.
+    if (shouldCelebrate) setGoldOpen(true);
+    // Xbox-style trophy toast when a new achievement was earned.
+    if (earned.length > 0) {
+      setToastTrophies(
+        earned.map((t) => ({ key: t.key, title: t.title }))
+      );
     }
     router.refresh();
     props.onSaved?.();
@@ -192,6 +200,14 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
 
   return (
     <>
+      <AchievementToast
+        trophies={toastTrophies}
+        onDismiss={() => setToastTrophies([])}
+      />
+      <GoldCongratulations
+        show={goldOpen}
+        onDone={() => setGoldOpen(false)}
+      />
       <form onSubmit={onReview} className="space-y-5">
         {isMentor && matches.length > 0 && (
           <div>
@@ -312,7 +328,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
 
         <div>
           <label className="label">
-            Action items{" "}
+            {isMentor ? "Action items" : "Other activity"}{" "}
             <span className="font-normal text-slate-400">(optional)</span>
           </label>
           <textarea
@@ -321,7 +337,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
             placeholder={
               isMentor
                 ? "What's the mentee doing before next time?"
-                : "What's your next step?"
+                : "Add anything else you worked on or want to remember."
             }
             value={actions}
             onChange={(e) => setActions(e.target.value)}
@@ -476,7 +492,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
               {actions.trim() && (
                 <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    Action Items
+                    {isMentor ? "Action Items" : "Other Activity"}
                   </dt>
                   <dd className="mt-0.5 whitespace-pre-wrap text-slate-800">
                     {actions}

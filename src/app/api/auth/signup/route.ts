@@ -5,8 +5,8 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { hashPassword, passwordIssues } from "@/lib/password";
-import { attachSessionCookie } from "@/lib/auth-cookie";
 import { limitSignup } from "@/lib/rate-limit";
+import { sendVerificationEmail } from "@/lib/send-verification";
 
 const BYUI_DOMAIN = "@byui.edu";
 
@@ -127,20 +127,30 @@ export async function POST(req: Request) {
       // parsePriorCareerChats which also accepts legacy range strings.
       priorCareerChats: String(data.priorCareerChats),
       priorInternshipExperience: data.priorInternshipExperience,
-      // We trust the BYU-I email gate (@byui.edu only) and mark verified.
-      // A future change could send a confirmation email; the column exists.
-      emailVerified: new Date(),
+      // Email is unverified until the user clicks the link we send below.
+      // The signin route rejects unverified accounts so a stolen password
+      // can't get in unless the attacker also reads the inbox.
+      emailVerified: null,
     })
     .returning({ id: users.id, email: users.email, name: users.name });
 
-  const res = NextResponse.json({
+  // Fire the verification email. Failures are surfaced to the caller so
+  // the UI can suggest a resend, but the account itself is created either
+  // way — the user can always come back and request a new link.
+  const origin = new URL(req.url).origin;
+  const send = await sendVerificationEmail({
+    email: inserted.email,
+    origin,
+  });
+  if (!send.ok) {
+    console.error("verification email failed:", send.error);
+  }
+
+  return NextResponse.json({
     ok: true,
     user: { id: inserted.id, email: inserted.email },
-    redirectTo: "/onboarding",
-  });
-  return attachSessionCookie(res, {
-    userId: inserted.id,
-    email: inserted.email,
-    name: inserted.name,
+    // Keep the user signed out — they must verify before they can log in.
+    redirectTo: `/login/check-email?email=${encodeURIComponent(inserted.email)}&purpose=verify`,
+    emailSent: send.sent,
   });
 }

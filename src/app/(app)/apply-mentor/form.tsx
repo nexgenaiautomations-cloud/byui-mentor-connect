@@ -126,7 +126,7 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
       </div>
 
       <div>
-        <label className="label">Capacity (max mentees)</label>
+        <label className="label">How many mentees can you manage?</label>
         <input
           type="number"
           min={1}
@@ -135,7 +135,10 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
           value={capacity}
           onChange={(e) => setCapacity(Number(e.target.value))}
         />
-        <p className="mt-1 text-xs text-slate-500">Default is 5. You can change this later from your profile.</p>
+        <p className="mt-1 text-xs text-slate-500">
+          Choose the maximum number of mentees you feel you can support well.
+          Default is 5 — you can change this later from your profile.
+        </p>
       </div>
 
       {error && (

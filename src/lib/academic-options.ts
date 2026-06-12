@@ -1,31 +1,57 @@
 // Shared dropdown options for academic profile fields.
 // Used by signup/onboarding, profile edit, and any validation paths.
+//
+// Majors and minors cover the BYU-Idaho College of Business and Communication.
+// "Other" is supported on both lists — the profile UI shows a free-text input
+// so students can type a major/minor we haven't listed.
 
 export const MAJOR_OPTIONS = [
   "Accounting",
+  "Agribusiness",
+  "Applied Business Management",
   "Business Analytics",
   "Business Finance",
   "Business Management",
+  "Communication",
   "Computer Science",
   "Data Science",
   "Economics",
+  "Entrepreneurship",
+  "Experience Design and Management",
+  "Financial Economics",
+  "Healthcare Administration",
   "Marketing",
+  "Operations Management",
+  "Public Relations",
   "Software Engineering",
   "Supply Chain Management",
   "Other",
 ] as const;
 
-// Minor list mirrors majors plus a "None" option for students with no minor.
+// Minors mirror majors plus a "None" option for students with no minor.
 export const MINOR_OPTIONS = [
   "None",
   "Accounting",
+  "Advertising",
+  "Agribusiness",
+  "Business",
   "Business Analytics",
-  "Business Finance",
   "Business Management",
+  "Communication",
   "Computer Science",
   "Data Science",
+  "Digital and Social Media",
   "Economics",
+  "Entrepreneurship",
+  "Event Management",
+  "Finance",
+  "Healthcare Administration",
+  "Human Resource Management",
+  "International Business",
   "Marketing",
+  "Operations Management",
+  "Public Relations",
+  "Social Media Marketing",
   "Software Engineering",
   "Supply Chain Management",
   "Other",

@@ -19,6 +19,11 @@ export type AccomplishmentGroupKey =
 export type ActionDef = {
   key: string;
   group: AccomplishmentGroupKey;
+  // Some actions land in a different group on the mentor side (e.g. the
+  // "Helped apply to an internship or job" line moved from Career Tasks
+  // into Industry Experiences for mentors). When `mentorGroup` is set, the
+  // mentor form uses it instead of `group`.
+  mentorGroup?: AccomplishmentGroupKey;
   menteeLabel: string;
   mentorLabel: string;
 };
@@ -60,6 +65,9 @@ export const ACTIONS: readonly ActionDef[] = [
   {
     key: "apply_internship",
     group: "career_tasks",
+    // Mentor side moves this into Industry Experiences (Group 2) — it's the
+    // only item in that group on the mentor form per the latest spec.
+    mentorGroup: "industry_experiences",
     menteeLabel: "Applied to an internship or job",
     mentorLabel: "Helped apply to an internship or job",
   },
@@ -97,7 +105,7 @@ export const ACTIONS: readonly ActionDef[] = [
     key: "other_career_activity",
     group: "career_tasks",
     menteeLabel: "Completed another career-building activity",
-    mentorLabel: "Did another career-building activity together",
+    mentorLabel: "Go do something awesome together",
   },
   {
     key: "explore_careers",
@@ -171,6 +179,24 @@ export type RoleGroup = {
   options: readonly string[]; // labels for the given role
 };
 
+// Per-spec, the mentor form hides the three "offer" items entirely — the
+// mentee is the one who logs receiving an offer (and triggers the gold
+// celebration). The mentor's Industry Experiences group is reduced to just
+// "Helped apply to an internship or job" (moved up from Career Tasks via
+// the `mentorGroup` override).
+const MENTOR_HIDDEN_KEYS = new Set([
+  "internship_offer",
+  "part_time_offer",
+  "full_time_offer",
+]);
+
+function effectiveGroup(
+  a: ActionDef,
+  role: "mentee" | "mentor"
+): AccomplishmentGroupKey {
+  return role === "mentor" && a.mentorGroup ? a.mentorGroup : a.group;
+}
+
 export function groupsForRole(role: "mentee" | "mentor"): RoleGroup[] {
   const groups: AccomplishmentGroupKey[] = [
     "career_tasks",
@@ -180,9 +206,10 @@ export function groupsForRole(role: "mentee" | "mentor"): RoleGroup[] {
   return groups.map((g) => ({
     key: g,
     heading: GROUP_HEADINGS[g],
-    options: ACTIONS.filter((a) => a.group === g).map((a) =>
-      role === "mentee" ? a.menteeLabel : a.mentorLabel
-    ),
+    options: ACTIONS.filter((a) => {
+      if (role === "mentor" && MENTOR_HIDDEN_KEYS.has(a.key)) return false;
+      return effectiveGroup(a, role) === g;
+    }).map((a) => (role === "mentee" ? a.menteeLabel : a.mentorLabel)),
   }));
 }
 
@@ -224,7 +251,10 @@ const GROUP_BY_LABEL: Record<string, AccomplishmentGroupKey> = (() => {
   const map: Record<string, AccomplishmentGroupKey> = {};
   for (const a of ACTIONS) {
     map[a.menteeLabel] = a.group;
-    map[a.mentorLabel] = a.group;
+    // Mentor labels respect the per-role group override so KPI math reflects
+    // where the item appears in the mentor form (e.g. "Helped apply to an
+    // internship or job" now counts as Industry Experiences for mentors).
+    map[a.mentorLabel] = a.mentorGroup ?? a.group;
   }
   // Legacy labels mapped to their group via best-guess content match.
   const LEGACY_GROUP: Record<string, AccomplishmentGroupKey> = {

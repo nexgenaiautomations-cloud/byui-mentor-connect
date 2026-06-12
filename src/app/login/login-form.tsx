@@ -7,17 +7,46 @@ import { useState, useTransition } from "react";
 export function LoginForm({
   initialEmail = "",
   next,
+  initialBanner,
 }: {
   initialEmail?: string;
   next?: string;
+  initialBanner?: { tone: "success" | "error"; message: string };
 }) {
   const router = useRouter();
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    initialBanner?.tone === "error" ? initialBanner.message : null
+  );
+  const [info, setInfo] = useState<string | null>(
+    initialBanner?.tone === "success" ? initialBanner.message : null
+  );
   const [pending, startTransition] = useTransition();
   const [mode, setMode] = useState<"password" | "magic">("password");
+  // When the signin response says the account is unverified we surface a
+  // resend button instead of nudging the user into another login attempt.
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resending, startResend] = useTransition();
+
+  function resendVerification() {
+    if (!unverifiedEmail) return;
+    setInfo(null);
+    startResend(async () => {
+      try {
+        await fetch("/api/auth/resend-verification", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email: unverifiedEmail }),
+        });
+        setInfo(
+          "If your account still needs verifying, we just sent a fresh link."
+        );
+      } catch {
+        setError("Could not reach the server. Try again in a minute.");
+      }
+    });
+  }
 
   function safeNext(): string {
     if (next && next.startsWith("/") && !next.startsWith("//")) return next;
@@ -28,6 +57,7 @@ export function LoginForm({
     e.preventDefault();
     setError(null);
     setInfo(null);
+    setUnverifiedEmail(null);
     if (!email.trim() || !password) {
       setError("Email and password are required.");
       return;
@@ -41,6 +71,9 @@ export function LoginForm({
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(body?.error || "Sign in failed.");
+        if (body?.unverified) {
+          setUnverifiedEmail(body.email ?? email.trim().toLowerCase());
+        }
         return;
       }
       router.push(body.redirectTo || safeNext());
@@ -187,6 +220,18 @@ export function LoginForm({
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
+          {unverifiedEmail && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={resendVerification}
+                disabled={resending}
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-byui-blue/40 bg-white px-3 py-1.5 text-xs font-bold text-byui-blue-dark transition hover:bg-byui-blue-light/20 disabled:opacity-50 cursor-pointer"
+              >
+                {resending ? "Sending…" : "Resend verification email"}
+              </button>
+            </div>
+          )}
         </div>
       )}
       {info && (

@@ -53,8 +53,12 @@ export default async function DashboardPage() {
       menteeId: matches.menteeId,
       mentorName: mentor.name,
       mentorImage: mentor.image,
+      mentorMajor: mentor.major,
+      mentorBio: mentor.bio,
       menteeName: mentee.name,
       menteeImage: mentee.image,
+      menteeMajor: mentee.major,
+      menteeBio: mentee.bio,
     })
     .from(matches)
     .innerJoin(mentor, eq(mentor.id, matches.mentorId))
@@ -362,23 +366,46 @@ export default async function DashboardPage() {
               {recentMatches.map((m) => {
                 const iAmMentor = m.mentorId === me.id;
                 const other = iAmMentor
-                  ? { name: m.menteeName, image: m.menteeImage }
-                  : { name: m.mentorName, image: m.mentorImage };
+                  ? {
+                      name: m.menteeName,
+                      image: m.menteeImage,
+                      major: m.menteeMajor,
+                      bio: m.menteeBio,
+                    }
+                  : {
+                      name: m.mentorName,
+                      image: m.mentorImage,
+                      major: m.mentorMajor,
+                      bio: m.mentorBio,
+                    };
                 return (
-                  <li key={m.id} className="flex items-center gap-3 py-3">
+                  <li key={m.id} className="flex items-start gap-3 py-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={other.image || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(other.name || "")}&backgroundColor=006EB6&textColor=ffffff`}
                       alt=""
-                      className="h-10 w-10 rounded-full object-cover"
+                      className="h-12 w-12 shrink-0 rounded-full object-cover"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-byui-blue-dark">{other.name}</p>
-                      <p className="text-xs text-slate-500">
-                        {iAmMentor ? "Mentee" : "Mentor"} · matched {new Date(m.startedAt).toLocaleDateString()}
+                      <p className="truncate text-sm font-semibold text-byui-blue-dark">
+                        {other.name}
+                      </p>
+                      <p className="truncate text-xs text-slate-600">
+                        {other.major?.trim() || (
+                          <span className="text-slate-400">Major not listed</span>
+                        )}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-xs leading-snug text-slate-500">
+                        <span className="font-semibold text-slate-600">Bio:</span>{" "}
+                        {other.bio?.trim() || (
+                          <span className="text-slate-400">Bio not listed</span>
+                        )}
                       </p>
                     </div>
-                    <Link href="/matches" className="text-xs font-semibold text-byui-blue hover:underline">
+                    <Link
+                      href="/matches"
+                      className="shrink-0 text-xs font-semibold text-byui-blue hover:underline"
+                    >
                       Open
                     </Link>
                   </li>

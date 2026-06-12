@@ -10,11 +10,39 @@ const CAMPUS_LOGIN = "/byui-campus.jpg";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; next?: string; email?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    next?: string;
+    email?: string;
+    verify?: string;
+  }>;
 }) {
   const session = await auth();
   if (session?.user?.id) redirect("/dashboard");
-  const { error, next, email } = await searchParams;
+  const { error, next, email, verify } = await searchParams;
+
+  // Verification result banner — landing here from /api/auth/verify-email.
+  // Success unlocks signin; expired/invalid prompts the user to request a
+  // fresh link via the existing resend flow.
+  const verifyBanner: { tone: "success" | "error"; message: string } | undefined =
+    verify === "ok"
+      ? {
+          tone: "success",
+          message: "Email verified — you can sign in now.",
+        }
+      : verify === "expired"
+        ? {
+            tone: "error",
+            message:
+              "That verification link expired. Sign in below to trigger a resend, or use the resend button.",
+          }
+        : verify === "invalid"
+          ? {
+              tone: "error",
+              message:
+                "That verification link isn't valid. Try signing in to get a fresh one.",
+            }
+          : undefined;
 
   return (
     <main className="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
@@ -76,7 +104,11 @@ export default async function LoginPage({
             )}
 
             <div className="mt-5">
-              <LoginForm initialEmail={email ?? ""} next={next} />
+              <LoginForm
+                initialEmail={email ?? ""}
+                next={next}
+                initialBanner={verifyBanner}
+              />
             </div>
 
             <p className="mt-6 text-center text-xs text-slate-500">

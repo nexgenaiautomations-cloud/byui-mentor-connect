@@ -30,7 +30,6 @@ function buildNav(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/matches", label: "My Mentees" },
       { href: "/log-meeting", label: "Log a Meeting" },
-      { href: "/check-in", label: "Monthly Check-in" },
       { href: "/settings", label: "Settings" }
     );
   } else if (activeRole === "member") {
@@ -315,7 +314,7 @@ export function MobileBar({
       { href: "/dashboard", label: "Home", icon: "home" },
       { href: "/matches", label: "Mentees", icon: "mentees" },
       { href: "/log-meeting", label: "Meeting", icon: "meetings" },
-      { href: "/check-in", label: "Check-in", icon: "review" },
+      { href: "/settings", label: "Settings", icon: "users" },
     ];
   } else {
     items = [

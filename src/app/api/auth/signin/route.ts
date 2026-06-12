@@ -57,6 +57,7 @@ export async function POST(req: Request) {
       name: users.name,
       passwordHash: users.passwordHash,
       onboardedAt: users.onboardedAt,
+      emailVerified: users.emailVerified,
     })
     .from(users)
     .where(eq(users.email, email))
@@ -82,6 +83,21 @@ export async function POST(req: Request) {
           "That email and password don't match. Try again or use Forgot password.",
       },
       { status: 401 }
+    );
+  }
+
+  // Password matched — but block login until email is verified. Surface a
+  // dedicated `unverified: true` flag so the client can render the resend
+  // button instead of the generic error banner.
+  if (!user.emailVerified) {
+    return NextResponse.json(
+      {
+        error:
+          "Please verify your email before logging in. Check your inbox for the verification link.",
+        unverified: true,
+        email: user.email,
+      },
+      { status: 403 }
     );
   }
 

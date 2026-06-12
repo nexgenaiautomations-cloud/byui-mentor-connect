@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type Initial = {
   firstName: string;
@@ -15,7 +15,21 @@ type Initial = {
   bio: string;
   image: string;
   careerInterests: string[];
+  priorCareerChats?: string;
 };
+
+// "Other" handling: the dropdown shows only the canonical options. When the
+// student's saved value isn't in that list, they originally picked "Other"
+// and typed a custom value — we hydrate by selecting "Other" in the dropdown
+// and pre-filling the free-text input with their value.
+function splitOption(value: string, options: readonly string[]): {
+  selected: string;
+  other: string;
+} {
+  if (!value) return { selected: "", other: "" };
+  if (options.includes(value)) return { selected: value, other: "" };
+  return { selected: "Other", other: value };
+}
 
 function dicebearUrl(name: string) {
   const seed = encodeURIComponent(name || "Member");
@@ -65,6 +79,7 @@ export function OnboardingForm({
   majorOptions,
   minorOptions,
   graduationOptions,
+  showCareerChats = false,
 }: {
   initial: Initial;
   careerOptions: string[];
@@ -72,6 +87,7 @@ export function OnboardingForm({
   majorOptions: string[];
   minorOptions: string[];
   graduationOptions: string[];
+  showCareerChats?: boolean;
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -79,7 +95,45 @@ export function OnboardingForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Dropdown "Other" state for major/minor — we drive the <select> with a
+  // separate variable so the user can pick "Other" without losing the typed
+  // custom value on the next render.
+  const initialMajor = useMemo(
+    () => splitOption(initial.major, majorOptions),
+    [initial.major, majorOptions]
+  );
+  const initialMinor = useMemo(
+    () => splitOption(initial.minor, minorOptions),
+    [initial.minor, minorOptions]
+  );
+  const [majorChoice, setMajorChoice] = useState(initialMajor.selected);
+  const [majorOther, setMajorOther] = useState(initialMajor.other);
+  const [minorChoice, setMinorChoice] = useState(initialMinor.selected);
+  const [minorOther, setMinorOther] = useState(initialMinor.other);
+
+  // Career interests "Other" — anything saved that isn't in the canonical
+  // list shows up as the pre-filled custom value with "Other" toggled on.
+  const initialOtherCareer = useMemo(() => {
+    const extras = initial.careerInterests.filter(
+      (c) => c !== "Other" && !careerOptions.includes(c)
+    );
+    return extras.join(", ");
+  }, [initial.careerInterests, careerOptions]);
+  const initialOtherChecked = useMemo(
+    () =>
+      initial.careerInterests.includes("Other") || initialOtherCareer !== "",
+    [initial.careerInterests, initialOtherCareer]
+  );
+  const [otherCareerChecked, setOtherCareerChecked] = useState(
+    initialOtherChecked
+  );
+  const [otherCareerText, setOtherCareerText] = useState(initialOtherCareer);
+
   function toggleCareer(opt: string) {
+    if (opt === "Other") {
+      setOtherCareerChecked((v) => !v);
+      return;
+    }
     setForm((f) => ({
       ...f,
       careerInterests: f.careerInterests.includes(opt)
@@ -98,10 +152,48 @@ export function OnboardingForm({
     setSubmitting(true);
     setError(null);
     try {
+      // Resolve "Other" inputs into the final saved values.
+      const resolvedMajor =
+        majorChoice === "Other"
+          ? majorOther.trim() || "Other"
+          : majorChoice;
+      const resolvedMinor =
+        minorChoice === "Other"
+          ? minorOther.trim() || "Other"
+          : minorChoice;
+      // Career interests: keep the canonical picks the user toggled, then
+      // append the typed "Other" value (split on commas so they can list a
+      // few). Fall back to the literal "Other" when checked with no text.
+      const canonicalInterests = form.careerInterests.filter(
+        (c) => c !== "Other" && careerOptions.includes(c)
+      );
+      const customInterests = otherCareerChecked
+        ? otherCareerText
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+      const resolvedInterests =
+        otherCareerChecked && customInterests.length === 0
+          ? [...canonicalInterests, "Other"]
+          : [...canonicalInterests, ...customInterests];
+
+      const payload: Record<string, unknown> = {
+        ...form,
+        major: resolvedMajor,
+        minor: resolvedMinor,
+        careerInterests: resolvedInterests,
+      };
+      // Only send priorCareerChats when the settings panel is showing the
+      // edit field. Onboarding leaves it untouched so the signup answer
+      // wins until the student edits it themselves.
+      if (!showCareerChats) {
+        delete payload.priorCareerChats;
+      }
       const res = await fetch("/api/me", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -231,27 +323,47 @@ export function OnboardingForm({
                 <label className="label">Major <span className="font-normal text-slate-400">(optional)</span></label>
                 <select
                   className="input"
-                  value={form.major}
-                  onChange={(e) => setForm({ ...form, major: e.target.value })}
+                  value={majorChoice}
+                  onChange={(e) => setMajorChoice(e.target.value)}
                 >
                   <option value="">Select your major</option>
                   {majorOptions.map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
                 </select>
+                {majorChoice === "Other" && (
+                  <input
+                    type="text"
+                    className="input mt-2"
+                    placeholder="Type your major"
+                    maxLength={120}
+                    value={majorOther}
+                    onChange={(e) => setMajorOther(e.target.value)}
+                  />
+                )}
               </div>
               <div>
                 <label className="label">Minor <span className="font-normal text-slate-400">(optional)</span></label>
                 <select
                   className="input"
-                  value={form.minor}
-                  onChange={(e) => setForm({ ...form, minor: e.target.value })}
+                  value={minorChoice}
+                  onChange={(e) => setMinorChoice(e.target.value)}
                 >
                   <option value="">Select your minor</option>
                   {minorOptions.map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
                 </select>
+                {minorChoice === "Other" && (
+                  <input
+                    type="text"
+                    className="input mt-2"
+                    placeholder="Type your minor"
+                    maxLength={120}
+                    value={minorOther}
+                    onChange={(e) => setMinorOther(e.target.value)}
+                  />
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -367,7 +479,10 @@ export function OnboardingForm({
             </label>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {careerOptions.map((opt) => {
-                const selected = form.careerInterests.includes(opt);
+                const selected =
+                  opt === "Other"
+                    ? otherCareerChecked
+                    : form.careerInterests.includes(opt);
                 return (
                   <button
                     type="button"
@@ -384,8 +499,49 @@ export function OnboardingForm({
                 );
               })}
             </div>
+            {otherCareerChecked && (
+              <input
+                type="text"
+                className="input mt-3"
+                placeholder="Type your career interest"
+                maxLength={200}
+                value={otherCareerText}
+                onChange={(e) => setOtherCareerText(e.target.value)}
+              />
+            )}
+            {showCareerChats && (
+              <div className="mt-5 rounded-xl border border-byui-blue-light/40 bg-slate-50 p-3">
+                <label htmlFor="settings-prior-chats" className="label">
+                  How many informational interviews or career chats have you done?
+                </label>
+                <input
+                  id="settings-prior-chats"
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  className="input max-w-[160px]"
+                  value={form.priorCareerChats ?? ""}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      setForm({ ...form, priorCareerChats: "" });
+                      return;
+                    }
+                    if (!/^\d+$/.test(raw)) return;
+                    setForm({ ...form, priorCareerChats: raw });
+                  }}
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  Whole number, 0 or greater. Trophy Case totals update as soon as
+                  you save.
+                </p>
+              </div>
+            )}
             <p className="mt-2 text-xs text-slate-500">
-              {form.careerInterests.length} selected
+              {form.careerInterests.length +
+                (otherCareerChecked && otherCareerText.trim() ? 1 : 0)}{" "}
+              selected
             </p>
           </div>
         )}

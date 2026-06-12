@@ -20,8 +20,7 @@ function buildNav(
     primary.push(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/matches", label: "My Mentees" },
-      { href: "/log-meeting", label: "Log a Meeting" },
-      { href: "/check-in", label: "Monthly Check-in" }
+      { href: "/log-meeting", label: "Log a Meeting" }
     );
   } else if (activeRole === "member") {
     primary.push(

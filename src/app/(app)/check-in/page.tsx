@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { matches, monthlyFeedback, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
-import { and, eq, inArray, or } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { readActiveRole } from "@/lib/roles-server";
 import { CheckInForm } from "./form";
 
 export default async function CheckInPage() {
@@ -11,6 +12,11 @@ export default async function CheckInPage() {
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
   if (me.isAdmin && !me.isMentor) redirect("/admin");
+  // Monthly Check-in is mentee-only now — mentors viewing this page get
+  // bounced back to their dashboard. The page still serves mentees who
+  // submit feedback on their mentor.
+  const activeRole = await readActiveRole(me);
+  if (activeRole === "mentor") redirect("/dashboard");
 
   const mentee = alias(users, "mentee_u");
   const mentor = alias(users, "mentor_u");
@@ -27,10 +33,7 @@ export default async function CheckInPage() {
     .innerJoin(mentor, eq(mentor.id, matches.mentorId))
     .innerJoin(mentee, eq(mentee.id, matches.menteeId))
     .where(
-      and(
-        or(eq(matches.mentorId, me.id), eq(matches.menteeId, me.id)),
-        eq(matches.status, "active")
-      )
+      and(eq(matches.menteeId, me.id), eq(matches.status, "active"))
     );
 
   // Which matches already have feedback from me this month?
@@ -53,14 +56,11 @@ export default async function CheckInPage() {
     : [];
   const submittedSet = new Set(alreadySubmitted.map((s) => s.matchId));
 
-  const options = myMatches.map((m) => {
-    const isMentor = m.mentorId === me.id;
-    return {
-      id: m.id,
-      counterpart: isMentor ? m.menteeName : m.mentorName,
-      alreadySubmitted: submittedSet.has(m.id),
-    };
-  });
+  const options = myMatches.map((m) => ({
+    id: m.id,
+    counterpart: m.mentorName,
+    alreadySubmitted: submittedSet.has(m.id),
+  }));
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

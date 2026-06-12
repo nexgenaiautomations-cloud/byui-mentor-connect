@@ -95,7 +95,14 @@ describe("groupsForRole", () => {
     const groups = groupsForRole("mentor");
     expect(groups[0].options).toContain("Helped with resumes");
     expect(groups[0].options).not.toContain("Worked on my resume");
-    expect(groups[1].options).toContain("My mentee got an internship offer");
+    // Mentor Industry Experiences now only contains "Helped apply to an
+    // internship or job" — the three offer items moved to mentee-only.
+    expect(groups[1].options).toEqual([
+      "Helped apply to an internship or job",
+    ]);
+    expect(groups[1].options).not.toContain(
+      "My mentee got an internship offer"
+    );
     expect(groups[2].options).toContain(
       "Helped with informational interview preparation"
     );
