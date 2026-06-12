@@ -116,6 +116,26 @@ async function main() {
   `);
   console.log(`  meeting_log:      ${ml.rowCount ?? "?"}`);
 
+  // Null out non-cascading references that survive on rows owned by the
+  // keep-list users. mentor_application.reviewed_by has no cascade, so
+  // applications still owned by a keep user but reviewed by an outgoing
+  // admin would block the user delete. Same shape for meeting_log
+  // .last_edited_by on any logs we didn't already remove above.
+  console.log("\nClearing orphan references on retained rows…");
+  const a = await db.execute(sql`
+    UPDATE "mentor_application"
+    SET reviewed_by = NULL
+    WHERE reviewed_by IS NOT NULL AND reviewed_by NOT IN (${keepList})
+  `);
+  console.log(`  mentor_application.reviewed_by → NULL: ${a.rowCount ?? "?"}`);
+
+  const le = await db.execute(sql`
+    UPDATE "meeting_log"
+    SET last_edited_by = NULL
+    WHERE last_edited_by IS NOT NULL AND last_edited_by NOT IN (${keepList})
+  `);
+  console.log(`  meeting_log.last_edited_by → NULL:     ${le.rowCount ?? "?"}`);
+
   console.log("\nDeleting users (cascades sessions/accounts/matches/etc.)…");
   const u = await db.execute(sql`
     DELETE FROM "user" WHERE id NOT IN (${keepList})
