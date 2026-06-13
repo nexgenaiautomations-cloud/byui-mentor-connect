@@ -21,7 +21,10 @@ const HEAD_ADMIN: NewUser = {
   bio: "Head admin for BYUI CAN. Runs the program day-to-day and promotes new admins from the Manage admins page.",
   isAdmin: true,
   isHeadAdmin: true,
-  isMentor: false,
+  // Every admin is also a mentor — they coach students directly too.
+  isMentor: true,
+  mentorAvailable: true,
+  mentorCapacity: 5,
   onboardedAt: new Date(),
 };
 

@@ -5,6 +5,7 @@ import { matches, meetingLogs, requests, users } from "@/db/schema";
 import { and, desc, eq, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getCurrentUser } from "@/lib/session";
+import { readActiveRole } from "@/lib/roles-server";
 import { StatTile } from "@/components/stat-card";
 import { KpiStrip } from "@/components/kpi-strip";
 import { getStudentKpis } from "@/lib/kpis";
@@ -13,13 +14,17 @@ export default async function DashboardPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
-  // Admins (who aren't also mentors) don't get a member/mentor dashboard —
-  // their home is the program overview at /admin.
-  if (me.isAdmin && !me.isMentor) redirect("/admin");
+
+  // Which face of the dashboard to render is driven by the active-role
+  // cookie, not the DB identity flags. Admins are also mentors and
+  // members, so the rendering decision must follow the role switcher.
+  const activeRole = await readActiveRole(me);
+  if (activeRole === "admin") redirect("/admin");
+  const actingAsMentor = activeRole === "mentor";
 
   // Members still see their own pending/outgoing request counts. Mentors
   // never look at request status from the dashboard — that surface is gone.
-  const allReqs = me.isMentor
+  const allReqs = actingAsMentor
     ? []
     : await db
         .select()
@@ -41,7 +46,7 @@ export default async function DashboardPage() {
   const sentByMe = allReqs.filter((r) => r.menteeId === me.id);
 
   // Mentee KPI snapshot — drives the new strip and the welcome-panel logic.
-  const studentKpis = me.isMentor ? null : await getStudentKpis(me.id);
+  const studentKpis = actingAsMentor ? null : await getStudentKpis(me.id);
 
   const mentor = alias(users, "mentor_u");
   const mentee = alias(users, "mentee_u");
@@ -100,7 +105,7 @@ export default async function DashboardPage() {
     }[];
   } | null = null;
 
-  if (me.isMentor) {
+  if (actingAsMentor) {
     const [counts] = await db
       .select({
         menteesHelped: sql<number>`(select count(distinct mentee_id)::int from "match" where mentor_id = ${me.id})`,
@@ -146,8 +151,7 @@ export default async function DashboardPage() {
   // First-login welcome: no active matches, no pending requests. Computed
   // from data so the card naturally disappears once the student takes action.
   const showWelcome =
-    !me.isMentor &&
-    !me.isAdmin &&
+    !actingAsMentor &&
     activeMatches.length === 0 &&
     sentByMe.length === 0;
 
@@ -192,7 +196,7 @@ export default async function DashboardPage() {
             Welcome back, {me.firstName || "friend"}.
           </h1>
           <div className="flex flex-wrap gap-2">
-            {me.isMentor ? (
+            {actingAsMentor ? (
               <>
                 <Link
                   href="/matches"
@@ -215,17 +219,19 @@ export default async function DashboardPage() {
                 >
                   Find a mentor →
                 </Link>
-                <Link
-                  href="/apply-mentor"
-                  className="inline-flex items-center justify-center rounded-lg border border-white/40 bg-white/15 px-3 py-1.5 text-xs font-bold text-white backdrop-blur hover:bg-white/25 cursor-pointer"
-                >
-                  Apply to mentor →
-                </Link>
+                {!me.isMentor && (
+                  <Link
+                    href="/apply-mentor"
+                    className="inline-flex items-center justify-center rounded-lg border border-white/40 bg-white/15 px-3 py-1.5 text-xs font-bold text-white backdrop-blur hover:bg-white/25 cursor-pointer"
+                  >
+                    Apply to mentor →
+                  </Link>
+                )}
               </>
             )}
           </div>
         </div>
-        {me.isMentor && (
+        {actingAsMentor && (
           <p className="mt-2 max-w-xl text-xs text-byui-blue-light">
             You&apos;re an approved mentor. Every conversation, resume review, and
             connection moves a student closer to their career.
@@ -235,7 +241,7 @@ export default async function DashboardPage() {
 
       {studentKpis && <KpiStrip kpis={studentKpis} />}
 
-      {me.isMentor && impact && (
+      {actingAsMentor && impact && (
         <section className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
           <StatTile
             label="People Helped"
@@ -352,7 +358,7 @@ export default async function DashboardPage() {
         <div className="card">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-bold text-byui-blue-dark">
-              {me.isMentor ? "Your mentees" : "Your Mentors"}
+              {actingAsMentor ? "Your mentees" : "Your Mentors"}
             </h2>
             <Link href="/matches" className="text-xs font-semibold text-byui-blue hover:underline">
               View all →
@@ -360,11 +366,11 @@ export default async function DashboardPage() {
           </div>
           {recentMatches.length === 0 ? (
             <p className="mt-4 text-sm text-slate-500">
-              {me.isMentor
+              {actingAsMentor
                 ? "No active mentees yet. Your impact starts with your first match."
                 : "No active matches yet. Browse mentors and send a request."}
             </p>
-          ) : me.isMentor ? (
+          ) : actingAsMentor ? (
             <ul className="mt-4 divide-y divide-slate-100">
               {recentMatches.map((m) => (
                 <li key={m.id} className="flex items-start gap-3 py-3">
@@ -506,7 +512,7 @@ export default async function DashboardPage() {
         <div className="card">
           <h2 className="font-display text-lg font-bold text-byui-blue-dark">Quick actions</h2>
           <div className="mt-4 space-y-2">
-            {(me.isMentor
+            {(actingAsMentor
               ? [
                   { href: "/matches", title: "Your mentees", body: "Contact info and meeting history." },
                   { href: "/log-meeting", title: "Log a meeting", body: "Track what you did together and next steps." },
@@ -515,7 +521,15 @@ export default async function DashboardPage() {
               : [
                   { href: "/mentors", title: "Find a mentor", body: "Filter, browse, request." },
                   { href: "/matches", title: "My Mentors", body: "Active mentors and pending requests." },
-                  { href: "/apply-mentor", title: "Apply to mentor", body: "Pay it forward." },
+                  ...(me.isMentor
+                    ? []
+                    : [
+                        {
+                          href: "/apply-mentor",
+                          title: "Apply to mentor",
+                          body: "Pay it forward.",
+                        },
+                      ]),
                   { href: "/profile", title: "Update profile", body: "Photo, bio, career interests." },
                 ]
             ).map((a) => (

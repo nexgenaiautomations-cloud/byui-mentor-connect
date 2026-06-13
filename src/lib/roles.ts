@@ -22,22 +22,21 @@ export const ACTIVE_ROLE_COOKIE = "byui-can-role";
 
 // Roles the user is allowed to switch into. Order matches the natural
 // progression (member → mentor → admin) which is also the dropdown order.
+//
+// Everyone is a member — every user can log + track their own activities.
+// Every admin is also a mentor (admins help students directly too), so the
+// dropdown shows all three options for admins, mentor + member for plain
+// mentors, and just member for plain members.
 export function availableRoles(user: User): ActiveRole[] {
-  const roles: ActiveRole[] = [];
-  // Pure admins never operate as "member" — they got into the program as
-  // staff. Including member here would let them see the mentee dashboard
-  // which has nothing for them. Everyone else gets member by default.
-  if (!user.isAdmin || user.isMentor) roles.push("member");
-  if (user.isMentor) roles.push("mentor");
+  const roles: ActiveRole[] = ["member"];
+  if (user.isMentor || user.isAdmin) roles.push("mentor");
   if (user.isAdmin) roles.push("admin");
-  // Pure-admin fallback so the array is never empty.
-  if (roles.length === 0) roles.push("admin");
   return roles;
 }
 
 // The privilege-default — when the cookie isn't set, pick the most powerful
-// role available. Mentors who are also members default to mentor; admins
-// default to admin; pure members get member.
+// role available. Admins default to admin; mentors default to mentor;
+// everyone else gets member.
 export function defaultRole(user: User): ActiveRole {
   if (user.isAdmin) return "admin";
   if (user.isMentor) return "mentor";

@@ -15,7 +15,9 @@ export async function getHeadAdmin() {
   return row ?? null;
 }
 
-// Promote a user (by id or email) to admin. No-op if already admin.
+// Promote a user (by id or email) to admin. Every admin is also a mentor —
+// they help students directly, not just from a management seat — so the
+// mentor flag is set alongside isAdmin.
 export async function promoteToAdmin(target: { id?: string; email?: string }) {
   const where = target.id
     ? eq(users.id, target.id)
@@ -25,7 +27,7 @@ export async function promoteToAdmin(target: { id?: string; email?: string }) {
   if (!where) throw new Error("id or email required");
   const [updated] = await db
     .update(users)
-    .set({ isAdmin: true })
+    .set({ isAdmin: true, isMentor: true })
     .where(where)
     .returning({ id: users.id, email: users.email });
   return updated ?? null;

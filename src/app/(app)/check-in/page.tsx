@@ -11,11 +11,11 @@ export default async function CheckInPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
-  if (me.isAdmin && !me.isMentor) redirect("/admin");
-  // Monthly Check-in is mentee-only now — mentors viewing this page get
-  // bounced back to their dashboard. The page still serves mentees who
-  // submit feedback on their mentor.
+  // Monthly Check-in is mentee-only — mentor and admin role views get
+  // bounced back to their respective dashboards. Switching to the member
+  // role from the sidebar reaches this page like any other student.
   const activeRole = await readActiveRole(me);
+  if (activeRole === "admin") redirect("/admin");
   if (activeRole === "mentor") redirect("/dashboard");
 
   const mentee = alias(users, "mentee_u");

@@ -4,6 +4,7 @@ import { matches, users, meetingLogs } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 import { and, desc, eq, or } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { readActiveRole } from "@/lib/roles-server";
 import { getStudentKpis } from "@/lib/kpis";
 import { LogActivityForm } from "./form";
 import { MentorWorkspace } from "./mentor-workspace";
@@ -17,12 +18,17 @@ export default async function LogActivityPage({
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
-  // Admins (who aren't also mentors) go to admin — they don't log activity.
-  if (me.isAdmin && !me.isMentor) redirect("/admin");
+
+  // Mentor vs mentee surface is driven by the active-role cookie so
+  // admins (who are also mentors and members) can switch into the
+  // member workflow and log their own activities.
+  const activeRole = await readActiveRole(me);
+  if (activeRole === "admin") redirect("/admin");
+  const actingAsMentor = activeRole === "mentor";
 
   const { matchId: preselectMatchId } = await searchParams;
 
-  if (me.isMentor) {
+  if (actingAsMentor) {
     const mentee = alias(users, "mentee_u");
     const myMatches = await db
       .select({

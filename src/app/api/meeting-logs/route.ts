@@ -148,14 +148,9 @@ export async function POST(req: Request) {
     matchId = match.id;
     createdBy = me.isAdmin && match.mentorId !== me.id ? "admin" : "mentor";
   } else {
-    // Self-log path: only mentees may self-log. (A mentor with no matchId is
-    // ambiguous — block it so we never silently lose a log.)
-    if (me.isMentor) {
-      return NextResponse.json(
-        { error: "Mentor logs require a matchId" },
-        { status: 400 }
-      );
-    }
+    // Self-log path: anyone (member, mentor, or admin) can log their own
+    // activity by submitting without a matchId. The row is filed against
+    // them as the student so it lands in their own Trophy Case + KPIs.
     studentId = me.id;
     createdBy = "mentee";
     // Auto-associate with the student's active match (if any) so a mentor
