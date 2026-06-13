@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { matches, requests, users } from "@/db/schema";
 import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { readActiveRole } from "@/lib/roles-server";
 import { EmptyState } from "@/components/empty-state";
 import { MajorFilter } from "./major-filter";
 import { MentorProfileButton } from "./profile-modal";
@@ -16,9 +17,12 @@ export default async function MentorsPage({
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
-  // Mentors don't request mentors — bounce them back to their dashboard if
-  // they navigate here directly.
-  if (me.isMentor) redirect("/dashboard");
+  // Find-a-mentor is a member surface. An admin or mentor who switches
+  // into the member role from the sidebar lands here normally; only the
+  // mentor or admin view of the app redirects away.
+  const activeRole = await readActiveRole(me);
+  if (activeRole === "mentor") redirect("/dashboard");
+  if (activeRole === "admin") redirect("/admin");
 
   const params = await searchParams;
   const filterMyMajor = params.mine === "1";

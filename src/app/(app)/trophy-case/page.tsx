@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
+import { readActiveRole } from "@/lib/roles-server";
 import {
   listAchievementsForStudent,
   type AchievementListing,
@@ -12,7 +13,11 @@ export default async function TrophyCasePage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
-  if (me.isAdmin && !me.isMentor) redirect("/admin");
+  // Trophy Case shows individual career progress — only the admin view
+  // bounces. Mentors and members both see their own logged-activity
+  // trophies (a mentor in the member role still earns the same set).
+  const activeRole = await readActiveRole(me);
+  if (activeRole === "admin") redirect("/admin");
 
   const [achievements, stats] = await Promise.all([
     listAchievementsForStudent(me.id),

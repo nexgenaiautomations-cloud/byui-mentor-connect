@@ -1,59 +1,58 @@
 // Shared dropdown options for academic profile fields.
 // Used by signup/onboarding, profile edit, and any validation paths.
 //
-// Majors and minors cover the BYU-Idaho College of Business and Communication.
-// "Other" is supported on both lists — the profile UI shows a free-text input
-// so students can type a major/minor we haven't listed.
+// Majors and minors are the BYU-Idaho College of Business and Communication
+// catalog. "Other" is supported on both lists — the profile UI shows a
+// free-text input so students can type a major/minor we haven't listed.
 
+// CBC majors — kept in the order the program shares them publicly so the
+// UI matches the printed catalog. Communication tracks render as the
+// "Communication: <track>" parent + track combination students see in
+// CCB advising materials.
 export const MAJOR_OPTIONS = [
   "Accounting",
   "Agribusiness",
-  "Applied Business Management",
   "Business Analytics",
-  "Business Finance",
   "Business Management",
-  "Communication",
-  "Computer Science",
-  "Data Science",
+  "Communication: Digital and Social Media",
+  "Communication: Journalism",
+  "Communication: Organizational Leadership",
+  "Communication: Public Relations",
+  "Communication: Video Production",
+  "Communication: Visual Communication",
   "Economics",
-  "Entrepreneurship",
-  "Experience Design and Management",
+  "Finance",
   "Financial Economics",
-  "Healthcare Administration",
   "Marketing",
-  "Operations Management",
-  "Public Relations",
-  "Software Engineering",
-  "Supply Chain Management",
+  "Supply Chain Operations",
   "Other",
 ] as const;
 
-// Minors mirror majors plus a "None" option for students with no minor.
+// CBC minors — alphabetized so the dropdown is easy to scan. "None" is the
+// default for students with no declared minor, and "Other" stays at the
+// bottom so the free-text path is the obvious fallback.
 export const MINOR_OPTIONS = [
   "None",
   "Accounting",
-  "Advertising",
   "Agribusiness",
-  "Business",
   "Business Analytics",
   "Business Management",
-  "Communication",
-  "Computer Science",
-  "Data Science",
+  "Communication Theory",
+  "Construction Management",
   "Digital and Social Media",
   "Economics",
-  "Entrepreneurship",
-  "Event Management",
   "Finance",
+  "Financial Planning",
   "Healthcare Administration",
-  "Human Resource Management",
-  "International Business",
+  "Investments",
+  "Journalism",
   "Marketing",
-  "Operations Management",
+  "Organizational Leadership",
   "Public Relations",
-  "Social Media Marketing",
-  "Software Engineering",
+  "Small Business Innovation and Management",
   "Supply Chain Management",
+  "Video Production",
+  "Visual Communication",
   "Other",
 ] as const;
 

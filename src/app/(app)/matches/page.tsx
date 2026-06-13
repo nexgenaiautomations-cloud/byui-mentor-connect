@@ -5,6 +5,7 @@ import { matches, meetingLogs, requests, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { readActiveRole } from "@/lib/roles-server";
 import { INACTIVITY_WARN_DAYS, POSSIBLE_ACTIONS } from "@/lib/possible-actions";
 import { EmptyState } from "@/components/empty-state";
 import { CancelRequestButton } from "./cancel-request-button";
@@ -52,6 +53,13 @@ export default async function MatchesPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.onboardedAt) redirect("/onboarding");
+
+  // Drive the My Mentors vs My Mentees split off the active-role cookie
+  // so an admin (who is also a mentor and member) can flip between the
+  // two views via the role switcher.
+  const activeRole = await readActiveRole(me);
+  if (activeRole === "admin") redirect("/admin");
+  const actingAsMentor = activeRole === "mentor";
 
   const mentor = alias(users, "mentor_u");
   const mentee = alias(users, "mentee_u");
@@ -165,7 +173,7 @@ export default async function MatchesPage() {
   // mentors respond to pending requests via the forced popup, and admins
   // don't use this surface.
   const pendingMentorAlias = alias(users, "pending_mentor_u");
-  const pendingOutgoing = me.isMentor || me.isAdmin
+  const pendingOutgoing = actingAsMentor
     ? []
     : await db
         .select({
@@ -188,7 +196,9 @@ export default async function MatchesPage() {
     (r) => daysSince(r.startedAt) <= 7 && r.meetingCount === 0
   );
 
-  const isMember = !me.isMentor && !me.isAdmin;
+  // "Member view" = acting as a member (not a mentor). Used to flip
+  // copy and which side of the match data we surface.
+  const isMember = !actingAsMentor;
 
   return (
     <div className="space-y-6">
