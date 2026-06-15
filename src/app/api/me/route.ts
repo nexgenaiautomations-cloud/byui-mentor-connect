@@ -65,6 +65,14 @@ const profileSchema = z.object({
       },
       { message: "Career chats must be a whole number, 0 or greater." }
     ),
+  // Bucketed self-report from the experience step.
+  priorInternshipExperience: z
+    .union([
+      z.enum(["None", "1", "2", "3 or more"]),
+      z.literal(""),
+    ])
+    .optional()
+    .nullable(),
 });
 
 export async function GET() {
@@ -123,6 +131,10 @@ export async function PATCH(req: Request) {
           : data.priorCareerChats === null || data.priorCareerChats === ""
             ? user.priorCareerChats
             : String(data.priorCareerChats),
+      priorInternshipExperience:
+        data.priorInternshipExperience === undefined
+          ? user.priorInternshipExperience
+          : data.priorInternshipExperience || user.priorInternshipExperience,
       onboardedAt: user.onboardedAt ?? new Date(),
     })
     .where(eq(users.id, user.id))

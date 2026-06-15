@@ -36,12 +36,15 @@ export default async function OnboardingPage() {
             bio: user.bio ?? "",
             image: user.image ?? "",
             careerInterests: user.careerInterests ?? [],
+            priorCareerChats: user.priorCareerChats ?? "",
+            priorInternshipExperience: user.priorInternshipExperience ?? "",
           }}
           careerOptions={[...CAREER_OPTIONS]}
           semesterLevels={[...SEMESTER_LEVELS]}
           majorOptions={[...MAJOR_OPTIONS]}
           minorOptions={[...MINOR_OPTIONS]}
           graduationOptions={[...GRADUATION_OPTIONS]}
+          showExperienceStep
         />
       </div>
     </div>

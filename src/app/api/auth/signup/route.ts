@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { db } from "@/db/client";
@@ -10,35 +10,12 @@ import { sendVerificationEmail } from "@/lib/send-verification";
 
 const BYUI_DOMAIN = "@byui.edu";
 
-const PRIOR_INTERNSHIPS_OPTIONS = ["None", "1", "2", "3 or more"];
-
-// priorCareerChats is now a typed whole number. Accept either a number or a
-// numeric string from the client (the form sends a string from a number
-// input). Stored as a string in the DB to avoid a schema migration — the
-// parsePriorCareerChats helper handles read-time conversion.
-const priorChatsSchema = z
-  .union([z.number().int().min(0).max(10_000), z.string()])
-  .transform((v, ctx) => {
-    if (typeof v === "number") return v;
-    const trimmed = v.trim();
-    if (!/^\d+$/.test(trimmed)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Career chats must be a whole number 0 or greater.",
-      });
-      return z.NEVER;
-    }
-    const n = Number(trimmed);
-    if (n < 0 || n > 10_000) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Career chats must be between 0 and 10000.",
-      });
-      return z.NEVER;
-    }
-    return n;
-  });
-
+// Signup now only collects what's strictly needed to provision the account:
+// email + password. Names, major, prior experience, and everything else
+// move into the post-verification onboarding flow. Holding profile data
+// hostage behind email verification prevents anyone from squatting another
+// student's address — they can't fill out the profile until the real owner
+// clicks the verification link.
 const signupSchema = z.object({
   email: z
     .string()
@@ -49,13 +26,6 @@ const signupSchema = z.object({
       message: "Only @byui.edu emails are allowed.",
     }),
   password: z.string().min(8).max(200),
-  firstName: z.string().trim().min(1).max(80),
-  lastName: z.string().trim().min(1).max(80),
-  major: z.string().trim().max(120).optional().nullable(),
-  priorCareerChats: priorChatsSchema,
-  priorInternshipExperience: z.enum(
-    PRIOR_INTERNSHIPS_OPTIONS as [string, ...string[]]
-  ),
 });
 
 export async function POST(req: Request) {
@@ -117,40 +87,37 @@ export async function POST(req: Request) {
     .insert(users)
     .values({
       email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      name: `${data.firstName} ${data.lastName}`.trim(),
-      major: data.major ?? null,
       passwordHash,
-      // Stored as a string in the DB (column type is text) but always a
-      // clean numeric value moving forward. Trophy Case math reads it via
-      // parsePriorCareerChats which also accepts legacy range strings.
-      priorCareerChats: String(data.priorCareerChats),
-      priorInternshipExperience: data.priorInternshipExperience,
-      // Email is unverified until the user clicks the link we send below.
+      // Email is unverified until the user clicks the link we fire below.
       // The signin route rejects unverified accounts so a stolen password
-      // can't get in unless the attacker also reads the inbox.
+      // can't get in unless the attacker also reads the inbox. Name,
+      // major, bio, career interests, and the experience answers all
+      // land in onboarding so the user has nothing to surface publicly
+      // before verification.
       emailVerified: null,
     })
-    .returning({ id: users.id, email: users.email, name: users.name });
+    .returning({ id: users.id, email: users.email });
 
-  // Fire the verification email. Failures are surfaced to the caller so
-  // the UI can suggest a resend, but the account itself is created either
-  // way — the user can always come back and request a new link.
+  // Hand the Resend send off via Next 16's after() so the HTTP response
+  // returns immediately. The actual send still happens — Next keeps the
+  // function alive past the response just for the after() callbacks —
+  // but the user's browser sees the redirect without waiting on Resend's
+  // API round-trip.
   const origin = new URL(req.url).origin;
-  const send = await sendVerificationEmail({
-    email: inserted.email,
-    origin,
+  after(async () => {
+    const send = await sendVerificationEmail({
+      email: inserted.email,
+      origin,
+    });
+    if (!send.ok) {
+      console.error("verification email failed:", send.error);
+    }
   });
-  if (!send.ok) {
-    console.error("verification email failed:", send.error);
-  }
 
   return NextResponse.json({
     ok: true,
     user: { id: inserted.id, email: inserted.email },
     // Keep the user signed out — they must verify before they can log in.
     redirectTo: `/login/check-email?email=${encodeURIComponent(inserted.email)}&purpose=verify`,
-    emailSent: send.sent,
   });
 }

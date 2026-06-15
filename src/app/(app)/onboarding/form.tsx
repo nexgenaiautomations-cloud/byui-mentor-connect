@@ -16,7 +16,10 @@ type Initial = {
   image: string;
   careerInterests: string[];
   priorCareerChats?: string;
+  priorInternshipExperience?: string;
 };
+
+const PRIOR_INTERNSHIPS = ["None", "1", "2", "3 or more"] as const;
 
 // "Other" handling: the dropdown shows only the canonical options. When the
 // student's saved value isn't in that list, they originally picked "Other"
@@ -37,8 +40,15 @@ function dicebearUrl(name: string) {
 }
 
 // Resize an uploaded image to a square `size` × `size` thumbnail and return
-// it as a JPEG data URL. The image is cover-cropped: the shorter dimension
+// it as a data URL. The image is cover-cropped: the shorter dimension
 // fills the square and the longer one is trimmed centered, like Instagram.
+//
+// We try WebP first (typically 25–40% smaller than JPEG at the same visual
+// quality) and fall back to JPEG when the browser doesn't actually emit
+// `image/webp` data. The chosen encoding is whichever produces the
+// smaller payload — Chrome/Firefox/Edge all win with WebP at this size;
+// older Safari without WebP encode support falls through to JPEG without
+// failing the upload.
 async function resizeToDataUrl(file: File, size: number): Promise<string> {
   const reader = new FileReader();
   const blobUrl: string = await new Promise((resolve, reject) => {
@@ -57,6 +67,9 @@ async function resizeToDataUrl(file: File, size: number): Promise<string> {
   canvas.height = size;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas unsupported");
+  // Sharper down-scale for portrait crops on high-DPR displays.
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   const ratio = Math.max(size / img.width, size / img.height);
   const drawWidth = img.width * ratio;
   const drawHeight = img.height * ratio;
@@ -67,10 +80,18 @@ async function resizeToDataUrl(file: File, size: number): Promise<string> {
     drawWidth,
     drawHeight
   );
-  return canvas.toDataURL("image/jpeg", 0.85);
+
+  // WebP at 0.82 ≈ JPEG at 0.85 visually but ~30% fewer bytes. Some Safari
+  // builds advertise WebP support but the encoder silently returns the
+  // PNG/JPEG fallback header — that's why we sanity-check the prefix.
+  const webp = canvas.toDataURL("image/webp", 0.82);
+  const jpeg = canvas.toDataURL("image/jpeg", 0.85);
+  const webpOk = webp.startsWith("data:image/webp");
+  if (webpOk && webp.length < jpeg.length) return webp;
+  return jpeg;
 }
 
-const STEPS = ["Basics", "Profile", "Career"] as const;
+const BASE_STEPS = ["Basics", "Profile", "Career"] as const;
 
 export function OnboardingForm({
   initial,
@@ -80,6 +101,7 @@ export function OnboardingForm({
   minorOptions,
   graduationOptions,
   showCareerChats = false,
+  showExperienceStep = false,
 }: {
   initial: Initial;
   careerOptions: string[];
@@ -87,8 +109,18 @@ export function OnboardingForm({
   majorOptions: string[];
   minorOptions: string[];
   graduationOptions: string[];
+  // Settings mode — render the experience answers inline at the bottom of
+  // the Career step so they're editable without adding another wizard
+  // page for a user who's already onboarded.
   showCareerChats?: boolean;
+  // Onboarding mode — append an Experience step at the end so new users
+  // answer the two career-experience questions before reaching the
+  // dashboard.
+  showExperienceStep?: boolean;
 }) {
+  const STEPS = showExperienceStep
+    ? ([...BASE_STEPS, "Experience"] as const)
+    : BASE_STEPS;
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Initial>(initial);
@@ -184,11 +216,12 @@ export function OnboardingForm({
         minor: resolvedMinor,
         careerInterests: resolvedInterests,
       };
-      // Only send priorCareerChats when the settings panel is showing the
-      // edit field. Onboarding leaves it untouched so the signup answer
-      // wins until the student edits it themselves.
-      if (!showCareerChats) {
+      // Drop the experience fields when neither mode is exposing an editor
+      // for them — that keeps a non-experience save from blanking the
+      // values the user entered earlier.
+      if (!showCareerChats && !showExperienceStep) {
         delete payload.priorCareerChats;
+        delete payload.priorInternshipExperience;
       }
       const res = await fetch("/api/me", {
         method: "PATCH",
@@ -510,32 +543,58 @@ export function OnboardingForm({
               />
             )}
             {showCareerChats && (
-              <div className="mt-5 rounded-xl border border-byui-blue-light/40 bg-slate-50 p-3">
-                <label htmlFor="settings-prior-chats" className="label">
-                  How many informational interviews or career chats have you done?
-                </label>
-                <input
-                  id="settings-prior-chats"
-                  type="number"
-                  min={0}
-                  step={1}
-                  inputMode="numeric"
-                  className="input max-w-[160px]"
-                  value={form.priorCareerChats ?? ""}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === "") {
-                      setForm({ ...form, priorCareerChats: "" });
-                      return;
+              <div className="mt-5 space-y-3 rounded-xl border border-byui-blue-light/40 bg-slate-50 p-3">
+                <div>
+                  <label htmlFor="settings-prior-chats" className="label">
+                    How many informational interviews or career chats have you done?
+                  </label>
+                  <input
+                    id="settings-prior-chats"
+                    type="number"
+                    min={0}
+                    step={1}
+                    inputMode="numeric"
+                    className="input max-w-[160px]"
+                    value={form.priorCareerChats ?? ""}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === "") {
+                        setForm({ ...form, priorCareerChats: "" });
+                        return;
+                      }
+                      if (!/^\d+$/.test(raw)) return;
+                      setForm({ ...form, priorCareerChats: raw });
+                    }}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Whole number, 0 or greater. Trophy Case totals update as
+                    soon as you save.
+                  </p>
+                </div>
+                <div>
+                  <label htmlFor="settings-prior-intern" className="label">
+                    How many internships or career-related work experiences
+                    have you had?
+                  </label>
+                  <select
+                    id="settings-prior-intern"
+                    className="input max-w-[200px]"
+                    value={form.priorInternshipExperience ?? ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        priorInternshipExperience: e.target.value,
+                      })
                     }
-                    if (!/^\d+$/.test(raw)) return;
-                    setForm({ ...form, priorCareerChats: raw });
-                  }}
-                />
-                <p className="mt-1 text-xs text-slate-500">
-                  Whole number, 0 or greater. Trophy Case totals update as soon as
-                  you save.
-                </p>
+                  >
+                    <option value="">Select…</option>
+                    {PRIOR_INTERNSHIPS.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
             <p className="mt-2 text-xs text-slate-500">
@@ -543,6 +602,73 @@ export function OnboardingForm({
                 (otherCareerChecked && otherCareerText.trim() ? 1 : 0)}{" "}
               selected
             </p>
+          </div>
+        )}
+
+        {step === 3 && showExperienceStep && (
+          <div className="space-y-5">
+            <div>
+              <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+                A bit about your experience
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Two quick numbers so admins can track program impact over
+                time. You can update these later from settings.
+              </p>
+            </div>
+            <div>
+              <label htmlFor="onb-prior-chats" className="label">
+                How many informational interviews or career chats have you
+                done?
+              </label>
+              <input
+                id="onb-prior-chats"
+                type="number"
+                min={0}
+                step={1}
+                inputMode="numeric"
+                placeholder="Example: 5"
+                className="input max-w-[200px]"
+                value={form.priorCareerChats ?? ""}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    setForm({ ...form, priorCareerChats: "" });
+                    return;
+                  }
+                  if (!/^\d+$/.test(raw)) return;
+                  setForm({ ...form, priorCareerChats: raw });
+                }}
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Whole number, 0 or greater. Trophy Case totals start from
+                here, plus anything you log in BYUI CAN.
+              </p>
+            </div>
+            <div>
+              <label htmlFor="onb-prior-intern" className="label">
+                How many internships or career-related work experiences have
+                you had?
+              </label>
+              <select
+                id="onb-prior-intern"
+                className="input max-w-[200px]"
+                value={form.priorInternshipExperience ?? ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    priorInternshipExperience: e.target.value,
+                  })
+                }
+              >
+                <option value="">Select…</option>
+                {PRIOR_INTERNSHIPS.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
 
