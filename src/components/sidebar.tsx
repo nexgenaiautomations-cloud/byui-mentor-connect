@@ -193,7 +193,7 @@ function RoleSwitcher({
           const next = e.target.value as ActiveRole;
           startTransition(async () => {
             await setActiveRoleAction(next);
-            router.refresh();
+            router.push("/dashboard");
           });
         }}
         className="mt-1 w-full rounded-lg border border-white/30 bg-white/10 px-2 py-1.5 text-xs font-semibold text-white outline-none ring-byui-blue-light focus:ring-2 disabled:opacity-50 cursor-pointer"

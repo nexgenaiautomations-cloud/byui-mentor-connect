@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { matches, meetingLogs, requests, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
-import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { readActiveRole } from "@/lib/roles-server";
 import { INACTIVITY_WARN_DAYS, POSSIBLE_ACTIONS } from "@/lib/possible-actions";
@@ -97,7 +97,9 @@ export default async function MatchesPage() {
     .innerJoin(mentee, eq(matches.menteeId, mentee.id))
     .where(
       and(
-        or(eq(matches.mentorId, me.id), eq(matches.menteeId, me.id)),
+        actingAsMentor
+          ? eq(matches.mentorId, me.id)
+          : eq(matches.menteeId, me.id),
         eq(matches.status, "active")
       )
     );

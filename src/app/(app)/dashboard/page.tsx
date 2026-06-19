@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { matches, meetingLogs, requests, users } from "@/db/schema";
-import { and, desc, eq, or, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getCurrentUser } from "@/lib/session";
 import { readActiveRole } from "@/lib/roles-server";
@@ -36,7 +36,9 @@ export default async function DashboardPage() {
     .from(matches)
     .where(
       and(
-        or(eq(matches.mentorId, me.id), eq(matches.menteeId, me.id)),
+        actingAsMentor
+          ? eq(matches.mentorId, me.id)
+          : eq(matches.menteeId, me.id),
         eq(matches.status, "active")
       )
     );
@@ -73,7 +75,9 @@ export default async function DashboardPage() {
     .innerJoin(mentee, eq(mentee.id, matches.menteeId))
     .where(
       and(
-        or(eq(matches.mentorId, me.id), eq(matches.menteeId, me.id)),
+        actingAsMentor
+          ? eq(matches.mentorId, me.id)
+          : eq(matches.menteeId, me.id),
         eq(matches.status, "active")
       )
     )

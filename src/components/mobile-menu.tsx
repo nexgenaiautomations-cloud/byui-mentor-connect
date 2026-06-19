@@ -155,7 +155,7 @@ export function MobileMenu({
                       const next = e.target.value as ActiveRole;
                       startSwitch(async () => {
                         await setActiveRoleAction(next);
-                        router.refresh();
+                        router.push("/dashboard");
                         setOpen(false);
                       });
                     }}

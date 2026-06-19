@@ -40,9 +40,9 @@ export default async function CheckEmailPage({
         <div className="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-left text-xs text-slate-600">
           <p className="font-semibold text-byui-blue-dark">Not seeing it?</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-4">
+            <li>Wait up to 3 minutes — university mail can lag.</li>
             <li>Check spam or Outlook&apos;s &ldquo;Other&rdquo; tab.</li>
             <li>Make sure you used your <strong>@byui.edu</strong> address.</li>
-            <li>Wait a minute — university mail can lag.</li>
           </ul>
         </div>
 
