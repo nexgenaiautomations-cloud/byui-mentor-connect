@@ -140,12 +140,12 @@ export default async function SettingsPage() {
           for everything you&apos;ve already loaded.
         </p>
         <div className="mt-3">
-          <InstallButton variant="primary" label="Install BYUI CAN" />
+          <InstallButton
+            variant="primary"
+            label="Install BYUI CAN"
+            fallback="instructions"
+          />
         </div>
-        <p className="mt-2 text-xs text-slate-500">
-          If the button is hidden, your device may have already installed the app
-          — or your browser doesn&apos;t support PWA installs.
-        </p>
       </section>
 
       {/* Want to be a mentor? — only show for non-mentor, non-admin users */}
