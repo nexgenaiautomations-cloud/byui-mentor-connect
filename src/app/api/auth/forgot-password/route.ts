@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { issueResetToken, RESET_TOKEN_TTL_MS } from "@/lib/password-reset";
 import { limitPasswordReset } from "@/lib/rate-limit";
 import { buildResetPasswordEmail } from "@/lib/reset-password-email";
+import { auditEvent } from "@/lib/audit";
 
 const BYUI_DOMAIN = "@byui.edu";
 const TTL_MIN = Math.round(RESET_TOKEN_TTL_MS / 60000);
@@ -76,6 +77,12 @@ export async function POST(req: Request) {
   }
 
   const rawToken = await issueResetToken(user.id);
+  await auditEvent({
+    targetUserId: user.id,
+    eventType: "PASSWORD_RESET_REQUESTED",
+    severity: "info",
+    request: req,
+  });
   const origin = new URL(req.url).origin;
   const resetUrl = `${origin}/reset-password?token=${encodeURIComponent(rawToken)}`;
 

@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { mentorApplications, users } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { requireAdmin } from "@/lib/session";
+import { auditEvent } from "@/lib/audit";
 
 const reviewSchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -14,7 +15,9 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await requireAdmin();
+  const adminOrResp = await requireAdmin(req);
+  if (adminOrResp instanceof Response) return adminOrResp;
+  const admin = adminOrResp;
   const { id } = await params;
   const body = await req.json();
   const parsed = reviewSchema.safeParse(body);
@@ -67,6 +70,16 @@ export async function PATCH(
       })
       .where(eq(users.id, app.userId));
   }
+
+  await auditEvent({
+    actorUserId: admin.id,
+    targetUserId: app.userId,
+    eventType:
+      status === "approved" ? "ADMIN_APPROVED_MENTOR" : "ADMIN_REJECTED_MENTOR",
+    severity: "info",
+    request: req,
+    metadata: { applicationId: id },
+  });
 
   return NextResponse.json({ application: updated[0] });
 }

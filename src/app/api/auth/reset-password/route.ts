@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { passwordIssues } from "@/lib/password";
 import { resetPasswordWithToken } from "@/lib/password-reset";
 import { attachSessionCookie } from "@/lib/auth-cookie";
+import { auditEvent } from "@/lib/audit";
 
 const schema = z.object({
   token: z.string().min(16).max(200),
@@ -49,6 +50,13 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+  await auditEvent({
+    actorUserId: user.id,
+    targetUserId: user.id,
+    eventType: "PASSWORD_RESET_COMPLETED",
+    severity: "info",
+    request: req,
+  });
   const res = NextResponse.json({
     ok: true,
     redirectTo: "/dashboard",

@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { hashPassword, passwordIssues } from "@/lib/password";
 import { limitSignup } from "@/lib/rate-limit";
 import { sendVerificationEmail } from "@/lib/send-verification";
+import { auditEvent } from "@/lib/audit";
 
 const BYUI_DOMAIN = "@byui.edu";
 
@@ -37,6 +38,12 @@ export async function POST(req: Request) {
 
   const rl = await limitSignup(ip);
   if (!rl.ok) {
+    await auditEvent({
+      eventType: "RATE_LIMIT_TRIGGERED",
+      severity: "warning",
+      request: req,
+      metadata: { route: "auth/signup", reason: rl.reason ?? "ip" },
+    });
     return NextResponse.json(
       { error: "Too many sign-up attempts. Please wait an hour and try again." },
       { status: 429 }
@@ -97,6 +104,14 @@ export async function POST(req: Request) {
       emailVerified: null,
     })
     .returning({ id: users.id, email: users.email });
+
+  await auditEvent({
+    actorUserId: inserted.id,
+    targetUserId: inserted.id,
+    eventType: "USER_SIGNUP_CREATED",
+    severity: "info",
+    request: req,
+  });
 
   // Hand the Resend send off via Next 16's after() so the HTTP response
   // returns immediately. The actual send still happens — Next keeps the

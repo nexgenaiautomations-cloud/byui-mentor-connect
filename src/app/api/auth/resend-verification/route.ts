@@ -6,6 +6,7 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { sendVerificationEmail } from "@/lib/send-verification";
 import { limitPasswordReset } from "@/lib/rate-limit";
+import { auditEvent } from "@/lib/audit";
 
 const BYUI_DOMAIN = "@byui.edu";
 
@@ -43,6 +44,12 @@ export async function POST(req: Request) {
   // hammer a single inbox.
   const rl = await limitPasswordReset(email, ip);
   if (!rl.ok) {
+    await auditEvent({
+      eventType: "RATE_LIMIT_TRIGGERED",
+      severity: "warning",
+      request: req,
+      metadata: { route: "auth/resend-verification", reason: rl.reason ?? "ip" },
+    });
     return NextResponse.json(NEUTRAL);
   }
 
@@ -65,5 +72,12 @@ export async function POST(req: Request) {
   if (!send.ok) {
     console.error("resend verification failed:", send.error);
   }
+  await auditEvent({
+    targetUserId: user.id,
+    eventType: "MAGIC_LINK_REQUESTED",
+    severity: "info",
+    request: req,
+    metadata: { kind: "resend_verification" },
+  });
   return NextResponse.json(NEUTRAL);
 }

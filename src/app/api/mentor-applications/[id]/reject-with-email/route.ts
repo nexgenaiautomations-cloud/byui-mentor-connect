@@ -17,7 +17,9 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await requireAdmin();
+  const adminOrResp = await requireAdmin(req);
+  if (adminOrResp instanceof Response) return adminOrResp;
+  const admin = adminOrResp;
   const { id } = await params;
 
   const parsed = schema.safeParse(await req.json());

@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { verifyPassword } from "@/lib/password";
 import { attachSessionCookie } from "@/lib/auth-cookie";
 import { limitPasswordSignIn } from "@/lib/rate-limit";
+import { auditEvent } from "@/lib/audit";
 
 const BYUI_DOMAIN = "@byui.edu";
 
@@ -41,6 +42,12 @@ export async function POST(req: Request) {
 
   const rl = await limitPasswordSignIn(email, ip);
   if (!rl.ok) {
+    await auditEvent({
+      eventType: "RATE_LIMIT_TRIGGERED",
+      severity: "warning",
+      request: req,
+      metadata: { route: "auth/signin", reason: rl.reason ?? "ip" },
+    });
     return NextResponse.json(
       {
         error:
@@ -66,6 +73,12 @@ export async function POST(req: Request) {
   // Identical response for "no user" and "wrong password" — prevents account
   // enumeration via response timing or wording.
   if (!user || !user.passwordHash) {
+    await auditEvent({
+      eventType: "LOGIN_FAILED",
+      severity: "warning",
+      request: req,
+      metadata: { reason: "unknown_email_or_no_password" },
+    });
     return NextResponse.json(
       {
         error:
@@ -77,6 +90,13 @@ export async function POST(req: Request) {
 
   const ok = await verifyPassword(password, user.passwordHash);
   if (!ok) {
+    await auditEvent({
+      targetUserId: user.id,
+      eventType: "LOGIN_FAILED",
+      severity: "warning",
+      request: req,
+      metadata: { reason: "wrong_password" },
+    });
     return NextResponse.json(
       {
         error:
@@ -100,6 +120,14 @@ export async function POST(req: Request) {
       { status: 403 }
     );
   }
+
+  await auditEvent({
+    actorUserId: user.id,
+    targetUserId: user.id,
+    eventType: "LOGIN_SUCCEEDED",
+    severity: "info",
+    request: req,
+  });
 
   const res = NextResponse.json({
     ok: true,

@@ -7,6 +7,7 @@ import { users, accounts, sessions, verificationTokens } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { buildMagicLinkEmail } from "@/lib/magic-link-email";
 import { verifyPassword } from "@/lib/password";
+import { auditEvent } from "@/lib/audit";
 
 const BYUI_DOMAIN = "@byui.edu";
 
@@ -98,6 +99,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const body = await res.text();
           throw new Error(`Resend error: ${body}`);
         }
+
+        // Best-effort audit log. We don't have a Request here (Auth.js
+        // owns the callback context), so the row goes in without IP/UA.
+        // We DO know the recipient email, so do a quick lookup to attach
+        // a targetUserId — the audit becomes searchable per-user.
+        let targetUserId: string | null = null;
+        try {
+          const [u] = await db
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.email, email.trim().toLowerCase()))
+            .limit(1);
+          targetUserId = u?.id ?? null;
+        } catch {
+          // Lookup failure shouldn't block the audit row — we'll just
+          // store it without a targetUserId.
+        }
+        await auditEvent({
+          targetUserId,
+          eventType: "MAGIC_LINK_REQUESTED",
+          severity: "info",
+          metadata: { kind: "auth_js_resend_provider" },
+        });
       },
     }),
     Credentials({

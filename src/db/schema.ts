@@ -50,6 +50,43 @@ export const accomplishmentGroup = pgEnum("accomplishment_group", [
   "career_chats",
 ]);
 
+// Append-only audit log severity bucket. `info` = routine, expected events
+// (sign-up, sign-in OK). `warning` = anomalous but not necessarily malicious
+// (sign-in failed, rate-limit triggered, CSP violation). `critical` = active
+// security incident (unauthorized admin attempt, role-cookie rejected,
+// rejected promotion).
+export const auditSeverity = pgEnum("audit_severity", [
+  "info",
+  "warning",
+  "critical",
+]);
+
+// Strict event-type enum. ADD NEW VALUES HERE before logging them — Postgres
+// will reject inserts with values not in this list. Keep the union in
+// `src/lib/audit.ts` in lockstep with this enum.
+export const auditEventType = pgEnum("audit_event_type", [
+  "ADMIN_PROMOTED_USER",
+  "ADMIN_DEMOTED_USER",
+  "ADMIN_TRANSFERRED_HEAD",
+  "ADMIN_APPROVED_MENTOR",
+  "ADMIN_REJECTED_MENTOR",
+  "ADMIN_CREATED_MATCH",
+  "ADMIN_REMOVED_MATCH",
+  "ADMIN_DELETED_USER",
+  "ADMIN_CLEANED_USER_DATA",
+  "USER_SIGNUP_CREATED",
+  "USER_EMAIL_VERIFIED",
+  "PASSWORD_RESET_REQUESTED",
+  "PASSWORD_RESET_COMPLETED",
+  "LOGIN_SUCCEEDED",
+  "LOGIN_FAILED",
+  "MAGIC_LINK_REQUESTED",
+  "RATE_LIMIT_TRIGGERED",
+  "ROLE_COOKIE_REJECTED",
+  "UNAUTHORIZED_ADMIN_ATTEMPT",
+  "CSP_VIOLATION_REPORTED",
+]);
+
 // Auth.js users table — also our "members". Everyone who registers is a member.
 export const users = pgTable("user", {
   id: text("id")
@@ -353,6 +390,52 @@ export const achievements = pgTable(
     studentIdx: index("achievement_student_idx").on(t.studentId),
   })
 );
+
+// Append-only audit log. Writes happen via `auditEvent()` in `src/lib/audit.ts`
+// and are best-effort — a failed insert never blocks the user-facing action.
+// Reads are gated to admins at the API layer. UPDATE and DELETE are blocked
+// at the database layer by Row Level Security (see scripts/apply-rls.ts and
+// docs/security/rls-plan.md) so even a leaked DB credential cannot tamper
+// with prior log entries.
+//
+// `actorUserId` is the user who caused the event (when known) — `null` for
+// anonymous flows like password-reset requests by email.
+// `targetUserId` is the user the event was about (when applicable).
+// `ipHash` is SHA-256(ip + AUDIT_IP_HASH_SECRET), never the raw IP. Hashes
+// are stored as hex so they can still be grouped without revealing addresses.
+// `metadata` is a typed JSON column. The helper validates payloads before
+// insert so passwords, raw tokens, magic links, and session JWTs never land
+// here even by accident.
+export const auditEvents = pgTable(
+  "audit_event",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    actorUserId: text("actor_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    targetUserId: text("target_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    eventType: auditEventType("event_type").notNull(),
+    severity: auditSeverity("severity").notNull().default("info"),
+    ipHash: text("ip_hash"),
+    userAgent: text("user_agent"),
+    // text + JSON.stringify rather than jsonb so a malformed payload never
+    // hard-fails the insert at the column level.
+    metadataJson: text("metadata_json"),
+  },
+  (t) => ({
+    createdIdx: index("audit_event_created_idx").on(t.createdAt),
+    typeIdx: index("audit_event_type_idx").on(t.eventType, t.createdAt),
+    actorIdx: index("audit_event_actor_idx").on(t.actorUserId, t.createdAt),
+    targetIdx: index("audit_event_target_idx").on(t.targetUserId, t.createdAt),
+    severityIdx: index("audit_event_severity_idx").on(t.severity, t.createdAt),
+  })
+);
+
+export type AuditEvent = typeof auditEvents.$inferSelect;
+export type NewAuditEvent = typeof auditEvents.$inferInsert;
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
