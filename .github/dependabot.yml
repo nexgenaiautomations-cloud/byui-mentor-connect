@@ -1,0 +1,35 @@
+version: 2
+updates:
+  # JS / npm dependencies — weekly scan, cap open PRs so a flood of minor
+  # version bumps doesn't drown the queue. Security advisories ALSO open
+  # PRs regardless of this limit when a vulnerability is found.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    # Group minor + patch bumps together so the queue stays tidy. Major
+    # version bumps still open as individual PRs because they often have
+    # breaking changes that need a focused review.
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions versions. Even if no workflows exist yet, this keeps the
+  # config ready for the day a CI workflow lands.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
