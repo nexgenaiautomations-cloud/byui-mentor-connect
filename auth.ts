@@ -164,10 +164,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account }) {
       if (!user.email) return false;
       const email = user.email.toLowerCase();
       if (!email.endsWith(BYUI_DOMAIN)) return false;
+
+      // Magic-link sign-ins go through the Resend provider and bypass our
+      // /api/auth/signin route entirely, so we audit them here. Password
+      // sign-ins are already audited in that route — checking
+      // account.provider keeps the row from being duplicated.
+      //
+      // Note on the threat model: anyone who clicks a magic link must
+      // control the recipient's inbox. If a password-signup account exists
+      // for the same email but is still emailVerified=null, this sign-in
+      // implicitly verifies it (Auth.js sets emailVerified on the user
+      // record). That's correct: proving email ownership at any point
+      // should grant account access, and someone with inbox access could
+      // do a password reset anyway.
+      if (account?.provider === "resend" && user.id) {
+        void auditEvent({
+          actorUserId: user.id,
+          targetUserId: user.id,
+          eventType: "LOGIN_SUCCEEDED",
+          severity: "info",
+          metadata: { method: "magic_link" },
+        });
+      }
       return true;
     },
     async jwt({ token, user }) {
