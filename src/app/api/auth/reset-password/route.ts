@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/db/client";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { passwordIssues } from "@/lib/password";
 import { resetPasswordWithToken } from "@/lib/password-reset";
-import { attachSessionCookie } from "@/lib/auth-cookie";
 import { auditEvent } from "@/lib/audit";
 
 const schema = z.object({
@@ -38,32 +34,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
-  // Sign the user in so they go straight to the dashboard after resetting.
-  const [user] = await db
-    .select({ id: users.id, email: users.email, name: users.name })
-    .from(users)
-    .where(eq(users.id, result.userId))
-    .limit(1);
-  if (!user) {
-    return NextResponse.json(
-      { error: "Account not found after reset" },
-      { status: 500 }
-    );
-  }
+  // Audit the completion, then bounce the user to /login with a banner.
+  // We intentionally do NOT attach a session cookie here: a reset link in
+  // the wrong hands would otherwise be equivalent to a logged-in session.
+  // Requiring re-authentication with the new password forces the user
+  // through rate-limit gates and gives any anomaly signals one more
+  // chance to fire.
   await auditEvent({
-    actorUserId: user.id,
-    targetUserId: user.id,
+    actorUserId: result.userId,
+    targetUserId: result.userId,
     eventType: "PASSWORD_RESET_COMPLETED",
     severity: "info",
     request: req,
   });
-  const res = NextResponse.json({
+  return NextResponse.json({
     ok: true,
-    redirectTo: "/dashboard",
-  });
-  return attachSessionCookie(res, {
-    userId: user.id,
-    email: user.email,
-    name: user.name,
+    redirectTo: "/login?reset=ok",
   });
 }

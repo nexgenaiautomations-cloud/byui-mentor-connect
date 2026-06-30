@@ -33,7 +33,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // JWT sessions so the Credentials (password) provider can coexist with the
   // Resend magic-link provider. Both write to the same `users` table via the
   // DrizzleAdapter; only the session storage differs.
-  session: { strategy: "jwt" },
+  //
+  // 14-day TTL: shorter than the auth.js default (30 days) so a stolen
+  // session cookie has a smaller window of usefulness, and long enough that
+  // regular weekly users don't get re-prompted every visit. The
+  // active-role cookie's maxAge is independently set to 30 days in
+  // src/lib/actions.ts so role preference outlives auth sessions.
+  session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 14 },
   // Pin the session cookie name to NODE_ENV. Auth.js would otherwise pick the
   // `__Secure-` prefix whenever AUTH_URL is HTTPS — but in local dev (http on
   // localhost) the browser silently refuses to STORE a `__Secure-` cookie, so

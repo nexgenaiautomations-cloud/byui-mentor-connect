@@ -142,6 +142,22 @@ async function main() {
   `);
   console.log(`  user:             ${u.rowCount ?? "?"}`);
 
+  // Audit the bulk cleanup. One row covers the whole batch — we record the
+  // counts (not individual user IDs), since those rows are gone and
+  // auditing N IDs would balloon the table.
+  const { auditEvent } = await import("../src/lib/audit");
+  await auditEvent({
+    eventType: "ADMIN_CLEANED_USER_DATA",
+    severity: "critical",
+    metadata: {
+      script: "scripts/cleanup-accounts.ts",
+      users_deleted: u.rowCount ?? 0,
+      meeting_logs_deleted: ml.rowCount ?? 0,
+      monthly_feedback_deleted: mf.rowCount ?? 0,
+      retained_emails: [...KEEP_EMAILS],
+    },
+  });
+
   console.log("\nDone.");
 }
 

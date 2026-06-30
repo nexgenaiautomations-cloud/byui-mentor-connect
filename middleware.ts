@@ -91,9 +91,51 @@ function buildPolicy(nonce: string): string {
   return value;
 }
 
+// Standard hardening headers that ship on every HTML response regardless of
+// CSP mode. CSP is the heavy hitter, but reviewers (and HECVAT checklists)
+// look for these specific names individually.
+//
+//   HSTS              — production only. Browsers refuse to talk to the
+//                       origin over HTTP for `max-age` seconds.
+//                       includeSubDomains + preload signal that we're
+//                       willing to be on the preload list.
+//   X-Content-Type-Options nosniff
+//                     — blocks MIME-sniffing attacks where a browser
+//                       reinterprets a text/plain file as JS.
+//   Referrer-Policy strict-origin-when-cross-origin
+//                     — strips path/query from the Referer header on
+//                       cross-origin requests. Same-origin keeps the
+//                       full URL so tracking + analytics still work.
+//   X-Frame-Options DENY
+//                     — legacy clickjacking guard. CSP frame-ancestors
+//                       'none' covers modern browsers; this picks up the
+//                       rare older one.
+//   Permissions-Policy
+//                     — explicitly disable powerful APIs we don't use.
+function applySecurityHeaders(headers: Headers) {
+  if (process.env.NODE_ENV === "production") {
+    headers.set(
+      "Strict-Transport-Security",
+      "max-age=63072000; includeSubDomains; preload"
+    );
+  }
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set("X-Frame-Options", "DENY");
+  headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=()"
+  );
+}
+
 export function middleware(request: NextRequest) {
   const mode = resolveMode();
-  if (mode === "disabled") return NextResponse.next();
+
+  if (mode === "disabled") {
+    const response = NextResponse.next();
+    applySecurityHeaders(response.headers);
+    return response;
+  }
 
   // Edge crypto is available in all Vercel runtimes.
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
@@ -109,6 +151,7 @@ export function middleware(request: NextRequest) {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set(headerName, policy);
+  applySecurityHeaders(response.headers);
   return response;
 }
 

@@ -1,11 +1,20 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // Mock the audit module so we can observe what the route logs without
-// touching the database.
+// touching the database. We also have to mock the IP-extraction helper
+// because the route imports it from the same module to feed the
+// rate-limiter.
 vi.mock("@/lib/audit", () => {
   const auditEvent = vi.fn(async () => true);
-  return { auditEvent, __spy: { auditEvent } };
+  const extractIp = vi.fn(() => "1.2.3.4");
+  return { auditEvent, extractIp, __spy: { auditEvent } };
 });
+
+// Rate-limit defaults to ok when Upstash isn't configured (test env), but
+// be explicit so a future change to defaults can't break these tests.
+vi.mock("@/lib/rate-limit", () => ({
+  limitCspReport: vi.fn(async () => ({ ok: true })),
+}));
 
 import { POST } from "@/app/api/security/csp-report/route";
 import * as auditModule from "@/lib/audit";
@@ -89,5 +98,18 @@ describe("POST /api/security/csp-report", () => {
       makeReq({ "csp-report": { "blocked-uri": "data:text/html,x" } })
     );
     expect(res.status).toBe(204);
+  });
+
+  it("rate-limit short-circuit drops the report without auditing", async () => {
+    const { limitCspReport } = await import("@/lib/rate-limit");
+    (limitCspReport as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      reason: "ip",
+    });
+    const res = await POST(
+      makeReq({ "csp-report": { "blocked-uri": "https://evil.example/x.js" } })
+    );
+    expect(res.status).toBe(204);
+    expect(spy.auditEvent).not.toHaveBeenCalled();
   });
 });

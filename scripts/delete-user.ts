@@ -7,6 +7,7 @@
 import "dotenv/config";
 import { sql } from "drizzle-orm";
 import { db } from "../src/db/client";
+import { auditEvent } from "../src/lib/audit";
 
 async function main() {
   const email = process.argv[2];
@@ -44,6 +45,20 @@ async function main() {
   }
   const res = await db.execute(sql`DELETE FROM "user" WHERE id = ${userId}`);
   console.log(`deleted rows: ${res.rowCount ?? "?"}`);
+
+  // Audit trail for the destructive script. actorUserId is null (script
+  // ran from an operator shell, not on behalf of a logged-in admin) — the
+  // metadata carries enough context to reconstruct who ran what.
+  await auditEvent({
+    targetUserId: userId,
+    eventType: "ADMIN_DELETED_USER",
+    severity: "critical",
+    metadata: {
+      email,
+      script: "scripts/delete-user.ts",
+      cascade: tally.rows[0],
+    },
+  });
 }
 
 main()

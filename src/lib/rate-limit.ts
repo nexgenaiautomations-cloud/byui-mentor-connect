@@ -12,6 +12,7 @@ let cachedClient: {
   passwordSignInPerIp: Ratelimit;
   passwordResetPerEmail: Ratelimit;
   passwordResetPerIp: Ratelimit;
+  cspReportPerIp: Ratelimit;
 } | null = null;
 
 function getClient() {
@@ -66,6 +67,16 @@ function getClient() {
       redis,
       limiter: Ratelimit.slidingWindow(10, "1 h"),
       prefix: "rl:pri",
+    }),
+    // CSP violation reports are accepted from any browser and have no auth
+    // gate by design. A bored attacker can flood with bogus reports and bloat
+    // the audit table. 30/min per IP is plenty for legitimate browsers
+    // (which coalesce identical reports server-side anyway) and brick-walls
+    // anyone trying to abuse the endpoint.
+    cspReportPerIp: new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(30, "1 m"),
+      prefix: "rl:csp",
     }),
   };
   return cachedClient;
@@ -129,5 +140,13 @@ export async function limitPasswordReset(
   ]);
   if (!emailRes.success) return { ok: false, reason: "email", resetAt: emailRes.reset };
   if (!ipRes.success) return { ok: false, reason: "ip", resetAt: ipRes.reset };
+  return { ok: true };
+}
+
+export async function limitCspReport(ip: string | null): Promise<LimitResult> {
+  const client = getClient();
+  if (!client) return { ok: true };
+  const res = await client.cspReportPerIp.limit(ip ?? "unknown");
+  if (!res.success) return { ok: false, reason: "ip", resetAt: res.reset };
   return { ok: true };
 }

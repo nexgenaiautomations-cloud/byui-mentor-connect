@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { auditEvent } from "@/lib/audit";
+import { auditEvent, extractIp } from "@/lib/audit";
+import { limitCspReport } from "@/lib/rate-limit";
 
 // CSP violation report endpoint. The middleware sets
 // `report-uri /api/security/csp-report` so the browser POSTs a JSON body
@@ -43,6 +44,15 @@ function pickCspBody(payload: CspReportPayload): Record<string, unknown> | null 
 
 export async function POST(req: Request) {
   try {
+    // Rate-limit early so a flood attack can't fill the audit table or burn
+    // request budget on JSON parsing. We swallow the 429 silently — the
+    // browser doesn't need to know the report was dropped, and a noisy
+    // response could trigger a retry loop.
+    const rl = await limitCspReport(extractIp(req));
+    if (!rl.ok) {
+      return new NextResponse(null, { status: 204 });
+    }
+
     const raw = await req.text();
     if (raw.length > MAX_BODY_BYTES) {
       return new NextResponse(null, { status: 204 });

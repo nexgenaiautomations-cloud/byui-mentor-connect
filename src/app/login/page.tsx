@@ -14,34 +14,45 @@ export default async function LoginPage({
     next?: string;
     email?: string;
     verify?: string;
+    reset?: string;
   }>;
 }) {
   const session = await auth();
   if (session?.user?.id) redirect("/dashboard");
-  const { error, next, email, verify } = await searchParams;
+  const { error, next, email, verify, reset } = await searchParams;
 
   // Verification result banner — landing here from /api/auth/verify-email.
   // Success unlocks signin; expired/invalid prompts the user to request a
   // fresh link via the existing resend flow.
+  //
+  // Reset banner: after a successful password reset we deliberately do NOT
+  // auto-sign-in (a stolen reset link would otherwise be equivalent to a
+  // stolen session). The user is bounced here with reset=ok so the banner
+  // explains why they need to sign in.
   const verifyBanner: { tone: "success" | "error"; message: string } | undefined =
-    verify === "ok"
+    reset === "ok"
       ? {
           tone: "success",
-          message: "Email verified — you can sign in now.",
+          message: "Password updated — sign in with your new password.",
         }
-      : verify === "expired"
+      : verify === "ok"
         ? {
-            tone: "error",
-            message:
-              "That verification link expired. Sign in below to trigger a resend, or use the resend button.",
+            tone: "success",
+            message: "Email verified — you can sign in now.",
           }
-        : verify === "invalid"
+        : verify === "expired"
           ? {
               tone: "error",
               message:
-                "That verification link isn't valid. Try signing in to get a fresh one.",
+                "That verification link expired. Sign in below to trigger a resend, or use the resend button.",
             }
-          : undefined;
+          : verify === "invalid"
+            ? {
+                tone: "error",
+                message:
+                  "That verification link isn't valid. Try signing in to get a fresh one.",
+              }
+            : undefined;
 
   return (
     <main className="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
