@@ -319,3 +319,5 @@ If reviewers want to verify any claim above, the relevant code lives at:
 | CSP report endpoint | `src/app/api/security/csp-report/route.ts` |
 | RLS apply script | `scripts/apply-rls.ts` |
 | RLS plan / decisions | `docs/security/rls-plan.md` |
+| Incident response runbook | `docs/security/incident-response.md` |
+| Data retention policy | `docs/security/retention-policy.md` |

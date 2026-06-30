@@ -342,6 +342,11 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
             value={actions}
             onChange={(e) => setActions(e.target.value)}
           />
+          <p className="mt-1 text-[11px] leading-snug text-slate-500">
+            Please don&apos;t record grades, health information, financial
+            details, or other sensitive info — keep notes focused on
+            career and mentorship.
+          </p>
         </div>
 
         {isMentor && (
