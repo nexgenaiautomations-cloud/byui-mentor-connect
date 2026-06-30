@@ -267,9 +267,9 @@ Violations are POSTed to `/api/security/csp-report`. That endpoint:
 
 ## 15. Row-Level Security (Postgres RLS)
 
-RLS is enabled and FORCEd on `audit_event` with permissive INSERT and SELECT policies and no UPDATE or DELETE policies. The absence of those policies, combined with `FORCE ROW LEVEL SECURITY`, makes the table provably append-only at the database layer — even the connection that owns the table cannot tamper with prior rows.
+RLS is enabled and FORCEd on `audit_event` with permissive INSERT and SELECT policies and no UPDATE or DELETE policies. **Important caveat verified against the production database**: Neon's default `neondb_owner` role (the connection the app uses) has `BYPASSRLS=true`, which per Postgres semantics overrides `FORCE ROW LEVEL SECURITY`. So the declared policies protect against any *future* non-owner Neon role we add (read-only analysts, a dedicated `app_user` role, etc.) but **do not** prevent the app's own connection from tampering with audit rows today. The next hardening step — creating a non-`BYPASSRLS` role for the app — is documented in [`security/rls-plan.md`](./security/rls-plan.md) §5 and is estimated at ~1 hour of work plus a Vercel env-var swap.
 
-Apply with `npm run db:apply-rls` after any `npm run db:push`. Idempotent.
+Apply the RLS policies with `npm run db:apply-rls` after any `npm run db:push`. Idempotent.
 
 RLS is **not yet enabled on user, request, match, meeting_log, or other domain tables.** This is a deliberate decision documented in [`security/rls-plan.md`](./security/rls-plan.md): the app's `drizzle-orm/neon-http` driver + single-owner connection model makes per-user RLS infeasible without infrastructure changes (the recommended next step is Neon Authorize with `pg_session_jwt`). For now, app-layer authorization remains the boundary for those tables.
 
