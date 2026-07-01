@@ -68,74 +68,55 @@ Run the script after any `npm run db:push`:
 npm run db:apply-rls
 ```
 
-## 4. ⚠️ Important caveat: Neon's owner role has `BYPASSRLS=true`
+## 4. Role separation — the runtime connection bypasses RLS no longer
 
-We verified empirically against the production database (2026-06-30):
+Background (history): when the policies first landed, the production
+`DATABASE_URL` connected as `neondb_owner`, which Neon ships with
+`BYPASSRLS=true`. Per Postgres semantics, a `BYPASSRLS` role bypasses
+all RLS policies including `FORCE ROW LEVEL SECURITY`. That meant the
+declared policies didn't actually bind the app's own queries — they
+were defense-in-depth for hypothetical future non-owner connections, but
+the app credentials themselves could tamper with audit rows. `ALTER
+ROLE neondb_owner NOBYPASSRLS` was refused by Neon (`neondb_owner`
+lacks the `CREATEROLE` + `ADMIN` privilege to alter itself).
 
-```sql
-SELECT rolbypassrls FROM pg_roles WHERE rolname = 'neondb_owner';
--- → t (true)
-```
+Resolution (2026-06-30): A second Postgres role `app_user` was created
+with `NOBYPASSRLS LOGIN`, granted the CRUD permissions the runtime
+actually needs (no DDL), and the production `DATABASE_URL` was swapped
+to it. The original owner URL is preserved as `DATABASE_URL_OWNER` for
+migrations and scripts.
 
-Neon's default `neondb_owner` role — the one our `DATABASE_URL` connects
-as — has the `BYPASSRLS` role attribute. **Per Postgres semantics, a
-role with `BYPASSRLS=true` bypasses all RLS policies including FORCE
-RLS.** That means the policies we declared above protect against:
+### What the app role can and cannot do
 
-| Connection profile | UPDATE/DELETE blocked? |
-|--------------------|------------------------|
-| Future Neon role *without* `BYPASSRLS` (e.g., a read-only analyst) | **Yes** |
-| A non-owner role created later for app queries | **Yes** |
-| The app's current `neondb_owner` connection | **No — bypasses RLS** |
-| The owner connecting via Neon SQL editor | **No — same role** |
+| Operation | `app_user` (runtime) | `neondb_owner` (migrations) |
+|-----------|----------------------|------------------------------|
+| SELECT / INSERT / UPDATE / DELETE on user, match, request, meeting_log, etc. | ✓ | ✓ |
+| SELECT on `audit_event` | ✓ (policy permits) | ✓ (BYPASSRLS) |
+| INSERT on `audit_event` | ✓ (policy permits) | ✓ (BYPASSRLS) |
+| **UPDATE on `audit_event`** | **✗ blocked by RLS — 0 rows affected** | ✓ (BYPASSRLS) |
+| **DELETE on `audit_event`** | **✗ blocked by RLS — 0 rows affected** | ✓ (BYPASSRLS) |
+| CREATE TABLE, ALTER TABLE, CREATE POLICY | ✗ (no DDL) | ✓ |
 
-So the policies declared today are **defense-in-depth for non-owner
-connections**, not a tamper-proof guarantee against the app's own
-credentials. This is a meaningful protection: any future role you create
-with reduced privileges (the recommended pattern) will be RLS-bound.
-It is **not** an "append-only at the DB layer regardless of who connects"
-guarantee.
+Empirical verification (2026-06-30): a canary INSERT-then-UPDATE-then-
+DELETE cycle from the `app_user` connection succeeded on the insert,
+returned **0 rows** on both UPDATE and DELETE, and the canary row was
+intact when re-read. Reproducible by re-running the same SQL from any
+`NOBYPASSRLS` Neon role.
 
-We tried `ALTER ROLE neondb_owner NOBYPASSRLS` and Neon refused with
-"permission denied to alter role" — Neon does not give `neondb_owner` the
-`CREATEROLE` + `ADMIN` privilege required to alter itself. There is no
-in-band fix; the change has to happen at the Neon control plane.
+### How to use the two URLs
 
-## 5. The path to actual DB-level append-only
+- Application runtime (`src/db/client.ts`) reads `DATABASE_URL` — points
+  at `app_user`.
+- `drizzle.config.ts` and `scripts/apply-rls.ts` prefer
+  `DATABASE_URL_OWNER` (then fall back to `DATABASE_URL`) — so
+  `npm run db:push` and `npm run db:apply-rls` run with DDL privileges.
+- One-off scripts (`scripts/cleanup-accounts.ts`,
+  `scripts/delete-user.ts`) run via `tsx` and pick up
+  `process.env.DATABASE_URL` — they continue to work as `app_user`
+  because none of them write to `audit_event` directly (they only call
+  `auditEvent()` which is an INSERT).
 
-Two options, in order of preference:
-
-### Option A (recommended): Create a separate app role without BYPASSRLS
-
-1. From Neon SQL editor or `neonctl`, create a new role:
-   ```sql
-   CREATE ROLE app_user WITH LOGIN PASSWORD '...' NOBYPASSRLS;
-   GRANT USAGE ON SCHEMA public TO app_user;
-   GRANT SELECT, INSERT, UPDATE, DELETE
-     ON ALL TABLES IN SCHEMA public TO app_user;
-   GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO app_user;
-   ALTER DEFAULT PRIVILEGES IN SCHEMA public
-     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user;
-   ```
-2. Build a new connection string for `app_user`.
-3. Update `DATABASE_URL` in Vercel to point at `app_user`.
-4. Keep `neondb_owner`'s connection string in a separate
-   `DATABASE_URL_ADMIN` env var for migrations / one-off scripts.
-5. Verify with a fresh test row that `UPDATE` and `DELETE` on
-   `audit_event` are now blocked from the app's connection.
-
-Effort: ~1 hour. Operational risk: low (the new role is constrained but
-still has every CRUD it needs for the app to run; only the privileged
-audit_event UPDATE/DELETE is denied).
-
-### Option B: Neon Authorize / `pg_session_jwt`
-
-The cleaner long-term direction described in Section 4 of the earlier
-version of this document. Lets per-user RLS work properly via JWT-bound
-session variables. Effort: ~1 week. Best fit when extending RLS beyond
-just `audit_event`.
-
-## 6. Application-layer protections still apply
+## 5. Application-layer protections still apply
 
 Independent of RLS state:
 
@@ -146,9 +127,14 @@ Independent of RLS state:
   implemented).
 - Drizzle parameterized queries make SQL injection structurally
   impossible.
-- The audit log is meaningful even without DB-level tamper protection
-  because tampering would itself leave a record (file system audit on
-  Neon side, missing rows on archive comparison).
+
+## 6. Future: per-record RLS on user data
+
+The per-user RLS approach for `user`, `match`, `meeting_log`, etc. is
+still deferred. The recommended path is Neon Authorize +
+`pg_session_jwt` — see prior revisions of this doc for the design.
+Effort: ~1 week. Best fit when the program expands beyond BYUI-only or
+starts handling more sensitive data categories.
 
 ## 4. What we did NOT enable, and why
 
