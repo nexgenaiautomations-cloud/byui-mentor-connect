@@ -37,9 +37,14 @@ loadEnv();
 import { neon } from "@neondatabase/serverless";
 
 async function main() {
-  const url = process.env.DATABASE_URL;
+  // RLS DDL (ENABLE/FORCE ROW LEVEL SECURITY, CREATE POLICY) requires the
+  // table owner. Use DATABASE_URL_OWNER when present (the production setup);
+  // fall back to DATABASE_URL for legacy single-URL environments.
+  const url = process.env.DATABASE_URL_OWNER ?? process.env.DATABASE_URL;
   if (!url) {
-    throw new Error("DATABASE_URL not set — check .env.local");
+    throw new Error(
+      "DATABASE_URL_OWNER (or DATABASE_URL) not set — check .env.local"
+    );
   }
   const sql = neon(url);
 

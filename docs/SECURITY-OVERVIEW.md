@@ -267,7 +267,7 @@ Violations are POSTed to `/api/security/csp-report`. That endpoint:
 
 ## 15. Row-Level Security (Postgres RLS)
 
-RLS is enabled and FORCEd on `audit_event` with permissive INSERT and SELECT policies and no UPDATE or DELETE policies. **Important caveat verified against the production database**: Neon's default `neondb_owner` role (the connection the app uses) has `BYPASSRLS=true`, which per Postgres semantics overrides `FORCE ROW LEVEL SECURITY`. So the declared policies protect against any *future* non-owner Neon role we add (read-only analysts, a dedicated `app_user` role, etc.) but **do not** prevent the app's own connection from tampering with audit rows today. The next hardening step — creating a non-`BYPASSRLS` role for the app — is documented in [`security/rls-plan.md`](./security/rls-plan.md) §5 and is estimated at ~1 hour of work plus a Vercel env-var swap.
+RLS is enabled and FORCEd on `audit_event` with permissive INSERT and SELECT policies and no UPDATE or DELETE policies. As of 2026-06-30 the production application runtime connects as a dedicated `app_user` Postgres role with `BYPASSRLS=false`, so RLS policies actually bind the app's own queries: UPDATE and DELETE on `audit_event` return **0 rows affected** from the runtime connection. Verified empirically against the production database with a canary INSERT-then-UPDATE-then-DELETE cycle. Schema migrations (`npm run db:push`) and the RLS apply script (`npm run db:apply-rls`) use a separate `DATABASE_URL_OWNER` env var that connects as `neondb_owner` and retains DDL privileges. Full architecture in [`security/rls-plan.md`](./security/rls-plan.md) §4.
 
 Apply the RLS policies with `npm run db:apply-rls` after any `npm run db:push`. Idempotent.
 
