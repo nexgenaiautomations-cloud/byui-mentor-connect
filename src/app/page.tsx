@@ -378,6 +378,13 @@ export default async function LandingPage() {
         >
           Accessibility
         </Link>
+        {" · "}
+        <Link
+          href="/privacy"
+          className="font-semibold text-byui-blue underline decoration-byui-blue-light underline-offset-2 hover:text-byui-blue-dark cursor-pointer"
+        >
+          Privacy
+        </Link>
       </footer>
     </main>
   );
