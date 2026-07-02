@@ -1,0 +1,33 @@
+# Weekly external vulnerability scan of production (HECVAT VULN-05/06).
+#
+# OWASP ZAP "baseline" mode: spiders the public surface and runs PASSIVE
+# checks only (headers, cookies, CSP, info leaks, common misconfigurations).
+# It sends no attack payloads, so it is safe to run against production.
+# Reports are uploaded as workflow artifacts; share them with reviewers on
+# request (HECVAT VULN-02).
+#
+# Authenticated/active scanning (VULN-01) is intentionally NOT done here —
+# that requires a scheduled window and a non-production target.
+name: ZAP baseline scan
+
+on:
+  schedule:
+    - cron: "0 10 * * 1" # Mondays 10:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  zap-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ZAP baseline scan of production
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: "https://www.byuican.com"
+          # Don't file GitHub issues automatically; findings are reviewed
+          # from the artifact report instead.
+          allow_issue_writing: false
+          artifact_name: zap-baseline-report
+          cmd_options: "-a"
