@@ -101,10 +101,10 @@ export default function AccessibilityPage() {
               <li>
                 Email the program owner:{" "}
                 <a
-                  href="mailto:gabrieldilworth32@gmail.com"
+                  href="mailto:GabrielD@nexgenaiintegrations.com"
                   className="font-semibold text-byui-blue underline decoration-byui-blue-light underline-offset-2 hover:text-byui-blue-dark cursor-pointer"
                 >
-                  gabrieldilworth32@gmail.com
+                  GabrielD@nexgenaiintegrations.com
                 </a>
                 . If the barrier prevents you from using either channel, any
                 CAN program staff member can file the report for you.
