@@ -23,6 +23,8 @@ export type SafeMe = {
   mentorTopics: string[] | null;
   mentorAvailable: boolean;
   onboardedAt: Date | null;
+  priorCareerChats: string | null;
+  priorInternshipExperience: string | null;
 };
 
 export function toSafeMe(u: User): SafeMe {
@@ -46,5 +48,9 @@ export function toSafeMe(u: User): SafeMe {
     mentorTopics: u.mentorTopics,
     mentorAvailable: u.mentorAvailable,
     onboardedAt: u.onboardedAt,
+    // The profile PATCH accepts these, so the GET must return them or the
+    // profile form silently resets them to empty on every reload.
+    priorCareerChats: u.priorCareerChats,
+    priorInternshipExperience: u.priorInternshipExperience,
   };
 }

@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { matches, requests, users } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { isUniqueViolation } from "@/lib/db-errors";
 
 const responseSchema = z.object({
   action: z.enum(["accept", "decline", "cancel"]),
@@ -79,24 +80,66 @@ export async function PATCH(
     return NextResponse.json({ ok: true });
   }
 
-  // Parallel: insert the match + read mentor capacity in one round trip.
-  const [insertResult, mentorRow] = await Promise.all([
+  // Parallel: read mentor capacity + check the mentee's existing matches.
+  // A mentee may only ever hold ONE active match — enforced here and by the
+  // partial unique index match_mentee_active_uniq (scripts/apply-security-indexes.ts),
+  // so two mentors accepting the same student concurrently can't both win.
+  const [mentorRow, menteeActive] = await Promise.all([
     db
+      .select({ mentorCapacity: users.mentorCapacity })
+      .from(users)
+      .where(eq(users.id, updated.mentorId))
+      .limit(1),
+    db
+      .select({ id: matches.id })
+      .from(matches)
+      .where(
+        and(eq(matches.menteeId, updated.menteeId), eq(matches.status, "active"))
+      )
+      .limit(1),
+  ]);
+
+  const menteeAlreadyMatched = async () => {
+    // The student found a mentor elsewhere while this request sat pending.
+    // The request can never be accepted now — cancel it instead of leaving
+    // it stuck in "accepted" with no match behind it.
+    await db
+      .update(requests)
+      .set({ status: "cancelled", respondedAt: new Date() })
+      .where(eq(requests.id, updated.id));
+    return NextResponse.json(
+      { error: "This student already has an active mentor" },
+      { status: 409 }
+    );
+  };
+
+  if (menteeActive.length > 0) return menteeAlreadyMatched();
+
+  let newMatchId: string;
+  try {
+    const [ins] = await db
       .insert(matches)
       .values({
         mentorId: updated.mentorId,
         menteeId: updated.menteeId,
         requestId: updated.id,
       })
-      .returning({ id: matches.id }),
-    db
-      .select({ mentorCapacity: users.mentorCapacity })
-      .from(users)
-      .where(eq(users.id, updated.mentorId))
-      .limit(1),
-  ]);
+      .returning({ id: matches.id });
+    newMatchId = ins.id;
+  } catch (e) {
+    if (isUniqueViolation(e)) {
+      // Lost the race on match_mentee_active_uniq — another mentor's accept
+      // landed between our check and insert.
+      return menteeAlreadyMatched();
+    }
+    // Unknown insert failure — revert the request so it isn't stuck accepted.
+    await db
+      .update(requests)
+      .set({ status: "pending", respondedAt: null })
+      .where(eq(requests.id, updated.id));
+    throw e;
+  }
 
-  const newMatchId = insertResult[0].id;
   const cap = mentorRow[0]?.mentorCapacity ?? 5;
 
   // Re-count active matches after insert to detect a concurrent accept.
@@ -108,14 +151,16 @@ export async function PATCH(
     );
 
   if (count > cap) {
-    // Concurrent overrun — roll back our match and revert the request.
-    await Promise.all([
-      db.delete(matches).where(eq(matches.id, newMatchId)),
-      db
-        .update(requests)
-        .set({ status: "pending", respondedAt: null })
-        .where(eq(requests.id, updated.id)),
-    ]);
+    // Concurrent overrun — roll back. Sequential, request first: if we die
+    // between the two statements the request is pending while the match still
+    // exists, which self-heals on the next accept (the mentee-active guard
+    // cancels the request). The reverse order could leave a request stuck in
+    // "accepted" with no match and no recovery path.
+    await db
+      .update(requests)
+      .set({ status: "pending", respondedAt: null })
+      .where(eq(requests.id, updated.id));
+    await db.delete(matches).where(eq(matches.id, newMatchId));
     return NextResponse.json(
       { error: "Mentor just hit capacity — try another mentor" },
       { status: 409 }

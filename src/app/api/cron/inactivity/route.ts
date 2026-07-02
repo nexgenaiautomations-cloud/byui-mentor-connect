@@ -14,6 +14,12 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   if (!process.env.CRON_SECRET) {
+    // Loud log, not just a 401 — Vercel cron retries briefly then drops the
+    // invocation silently, so a missing secret would otherwise disable the
+    // inactivity job with no operator-visible signal.
+    console.error(
+      "cron/inactivity: CRON_SECRET is not set — scheduled job cannot run"
+    );
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const auth = req.headers.get("authorization") ?? "";
@@ -49,7 +55,7 @@ export async function GET(req: Request) {
           eq(users.mentorAvailable, false),
           eq(users.isMentor, true),
           sql`${users.id} IN (${sql.join(affectedMentorIds.map((id) => sql`${id}`), sql.raw(","))})`,
-          sql`(SELECT count(*)::int FROM "match" WHERE mentor_id = ${users.id} AND status = 'active') < ${users.mentorCapacity}`
+          sql`(SELECT count(*)::int FROM ${matches} WHERE ${matches.mentorId} = ${users.id} AND ${matches.status} = 'active') < ${users.mentorCapacity}`
         )
       )
       .returning({ id: users.id });

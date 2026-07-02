@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { buildMagicLinkEmail } from "@/lib/magic-link-email";
 import { verifyPassword } from "@/lib/password";
 import { auditEvent } from "@/lib/audit";
+import { limitPasswordSignIn } from "@/lib/rate-limit";
 
 const BYUI_DOMAIN = "@byui.edu";
 
@@ -136,13 +137,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(rawCredentials) {
+      async authorize(rawCredentials, request) {
         const email = String(rawCredentials?.email ?? "")
           .trim()
           .toLowerCase();
         const password = String(rawCredentials?.password ?? "");
         if (!email || !password) return null;
         if (!email.endsWith(BYUI_DOMAIN)) return null;
+
+        // Rate-limit here, not just in /api/auth/signin — Auth.js also exposes
+        // this provider at /api/auth/callback/credentials, and without this
+        // check that endpoint allows unthrottled password guessing.
+        const ip =
+          request?.headers?.get?.("x-forwarded-for")?.split(",")[0]?.trim() ??
+          request?.headers?.get?.("x-real-ip") ??
+          null;
+        const rl = await limitPasswordSignIn(email, ip);
+        if (!rl.ok) {
+          void auditEvent({
+            eventType: "RATE_LIMIT_TRIGGERED",
+            severity: "warning",
+            metadata: { route: "auth/callback/credentials", reason: rl.reason ?? "ip" },
+          });
+          return null;
+        }
 
         const [user] = await db
           .select()

@@ -63,17 +63,24 @@ export async function maybeCreateAutoLogs(
       existingWeekly.length > 0
     )
   ) {
-    await db.insert(meetingLogs).values({
-      studentId,
-      menteeId: studentId,
-      createdBy: "system",
-      isSystemGenerated: true,
-      accomplishmentGroup: "career_tasks",
-      meetingDate: now,
-      meetingType: "other",
-      topicsDiscussed: WEEKLY_AUTO_LOG_TOPIC,
-    });
-    created.push("weekly");
+    // onConflictDoNothing: the partial unique index meeting_log_weekly_auto_uniq
+    // (scripts/apply-security-indexes.ts) closes the race where two concurrent
+    // log submissions both pass the SELECT above.
+    const inserted = await db
+      .insert(meetingLogs)
+      .values({
+        studentId,
+        menteeId: studentId,
+        createdBy: "system",
+        isSystemGenerated: true,
+        accomplishmentGroup: "career_tasks",
+        meetingDate: now,
+        meetingType: "other",
+        topicsDiscussed: WEEKLY_AUTO_LOG_TOPIC,
+      })
+      .onConflictDoNothing()
+      .returning({ id: meetingLogs.id });
+    if (inserted.length > 0) created.push("weekly");
   }
 
   // Monthly auto-log
@@ -97,17 +104,23 @@ export async function maybeCreateAutoLogs(
       existingMonthly.length > 0
     )
   ) {
-    await db.insert(meetingLogs).values({
-      studentId,
-      menteeId: studentId,
-      createdBy: "system",
-      isSystemGenerated: true,
-      accomplishmentGroup: "career_chats",
-      meetingDate: now,
-      meetingType: "other",
-      topicsDiscussed: MONTHLY_AUTO_LOG_TOPIC,
-    });
-    created.push("monthly");
+    // Same race-closing pattern as the weekly insert above, backed by
+    // meeting_log_monthly_auto_uniq.
+    const inserted = await db
+      .insert(meetingLogs)
+      .values({
+        studentId,
+        menteeId: studentId,
+        createdBy: "system",
+        isSystemGenerated: true,
+        accomplishmentGroup: "career_chats",
+        meetingDate: now,
+        meetingType: "other",
+        topicsDiscussed: MONTHLY_AUTO_LOG_TOPIC,
+      })
+      .onConflictDoNothing()
+      .returning({ id: meetingLogs.id });
+    if (inserted.length > 0) created.push("monthly");
   }
 
   return { created };

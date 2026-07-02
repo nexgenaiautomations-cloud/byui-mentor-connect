@@ -13,7 +13,13 @@ export default async function VerifyPage({
 }) {
   const { token = "", email = "", callbackUrl = "/dashboard" } = await searchParams;
 
-  if (!token || !email) {
+  // The email param is attacker-choosable (it's just a query string), and this
+  // page renders it as "you're signing in as X" before any token validation.
+  // Only sign-ins for @byui.edu addresses can succeed, so refuse to lend the
+  // page's credibility to anything else.
+  const displayEmail = /^[^\s@]+@byui\.edu$/i.test(email) ? email : "";
+
+  if (!token || !email || !displayEmail) {
     return (
       <main className="grid min-h-screen place-items-center bg-gradient-to-b from-byui-blue-light/30 via-white to-white px-6 py-12">
         <div className="w-full max-w-md rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-soft">

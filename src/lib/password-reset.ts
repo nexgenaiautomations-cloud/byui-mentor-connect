@@ -8,7 +8,7 @@
 //   3. Update the user's password_hash.
 //   4. Delete the row (single-use).
 import { createHash, randomBytes } from "node:crypto";
-import { and, eq, lt } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { passwordResetTokens, users } from "@/db/schema";
 import { hashPassword } from "./password";
@@ -68,16 +68,26 @@ export async function consumeTokenAndSetPassword(
     return { ok: false, reason: "expired" };
   }
 
-  // Update the password, then delete the token. Two statements; in practice a
-  // single token row + a single user row update is fine without an explicit
-  // transaction, and Drizzle's tx() doesn't help with the http-driver.
-  await db
-    .update(users)
-    .set({ passwordHash: newPasswordHashed })
-    .where(eq(users.id, row.userId));
-  await db
-    .delete(passwordResetTokens)
-    .where(eq(passwordResetTokens.id, row.id));
+  // Consume the token and rotate the password in ONE statement. The neon-http
+  // driver can't run multi-statement transactions, but a single statement is
+  // atomic — so a crash can never leave the password changed while the token
+  // stays valid (or vice versa). The DELETE in the CTE also acts as the
+  // concurrency gate: only one caller can consume a given token row.
+  const result = await db.execute(sql`
+    WITH consumed AS (
+      DELETE FROM ${passwordResetTokens}
+      WHERE ${passwordResetTokens.id} = ${row.id}
+      RETURNING user_id
+    )
+    UPDATE ${users} SET password_hash = ${newPasswordHashed}
+    FROM consumed
+    WHERE ${users.id} = consumed.user_id
+    RETURNING ${users.id} AS user_id
+  `);
+  if (result.rows.length === 0) {
+    // Token was consumed by a concurrent request between our SELECT and now.
+    return { ok: false, reason: "not_found" };
+  }
 
   return { ok: true, userId: row.userId };
 }

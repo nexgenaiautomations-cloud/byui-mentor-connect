@@ -7,7 +7,8 @@
 > fluff, organized by what users care about (their account, their email, their
 > data)."* and it will produce a polished explainer.
 >
-> Everything below is verified against the source code as of 2026-06-30.
+> Everything below is verified against the source code as of 2026-07-01
+> (post security-review fixes, all deployed to production).
 > Anything not listed here is **not implemented** — be careful not to over-claim.
 
 ---
@@ -24,9 +25,9 @@ Both providers write to the same `users` table. A user can be created via either
 - Sign-up is rejected unless the email ends with `@byui.edu`
 - Sign-in (both password and magic-link) is rejected unless the email ends with `@byui.edu`
 - The check happens at three layers:
-  1. **Form-level** Zod schema in `/api/auth/signup` (`signup/route.ts:19-29`)
-  2. **Credentials authorize()** callback in `auth.ts:115`
-  3. **Global `signIn` callback** in `auth.ts:137-142` — last line of defense; rejects any sign-in regardless of provider if the email isn't `@byui.edu`
+  1. **Form-level** Zod schema in `/api/auth/signup` (`signup/route.ts`, `signupSchema`)
+  2. **Credentials `authorize()`** callback in `auth.ts` (domain check at the top of the function)
+  3. **Global `signIn` callback** in `auth.ts` — last line of defense; rejects any sign-in regardless of provider if the email isn't `@byui.edu`
 
 This means even if a misconfiguration let an external email enter the system, it could never establish a session.
 
@@ -69,6 +70,7 @@ This means even if a misconfiguration let an external email enter the system, it
 - Only the **SHA-256 hash** of the token is stored in the database (`passwordResetTokens` table)
 - TTL: **1 hour** (shorter than verification — reset is a high-value operation)
 - Single-use: row deleted after the password is rotated
+- **Atomic consume**: the token delete and the password update execute in a single SQL statement, so a mid-operation crash can never leave the password changed while the token stays redeemable (and a token can only ever be consumed once, even by concurrent requests)
 - Issuing a new reset token **wipes earlier tokens** for the same user
 
 (`lib/password-reset.ts`)
@@ -82,7 +84,7 @@ This means even if a misconfiguration let an external email enter the system, it
 - **Link rewriting before sending**: instead of emailing the raw `/api/auth/callback/resend?token=…` URL (which Microsoft Defender Safe Links and Gmail link-preview would silently visit and burn before the user clicks), we wrap it in `/login/verify?token=…`. The verify page shows a "Continue to sign-in" button, and only the user's click actually consumes the token.
 - This prevents **scanner-burn** — a known failure mode where corporate mail filters destroy magic links before they reach the recipient
 
-(`auth.ts:55-101`)
+(`auth.ts`, `sendVerificationRequest` in the Resend provider)
 
 ---
 
@@ -98,8 +100,9 @@ This means even if a misconfiguration let an external email enter the system, it
   - `secure: true` in production — cookie is only transmitted over HTTPS
   - `path: "/"` — sent on all routes
 - **Session JWT** contains the user ID only; every server-side request that needs user data re-fetches from the DB via `getCurrentUser()` (`lib/session.ts`) — so role / privilege changes take effect immediately on the next request
+- **TTL: 14 days for BOTH sign-in paths** — Auth.js `session.maxAge` covers magic-link sessions, and `lib/auth-cookie.ts` issues the same 14-day TTL for password sign-ins (aligned 2026-07-01; password sessions were previously 30 days)
 
-(`auth.ts:35-53`, `lib/session.ts`)
+(`auth.ts`, `lib/auth-cookie.ts`, `lib/session.ts`)
 
 ---
 
@@ -116,7 +119,11 @@ Backed by Upstash Redis (`@upstash/ratelimit`). Sliding-window counters keyed in
 
 If Upstash is not configured (missing env vars), rate-limiting **silently no-ops** — it never crashes the app, but also never blocks. In production both `KV_REST_API_URL` and `KV_REST_API_TOKEN` are set.
 
-(`lib/rate-limit.ts`)
+Additional properties (added 2026-07-01):
+- The password sign-in limits are enforced in **both** password paths: the custom `/api/auth/signin` route AND the Auth.js `authorize()` callback, so the built-in `/api/auth/callback/credentials` endpoint cannot be used for unthrottled guessing.
+- Identifiers are **SHA-256 hashed (keyed with `AUDIT_IP_HASH_SECRET`) before being used as Redis keys**, so student email addresses and raw IPs never appear in Upstash key names.
+
+(`lib/rate-limit.ts`, `auth.ts`)
 
 ---
 
@@ -173,7 +180,9 @@ Server-side mutations always check the **capability**, not the cookie:
 - Magic-link emails use a **branded HTML template** (logo, brand colors, plain-text fallback) so users can distinguish real mail from impersonation attempts
 - Emails carry an `X-Entity-Ref-ID` header so corporate mail filters can thread + de-prioritize as transactional (helps with deliverability against Outlook's Focused Inbox)
 - Magic links are **scanner-resistant** (see Section 4 — link rewriting)
-- BYU-Idaho IT has the option to whitelist the `byuican.com` sender at the campus mail gateway to bypass spam scoring entirely
+- **Full sender authentication is in place** (as of 2026-07-01): SPF (`send.byuican.com`), DKIM (`resend._domainkey.byuican.com`), and DMARC (`_dmarc.byuican.com`, `p=none` with aggregate reporting; tightening to `p=quarantine` is planned once reports run clean)
+- BYU-Idaho IT has **allowlisted** the `byuican.com` sender at the campus mail gateway
+- **The branded sender cannot be used as a relay**: the admin rejection-email endpoint refuses any recipient that doesn't match the applicant on record, so a compromised admin account can't send arbitrary mail from `noreply@byuican.com`
 
 ---
 
@@ -195,9 +204,11 @@ User-facing PII actually stored: name, BYU-Idaho email, optional phone number, p
 ## 12. Operational Security
 
 - **No secrets in source code** — all credentials (Auth.js secret, Resend API key, Neon DATABASE_URL, Upstash tokens) are environment variables in Vercel
+- **Credential rotation is practiced, not just documented** — the full secret set (Auth.js secret, cron secret, both database role passwords, Resend API key, Upstash credentials) was rotated on 2026-07-01 with zero data loss; stale local credential copies were destroyed
 - **No third-party analytics or session-recording** that could capture form fields containing passwords or tokens
 - Deployment is **immutable** — every push creates a new Vercel deployment; rollback is a single click
 - Database is **point-in-time-restore capable** via Neon (last 7 days by default)
+- **Database-enforced data-integrity invariants**: partial unique indexes guarantee a student can never hold two active mentor matches and that KPI auto-logs can't duplicate under concurrent writes — applied via `npm run db:apply-indexes` (idempotent; run after every `db:push`, like the RLS script)
 - Cron-scheduled job at `0 9 * * *` (`/api/cron/inactivity`) flags inactive matches — runs server-side under Vercel cron auth
 
 ---
@@ -206,7 +217,7 @@ User-facing PII actually stored: name, BYU-Idaho email, optional phone number, p
 
 An `audit_event` table records admin and security-sensitive events. Writes go through `src/lib/audit.ts`, which:
 
-- Hashes the IP with SHA-256 + `AUDIT_IP_HASH_SECRET` before storing. The raw IP is never persisted.
+- Hashes the IP with SHA-256 + `AUDIT_IP_HASH_SECRET` before storing. The raw IP is never persisted. **`AUDIT_IP_HASH_SECRET` must be set in production** (it is, in Vercel) — without it the hash is unsalted and reversible by enumerating the IPv4 space.
 - Sanitizes metadata: keys whose names look like secrets (`password`, `token`, `secret`, `session`, `jwt`, `cookie`, `magic_link`, `bearer`, `authorization`) are replaced with `[redacted]`.
 - Caps serialized metadata at 8 KB so a misuse can't bloat the table.
 - Is best-effort: a failed audit insert never blocks the user-facing action; failures are logged to Vercel logs.
@@ -248,8 +259,10 @@ frame-ancestors 'none'   ← clickjacking guard
 form-action 'self'
 script-src 'self' 'nonce-…' 'strict-dynamic'
 style-src 'self' 'nonce-…' 'unsafe-inline'
+style-src-elem 'self' 'nonce-…' 'unsafe-inline' https://fonts.googleapis.com
+style-src-attr 'unsafe-inline'
 img-src 'self' data: blob: https://api.dicebear.com https://images.unsplash.com
-font-src 'self' data:
+font-src 'self' data: https://fonts.gstatic.com
 connect-src 'self' https://vitals.vercel-insights.com
 frame-src 'none'
 worker-src 'self' blob:
@@ -318,6 +331,7 @@ If reviewers want to verify any claim above, the relevant code lives at:
 | CSP middleware | `middleware.ts` |
 | CSP report endpoint | `src/app/api/security/csp-report/route.ts` |
 | RLS apply script | `scripts/apply-rls.ts` |
+| Data-integrity indexes script | `scripts/apply-security-indexes.ts` |
 | RLS plan / decisions | `docs/security/rls-plan.md` |
 | Incident response runbook | `docs/security/incident-response.md` |
 | Data retention policy | `docs/security/retention-policy.md` |
