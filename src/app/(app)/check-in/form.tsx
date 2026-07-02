@@ -132,7 +132,7 @@ export function CheckInForm({
       <div>
         <label className="label">
           How often are you meeting?{" "}
-          <span className="font-normal text-slate-400">(optional)</span>
+          <span className="font-normal text-slate-500">(optional)</span>
         </label>
         <input
           className="input"
@@ -145,7 +145,7 @@ export function CheckInForm({
       <div>
         <label className="label">
           What's been most valuable?{" "}
-          <span className="font-normal text-slate-400">(optional)</span>
+          <span className="font-normal text-slate-500">(optional)</span>
         </label>
         <textarea
           rows={2}
@@ -158,7 +158,7 @@ export function CheckInForm({
       <div>
         <label className="label">
           Any blockers we can help with?{" "}
-          <span className="font-normal text-slate-400">(optional)</span>
+          <span className="font-normal text-slate-500">(optional)</span>
         </label>
         <textarea
           rows={2}

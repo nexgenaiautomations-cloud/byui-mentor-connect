@@ -255,7 +255,7 @@ export default async function AdminPage() {
         </section>
       )}
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-slate-500">
         Tip: searchable user lookup, charts, and pagination land in v2.
       </p>
     </div>

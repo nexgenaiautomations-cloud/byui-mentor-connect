@@ -525,7 +525,7 @@ function MentorChip({
         aria-label={disabled ? "Mentor at capacity" : "Drag mentor"}
         disabled={disabled}
         className={
-          "grid h-7 w-5 shrink-0 place-items-center rounded text-slate-400 " +
+          "grid h-7 w-5 shrink-0 place-items-center rounded text-slate-500 " +
           (disabled
             ? "cursor-not-allowed"
             : "cursor-grab active:cursor-grabbing hover:bg-slate-100 hover:text-slate-600")
@@ -653,7 +653,7 @@ function MentorSlot({
             type="button"
             onClick={onClear}
             aria-label="Remove mentor"
-            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
           >
             <svg
               viewBox="0 0 24 24"
@@ -670,7 +670,7 @@ function MentorSlot({
           </button>
         </div>
       ) : (
-        <p className="grid h-full place-items-center text-xs font-medium text-slate-400">
+        <p className="grid h-full place-items-center text-xs font-medium text-slate-500">
           Drop a mentor here
         </p>
       )}

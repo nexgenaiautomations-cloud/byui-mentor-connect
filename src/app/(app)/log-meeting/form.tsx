@@ -238,7 +238,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
                   />
                   <p className="text-sm font-medium text-slate-700">
                     {selectedMatch.menteeMajor || (
-                      <span className="text-slate-400">Major not listed</span>
+                      <span className="text-slate-500">Major not listed</span>
                     )}
                   </p>
                 </div>
@@ -261,7 +261,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
             </div>
             <div>
               <label className="label">
-                Type <span className="font-normal text-slate-400">(optional)</span>
+                Type <span className="font-normal text-slate-500">(optional)</span>
               </label>
               <select
                 className="input"
@@ -279,7 +279,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
             <div>
               <label className="label">
                 Duration (min){" "}
-                <span className="font-normal text-slate-400">(optional)</span>
+                <span className="font-normal text-slate-500">(optional)</span>
               </label>
               <input
                 type="number"
@@ -329,7 +329,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
         <div>
           <label className="label">
             {isMentor ? "Action items" : "Other activity"}{" "}
-            <span className="font-normal text-slate-400">(optional)</span>
+            <span className="font-normal text-slate-500">(optional)</span>
           </label>
           <textarea
             rows={2}
@@ -353,7 +353,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
           <div>
             <label className="label">
               Next meeting{" "}
-              <span className="font-normal text-slate-400">(optional)</span>
+              <span className="font-normal text-slate-500">(optional)</span>
             </label>
             <input
               type="date"
@@ -405,7 +405,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
               type="button"
               onClick={() => !submitting && setConfirmOpen(false)}
               aria-label="Close"
-              className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer disabled:opacity-40"
+              className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer disabled:opacity-40"
               disabled={submitting}
             >
               <svg

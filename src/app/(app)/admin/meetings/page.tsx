@@ -131,11 +131,11 @@ export default async function AdminMeetingsPage() {
                           {l.studentName}
                           {l.mentorName ? (
                             <>
-                              <span className="text-slate-400"> · with </span>
+                              <span className="text-slate-500"> · with </span>
                               {l.mentorName}
                             </>
                           ) : (
-                            <span className="text-slate-400"> · no mentor</span>
+                            <span className="text-slate-500"> · no mentor</span>
                           )}
                         </p>
                         <AuthorPill createdBy={l.createdBy} />

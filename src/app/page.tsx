@@ -111,7 +111,7 @@ export default async function LandingPage() {
 
           <div className="relative">
             <div className="rounded-3xl bg-white p-6 shadow-lift">
-              <p className="text-xs font-bold uppercase tracking-wider text-byui-gray">Welcome to</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-byui-blue-light">Welcome to</p>
               <p className="mt-1 font-display text-2xl font-black text-byui-blue-dark">BYUI CAN Mentor Connect</p>
               <p className="mt-2 text-sm text-slate-600">Three quick steps to your first mentor match.</p>
               <ul className="mt-5 space-y-3">
@@ -220,7 +220,7 @@ export default async function LandingPage() {
             </ul>
           </div>
 
-          <p className="mx-auto mt-10 max-w-3xl text-center text-sm text-byui-gray">
+          <p className="mx-auto mt-10 max-w-3xl text-center text-sm text-slate-600">
             At major universities, career peer mentoring achieved results like a 96% job
             placement rate and a 700% increase in meaningful professional relationships.
             BYUI CAN brings the same model to BYU-Idaho.
@@ -369,7 +369,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs font-medium text-byui-gray">
+      <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs font-medium text-slate-600">
         BYUI CAN (Career Advancement Network) — Student-built peer mentorship
         {" · "}
         <Link

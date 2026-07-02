@@ -126,7 +126,7 @@ export function LoginForm({
             "flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition cursor-pointer " +
             (mode === "password"
               ? "bg-white text-navy-800 shadow-soft"
-              : "text-slate-500 hover:text-slate-700")
+              : "text-slate-600 hover:text-slate-700")
           }
         >
           Sign in with password
@@ -138,7 +138,7 @@ export function LoginForm({
             "flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition cursor-pointer " +
             (mode === "magic"
               ? "bg-white text-navy-800 shadow-soft"
-              : "text-slate-500 hover:text-slate-700")
+              : "text-slate-600 hover:text-slate-700")
           }
         >
           Send me a magic link

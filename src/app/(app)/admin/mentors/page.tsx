@@ -58,7 +58,7 @@ export default async function AdminMentorsPage() {
                     {m.name || "Mentor"}
                   </p>
                   <p className="truncate text-xs text-slate-500">{m.email}</p>
-                  <p className="mt-0.5 text-[11px] text-slate-400">
+                  <p className="mt-0.5 text-[11px] text-slate-500">
                     {m.major}
                     {m.semesterLevel ? ` · ${m.semesterLevel}` : ""}
                     {m.expectedGraduation ? ` · grad ${m.expectedGraduation}` : ""}
@@ -94,7 +94,7 @@ export default async function AdminMentorsPage() {
               </div>
 
               <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
-                <span className={m.mentorAvailable ? "text-emerald-700" : "text-slate-400"}>
+                <span className={m.mentorAvailable ? "text-emerald-700" : "text-slate-500"}>
                   {m.mentorAvailable ? "Accepting requests" : "Paused"}
                 </span>
                 <a href={`mailto:${m.email}`} className="font-semibold text-navy-700 hover:underline">

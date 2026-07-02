@@ -226,7 +226,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
           </div>
         )}
 
-        <p className="mt-4 text-center text-[11px] text-slate-400">
+        <p className="mt-4 text-center text-[11px] text-slate-500">
           Respond to keep going. Accepted mentees show up in My Mentees.
         </p>
       </div>

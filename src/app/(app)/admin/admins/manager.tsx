@@ -197,7 +197,7 @@ function AdminRowItem({
             </span>
           )}
           {isSelf && (
-            <span className="ml-1 text-[11px] font-medium text-slate-400">
+            <span className="ml-1 text-[11px] font-medium text-slate-500">
               (you)
             </span>
           )}

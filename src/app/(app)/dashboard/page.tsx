@@ -301,7 +301,7 @@ export default async function DashboardPage() {
               <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Active mentees</p>
               <p className="mt-1 font-display text-2xl font-bold text-byui-blue-dark">
                 {impact.activeMentees}{" "}
-                <span className="text-sm font-medium text-slate-400">of {me.mentorCapacity ?? 5}</span>
+                <span className="text-sm font-medium text-slate-500">of {me.mentorCapacity ?? 5}</span>
               </p>
             </div>
             <div className="rounded-xl border border-slate-100 p-3">
@@ -312,7 +312,7 @@ export default async function DashboardPage() {
               <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Time invested</p>
               <p className="mt-1 font-display text-2xl font-bold text-byui-blue-dark">
                 {Math.round(impact.totalMinutes / 60)}h{" "}
-                <span className="text-sm font-medium text-slate-400">{impact.totalMinutes % 60}m</span>
+                <span className="text-sm font-medium text-slate-500">{impact.totalMinutes % 60}m</span>
               </p>
             </div>
           </div>
@@ -395,13 +395,13 @@ export default async function DashboardPage() {
                     </p>
                     <p className="truncate text-xs text-slate-600">
                       {m.menteeMajor?.trim() || (
-                        <span className="text-slate-400">Major not listed</span>
+                        <span className="text-slate-500">Major not listed</span>
                       )}
                     </p>
                     <p className="mt-1 line-clamp-2 text-xs leading-snug text-slate-500">
                       <span className="font-semibold text-slate-600">Bio:</span>{" "}
                       {m.menteeBio?.trim() || (
-                        <span className="text-slate-400">Bio not listed</span>
+                        <span className="text-slate-500">Bio not listed</span>
                       )}
                     </p>
                   </div>
@@ -480,7 +480,7 @@ export default async function DashboardPage() {
                       <p className="mt-2 whitespace-pre-line text-xs leading-snug text-slate-700">
                         <span className="font-semibold text-slate-600">Bio:</span>{" "}
                         {m.mentorBio?.trim() || (
-                          <span className="text-slate-400">Bio not listed</span>
+                          <span className="text-slate-500">Bio not listed</span>
                         )}
                       </p>
 

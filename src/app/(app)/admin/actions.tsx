@@ -115,7 +115,7 @@ export function ApplicationActions({
               type="button"
               onClick={() => !busy && setRejectOpen(false)}
               aria-label="Close"
-              className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer disabled:opacity-40"
+              className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer disabled:opacity-40"
               disabled={busy}
             >
               <svg
