@@ -118,6 +118,18 @@ export function SignupForm() {
         We&apos;ll send a verification link to your BYU-I inbox. You can fill
         out the rest of your profile after you verify.
       </p>
+      <p className="text-center text-[11px] text-slate-500">
+        By creating an account you agree to the{" "}
+        <a
+          href="/privacy"
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-byui-blue underline decoration-byui-blue-light underline-offset-2 hover:text-byui-blue-dark cursor-pointer"
+        >
+          privacy notice
+        </a>
+        .
+      </p>
     </form>
   );
 }
