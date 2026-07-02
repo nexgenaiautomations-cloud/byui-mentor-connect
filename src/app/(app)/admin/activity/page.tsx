@@ -74,9 +74,9 @@ export default async function AdminActivityPage() {
               {recentLogs.map((l) => (
                 <li
                   key={l.id}
-                  className={
-                    "py-3 " + (l.isSystemGenerated ? "opacity-90" : "")
-                  }
+                  // System rows are marked by the emerald "Goal met" tag below —
+                  // no opacity dimming, which would push text under 4.5:1 contrast.
+                  className="py-3"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-navy-800">

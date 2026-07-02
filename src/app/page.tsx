@@ -111,7 +111,7 @@ export default async function LandingPage() {
 
           <div className="relative">
             <div className="rounded-3xl bg-white p-6 shadow-lift">
-              <p className="text-xs font-bold uppercase tracking-wider text-byui-blue-light">Welcome to</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-byui-blue">Welcome to</p>
               <p className="mt-1 font-display text-2xl font-black text-byui-blue-dark">BYUI CAN Mentor Connect</p>
               <p className="mt-2 text-sm text-slate-600">Three quick steps to your first mentor match.</p>
               <ul className="mt-5 space-y-3">
