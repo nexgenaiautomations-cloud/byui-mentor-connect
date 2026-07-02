@@ -111,11 +111,20 @@ export async function PATCH(
     updates.accomplishmentGroup = dominantGroup(valid);
   }
 
+  // Re-assert the read-only guard inside the WHERE — the authorization above
+  // was decided on a row read earlier in this request, and the row could have
+  // changed in between. A 0-row update means the row moved out from under us.
   const [updated] = await db
     .update(meetingLogs)
     .set(updates)
-    .where(eq(meetingLogs.id, id))
+    .where(and(eq(meetingLogs.id, id), eq(meetingLogs.isSystemGenerated, false)))
     .returning();
+  if (!updated) {
+    return NextResponse.json(
+      { error: "Log no longer editable" },
+      { status: 409 }
+    );
+  }
 
   // Re-evaluate achievements — edits can change earned state (e.g. swapping
   // a tasks log for a chats log). Failure is non-fatal.
@@ -157,6 +166,8 @@ export async function DELETE(
     (log.studentId === me.id && log.createdBy === "mentee");
   if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  await db.delete(meetingLogs).where(eq(meetingLogs.id, id));
+  await db
+    .delete(meetingLogs)
+    .where(and(eq(meetingLogs.id, id), eq(meetingLogs.isSystemGenerated, false)));
   return NextResponse.json({ ok: true });
 }

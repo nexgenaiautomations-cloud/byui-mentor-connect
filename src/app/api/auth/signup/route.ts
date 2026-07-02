@@ -8,6 +8,7 @@ import { hashPassword, passwordIssues } from "@/lib/password";
 import { limitSignup } from "@/lib/rate-limit";
 import { sendVerificationEmail } from "@/lib/send-verification";
 import { auditEvent } from "@/lib/audit";
+import { isUniqueViolation } from "@/lib/db-errors";
 
 const BYUI_DOMAIN = "@byui.edu";
 
@@ -90,20 +91,37 @@ export async function POST(req: Request) {
 
   const passwordHash = await hashPassword(data.password);
 
-  const [inserted] = await db
-    .insert(users)
-    .values({
-      email: data.email,
-      passwordHash,
-      // Email is unverified until the user clicks the link we fire below.
-      // The signin route rejects unverified accounts so a stolen password
-      // can't get in unless the attacker also reads the inbox. Name,
-      // major, bio, career interests, and the experience answers all
-      // land in onboarding so the user has nothing to surface publicly
-      // before verification.
-      emailVerified: null,
-    })
-    .returning({ id: users.id, email: users.email });
+  let inserted: { id: string; email: string };
+  try {
+    [inserted] = await db
+      .insert(users)
+      .values({
+        email: data.email,
+        passwordHash,
+        // Email is unverified until the user clicks the link we fire below.
+        // The signin route rejects unverified accounts so a stolen password
+        // can't get in unless the attacker also reads the inbox. Name,
+        // major, bio, career interests, and the experience answers all
+        // land in onboarding so the user has nothing to surface publicly
+        // before verification.
+        emailVerified: null,
+      })
+      .returning({ id: users.id, email: users.email });
+  } catch (e) {
+    // The pre-insert existence check above is not atomic with this insert —
+    // a concurrent double-submit hits the unique constraint on email instead.
+    // Return the same 409 as the check so the raw Postgres error never leaks.
+    if (isUniqueViolation(e)) {
+      return NextResponse.json(
+        {
+          error:
+            "An account with this email already exists. Try signing in or use Forgot password.",
+        },
+        { status: 409 }
+      );
+    }
+    throw e;
+  }
 
   await auditEvent({
     actorUserId: inserted.id,

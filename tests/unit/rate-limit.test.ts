@@ -1,4 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { createHash } from "node:crypto";
+
+// Mirror of the identifier hashing in src/lib/rate-limit.ts — identifiers are
+// hashed before they become Upstash keys so PII never lands in Redis.
+function hashId(id: string): string {
+  const secret = process.env.AUDIT_IP_HASH_SECRET ?? "";
+  return createHash("sha256").update(`${id}:${secret}`).digest("hex").slice(0, 32);
+}
 
 describe("limitMagicLink — no Upstash configured", () => {
   beforeEach(() => {
@@ -39,16 +47,17 @@ describe("limitMagicLink — Upstash configured (mocked)", () => {
     vi.resetModules();
     process.env.KV_REST_API_URL = "https://example.upstash.io";
     process.env.KV_REST_API_TOKEN = "test-token";
+    delete process.env.AUDIT_IP_HASH_SECRET;
   });
 
   it("returns 'email' reason when email limit is hit first", async () => {
+    const emailKey = hashId("test@byui.edu");
     vi.doMock("@upstash/ratelimit", () => ({
       Ratelimit: class {
         constructor() {}
         async limit(key: string) {
-          // First Ratelimit instance is per-email; second is per-IP.
-          // We can't distinguish easily — mark email failed by key prefix.
-          if (key.includes("@")) return { success: false, reset: 12345 };
+          // Identifiers arrive hashed — match on the email's digest.
+          if (key === emailKey) return { success: false, reset: 12345 };
           return { success: true, reset: 0 };
         }
         static slidingWindow() {
@@ -66,12 +75,13 @@ describe("limitMagicLink — Upstash configured (mocked)", () => {
   });
 
   it("returns 'ip' reason when ip limit is hit and email is fine", async () => {
+    const ipKey = hashId("1.1.1.1");
     vi.doMock("@upstash/ratelimit", () => ({
       Ratelimit: class {
         constructor() {}
         async limit(key: string) {
-          if (key.includes("@")) return { success: true, reset: 0 };
-          return { success: false, reset: 67890 };
+          if (key === ipKey) return { success: false, reset: 67890 };
+          return { success: true, reset: 0 };
         }
         static slidingWindow() {
           return {};
@@ -106,13 +116,14 @@ describe("limitMagicLink — Upstash configured (mocked)", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("falls back to 'unknown' when IP is null", async () => {
+  it("falls back to (hashed) 'unknown' when IP is null", async () => {
+    const emailKey = hashId("ok@byui.edu");
     let observedIpKey = "";
     vi.doMock("@upstash/ratelimit", () => ({
       Ratelimit: class {
         constructor() {}
         async limit(key: string) {
-          if (!key.includes("@")) observedIpKey = key;
+          if (key !== emailKey) observedIpKey = key;
           return { success: true, reset: 0 };
         }
         static slidingWindow() {
@@ -124,6 +135,6 @@ describe("limitMagicLink — Upstash configured (mocked)", () => {
 
     const { limitMagicLink } = await import("@/lib/rate-limit");
     await limitMagicLink("ok@byui.edu", null);
-    expect(observedIpKey).toBe("unknown");
+    expect(observedIpKey).toBe(hashId("unknown"));
   });
 });

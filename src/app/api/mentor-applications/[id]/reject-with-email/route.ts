@@ -6,6 +6,7 @@ import { mentorApplications, users } from "@/db/schema";
 import { requireAdmin } from "@/lib/session";
 import { sendEmail } from "@/lib/email";
 import { buildRejectionEmail } from "@/lib/rejection-email";
+import { auditEvent } from "@/lib/audit";
 
 const schema = z.object({
   to: z.string().email(),
@@ -47,6 +48,15 @@ export async function POST(
     );
   }
 
+  // The rejection email may only go to the applicant on record — the branded
+  // noreply sender must not be usable as a relay to arbitrary addresses.
+  if (parsed.data.to.toLowerCase() !== app.applicantEmail.toLowerCase()) {
+    return NextResponse.json(
+      { error: "Recipient must match the applicant's email" },
+      { status: 400 }
+    );
+  }
+
   const { html, text } = buildRejectionEmail({
     to: parsed.data.to,
     subject: parsed.data.subject,
@@ -85,6 +95,15 @@ export async function POST(
       { status: 409 }
     );
   }
+
+  await auditEvent({
+    actorUserId: admin.id,
+    targetUserId: app.userId,
+    eventType: "ADMIN_REJECTED_MENTOR",
+    severity: "info",
+    request: req,
+    metadata: { applicationId: id, viaEmail: true },
+  });
 
   return NextResponse.json({ application: updated[0], emailSent: true });
 }

@@ -73,7 +73,7 @@ export function buildMagicLinkEmail({
                 <table role="presentation" cellpadding="0" cellspacing="0">
                   <tr>
                     <td align="center" style="border-radius:10px;background:${BRAND_BLUE};">
-                      <a href="${url}"
+                      <a href="${escapeHtml(url)}"
                         style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;background:${BRAND_BLUE};line-height:1;">
                         Sign in to Mentor Connect →
                       </a>
@@ -85,7 +85,7 @@ export function buildMagicLinkEmail({
                   Button not working? Paste this URL into your browser:
                 </p>
                 <p style="margin:0;font-size:12px;line-height:1.5;word-break:break-all;color:${BRAND_DARK};">
-                  <a href="${url}" style="color:${BRAND_DARK};text-decoration:underline;">${url}</a>
+                  <a href="${escapeHtml(url)}" style="color:${BRAND_DARK};text-decoration:underline;">${escapeHtml(url)}</a>
                 </p>
               </td>
             </tr>

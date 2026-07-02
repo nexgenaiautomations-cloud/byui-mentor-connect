@@ -13,6 +13,7 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:cleanup-accounts": "tsx scripts/cleanup-accounts.ts",
     "db:apply-rls": "tsx scripts/apply-rls.ts",
+    "db:apply-indexes": "tsx scripts/apply-security-indexes.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

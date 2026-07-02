@@ -49,7 +49,9 @@ export function LoginForm({
   }
 
   function safeNext(): string {
-    if (next && next.startsWith("/") && !next.startsWith("//")) return next;
+    // Reject "//" AND "/\" — Chromium normalizes backslashes to slashes, so
+    // "/\evil.com" would otherwise navigate off-site.
+    if (next && /^\/(?![/\\])/.test(next)) return next;
     return "/dashboard";
   }
 

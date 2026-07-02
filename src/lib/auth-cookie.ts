@@ -29,8 +29,10 @@ export function sessionCookieName(): string {
     : "authjs.session-token";
 }
 
-// 30 days — matches Auth.js v5 default. Demo route uses a shorter window.
-const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 30;
+// 14 days — must match auth.ts session.maxAge so password sign-ins get the
+// same session lifetime as magic-link sign-ins (documented policy in
+// docs/security/retention-policy.md).
+const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 14;
 
 export async function attachSessionCookie(
   res: NextResponse,

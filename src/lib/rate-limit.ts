@@ -1,5 +1,16 @@
+import { createHash } from "node:crypto";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
+
+// Upstash counter keys include the identifier verbatim, which would put
+// student email addresses and raw IPs into a third-party Redis. Hash the
+// identifier first (keyed with AUDIT_IP_HASH_SECRET, same secret used for
+// audit-log IP hashing) so Redis only ever sees opaque digests. Limiting
+// semantics are unchanged — equal inputs still map to the same key.
+function hashId(id: string): string {
+  const secret = process.env.AUDIT_IP_HASH_SECRET ?? "";
+  return createHash("sha256").update(`${id}:${secret}`).digest("hex").slice(0, 32);
+}
 
 // Lazily initialized so missing env vars don't crash at import time. If
 // Upstash isn't configured, rate limiting silently no-ops (returns success).
@@ -96,8 +107,8 @@ export async function limitMagicLink(
   if (!client) return { ok: true }; // No KV configured → no-op
 
   const [emailRes, ipRes] = await Promise.all([
-    client.magicLinkPerEmail.limit(email),
-    client.magicLinkPerIp.limit(ip ?? "unknown"),
+    client.magicLinkPerEmail.limit(hashId(email)),
+    client.magicLinkPerIp.limit(hashId(ip ?? "unknown")),
   ]);
 
   if (!emailRes.success) return { ok: false, reason: "email", resetAt: emailRes.reset };
@@ -108,7 +119,7 @@ export async function limitMagicLink(
 export async function limitSignup(ip: string | null): Promise<LimitResult> {
   const client = getClient();
   if (!client) return { ok: true };
-  const res = await client.signupPerIp.limit(ip ?? "unknown");
+  const res = await client.signupPerIp.limit(hashId(ip ?? "unknown"));
   if (!res.success) return { ok: false, reason: "ip", resetAt: res.reset };
   return { ok: true };
 }
@@ -120,8 +131,8 @@ export async function limitPasswordSignIn(
   const client = getClient();
   if (!client) return { ok: true };
   const [emailRes, ipRes] = await Promise.all([
-    client.passwordSignInPerEmail.limit(email),
-    client.passwordSignInPerIp.limit(ip ?? "unknown"),
+    client.passwordSignInPerEmail.limit(hashId(email)),
+    client.passwordSignInPerIp.limit(hashId(ip ?? "unknown")),
   ]);
   if (!emailRes.success) return { ok: false, reason: "email", resetAt: emailRes.reset };
   if (!ipRes.success) return { ok: false, reason: "ip", resetAt: ipRes.reset };
@@ -135,8 +146,8 @@ export async function limitPasswordReset(
   const client = getClient();
   if (!client) return { ok: true };
   const [emailRes, ipRes] = await Promise.all([
-    client.passwordResetPerEmail.limit(email),
-    client.passwordResetPerIp.limit(ip ?? "unknown"),
+    client.passwordResetPerEmail.limit(hashId(email)),
+    client.passwordResetPerIp.limit(hashId(ip ?? "unknown")),
   ]);
   if (!emailRes.success) return { ok: false, reason: "email", resetAt: emailRes.reset };
   if (!ipRes.success) return { ok: false, reason: "ip", resetAt: ipRes.reset };
@@ -146,7 +157,7 @@ export async function limitPasswordReset(
 export async function limitCspReport(ip: string | null): Promise<LimitResult> {
   const client = getClient();
   if (!client) return { ok: true };
-  const res = await client.cspReportPerIp.limit(ip ?? "unknown");
+  const res = await client.cspReportPerIp.limit(hashId(ip ?? "unknown"));
   if (!res.success) return { ok: false, reason: "ip", resetAt: res.reset };
   return { ok: true };
 }
