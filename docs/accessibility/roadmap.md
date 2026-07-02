@@ -19,10 +19,11 @@ systematically verified. The roadmap below closes that gap.
 | 1 | ✅ Publish accessibility statement | Public `/accessibility` page: adopted standard, known limitations, reporting channel, contact | 2026-07 (done) |
 | 2 | ✅ Document issue reporting & tracking | [issue-reporting.md](./issue-reporting.md) — channels, triage SLA, resolution priority | 2026-07 (done) |
 | 3 | ✅ Accessibility in the development lifecycle | [sdlc-checklist.md](./sdlc-checklist.md) applied to every UI change | 2026-07 (done) |
-| 4 | 📅 Automated accessibility checks in CI | axe-core assertions added to the existing Playwright e2e suite for the 6 core flows (login, signup, onboarding, browse mentors, request mentor, log activity) | 2026-09-30 |
+| 4 | ✅ Automated accessibility checks | axe-core WCAG 2.1 AA assertions for all public pages in the Playwright suite (`tests/e2e/a11y.spec.ts`); full-surface scanner incl. authenticated + admin pages (`scripts/a11y-scan.mjs`) | 2026-07 (done, ahead of 2026-09-30 target) |
+| 4b | ✅ First full-surface remediation | 2026-07-01 axe scan of all 28 pages found 2 violation classes (low-contrast small text; 4 unlabeled selects) — fixed same day; app now scans clean against axe WCAG 2.1 AA rules | 2026-07 (done) |
 | 5 | 📅 Keyboard-only audit | Every core task completable with keyboard alone; fixes filed and closed for any failure | 2026-10-31 |
 | 6 | 📅 Screen-reader pass | NVDA walkthrough of the 6 core flows; labels/landmarks/announcements fixed | 2026-11-30 |
-| 7 | 📅 Contrast & zoom audit | Verify 4.5:1 text contrast and 200% zoom usability across the app | 2026-11-30 |
+| 7 | 📅 Contrast & zoom audit | Automated contrast portion complete (milestone 4b); manual 200% zoom usability check remains | 2026-11-30 |
 | 8 | 📅 VPAT / ACR draft | WCAG 2.1 AA conformance report (self-assessment) published alongside the accessibility statement | 2026-12-19 |
 | 9 | 📅 Third-party review decision | With BYU-Idaho: decide whether an external audit is required for the program's scope; schedule if so | 2027-Q1 |
 
