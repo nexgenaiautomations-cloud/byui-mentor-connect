@@ -84,7 +84,7 @@ export function RequestButton({
             onChange={(e) => setMessage(e.target.value)}
             maxLength={1000}
           />
-          <p className="mt-1 text-[11px] text-slate-400">Optional. 1000 characters max.</p>
+          <p className="mt-1 text-[11px] text-slate-500">Optional. 1000 characters max.</p>
           {error && (
             <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
           )}

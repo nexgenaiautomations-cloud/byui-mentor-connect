@@ -171,7 +171,7 @@ function EditLogModal({
           type="button"
           onClick={() => !saving && onClose()}
           aria-label="Close"
-          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer disabled:opacity-40"
+          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer disabled:opacity-40"
         >
           <svg
             viewBox="0 0 24 24"
@@ -251,7 +251,7 @@ function EditLogModal({
           <div>
             <label className="label">
               Action items{" "}
-              <span className="font-normal text-slate-400">(optional)</span>
+              <span className="font-normal text-slate-500">(optional)</span>
             </label>
             <textarea
               rows={2}

@@ -53,7 +53,7 @@ export function MonthlyLine({
   compact?: boolean;
 }) {
   if (points.length === 0) {
-    return <div className="text-xs text-slate-400">No data</div>;
+    return <div className="text-xs text-slate-500">No data</div>;
   }
 
   if (compact) return <Sparkline points={points} color={color} kind="line" />;
@@ -159,7 +159,7 @@ export function MonthlyBars({
   compact?: boolean;
 }) {
   if (points.length === 0) {
-    return <div className="text-xs text-slate-400">No data</div>;
+    return <div className="text-xs text-slate-500">No data</div>;
   }
 
   if (compact) return <Sparkline points={points} color={color} kind="bar" />;
@@ -321,7 +321,7 @@ export function HBarList({
   format?: (n: number) => string;
   color?: string;
 }) {
-  if (rows.length === 0) return <p className="text-xs text-slate-400">No data</p>;
+  if (rows.length === 0) return <p className="text-xs text-slate-500">No data</p>;
   const max = Math.max(...rows.map((r) => r.value), 1);
   return (
     <ul className="space-y-2">

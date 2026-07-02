@@ -108,7 +108,7 @@ export default async function AdminApplicationsPage() {
                   <p className="truncate text-sm font-semibold text-navy-800">{a.applicantName}</p>
                   <p className="text-xs text-slate-500">{a.applicantEmail}</p>
                   {a.reviewedAt && (
-                    <p className="mt-0.5 text-[11px] text-slate-400">
+                    <p className="mt-0.5 text-[11px] text-slate-500">
                       Reviewed {new Date(a.reviewedAt).toLocaleDateString()}
                     </p>
                   )}

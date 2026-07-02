@@ -84,7 +84,7 @@ export default async function AdminActivityPage() {
                       {l.mentorName ? (
                         <span className="text-slate-500"> · with {l.mentorName}</span>
                       ) : (
-                        <span className="text-slate-400"> · no mentor</span>
+                        <span className="text-slate-500"> · no mentor</span>
                       )}
                     </p>
                     <span className="text-xs text-slate-500">

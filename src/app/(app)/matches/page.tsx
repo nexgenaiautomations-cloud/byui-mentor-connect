@@ -436,7 +436,7 @@ export default async function MatchesPage() {
                     <dd
                       className={
                         "whitespace-pre-wrap leading-snug " +
-                        (other.bio ? "text-slate-700" : "italic text-slate-400")
+                        (other.bio ? "text-slate-700" : "italic text-slate-500")
                       }
                     >
                       {other.bio || "Bio not listed"}

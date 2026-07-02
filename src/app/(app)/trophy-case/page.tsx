@@ -189,7 +189,7 @@ function BadgeCard({ achievement }: { achievement: AchievementListing }) {
               <span>
                 {progress.current} / {progress.target} {progress.unit}
               </span>
-              <span className="text-slate-400">
+              <span className="text-slate-500">
                 {Math.round((progress.current / progress.target) * 100)}%
               </span>
             </div>

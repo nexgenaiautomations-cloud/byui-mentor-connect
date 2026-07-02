@@ -118,7 +118,7 @@ export default async function SettingsPage() {
                       "w-full truncate text-center text-[10px] " +
                       (a.isEarned
                         ? "font-semibold text-byui-blue-dark"
-                        : "text-slate-400")
+                        : "text-slate-500")
                     }
                   >
                     {a.title.split(" ")[0]}

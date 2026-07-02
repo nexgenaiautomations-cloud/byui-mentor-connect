@@ -391,7 +391,7 @@ export default async function AnalyticsPage() {
             <Donut value={capFilled} total={Math.max(1, capTotal)} color="#006EB6" />
             <div className="text-sm">
               <p className="font-display text-2xl font-black text-navy-800">
-                {capFilled}<span className="text-base font-medium text-slate-400"> / {capTotal}</span>
+                {capFilled}<span className="text-base font-medium text-slate-500"> / {capTotal}</span>
               </p>
               <p className="text-xs text-slate-500">slots filled</p>
             </div>
@@ -411,7 +411,7 @@ export default async function AnalyticsPage() {
         <div className="card">
           <h3 className="font-display text-base font-bold text-navy-800">Top mentors (active load)</h3>
           <ul className="mt-3 space-y-2 text-sm">
-            {topMentors.length === 0 && <li className="text-xs text-slate-400">No mentors yet.</li>}
+            {topMentors.length === 0 && <li className="text-xs text-slate-500">No mentors yet.</li>}
             {topMentors.map((m) => {
               const cap = m.capacity ?? 5;
               const pct = cap > 0 ? Math.min(100, Math.round((m.active / cap) * 100)) : 0;
@@ -502,7 +502,7 @@ export default async function AnalyticsPage() {
                 <li key={i} className="flex items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
                   <div className="min-w-0">
                     <p className="truncate text-xs font-semibold text-navy-800">{e.text}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-400">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500">
                       {e.kind}
                       {"status" in e ? ` · ${e.status}` : ""}
                     </p>
@@ -516,7 +516,7 @@ export default async function AnalyticsPage() {
         </div>
       </section>
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-slate-500">
         All counts are live. Series cover the trailing 12 calendar months including the current one.
       </p>
     </div>

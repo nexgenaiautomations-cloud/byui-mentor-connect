@@ -289,7 +289,7 @@ function MentorCard({
         <p
           className={
             "text-xs font-bold " +
-            (m.slotsLeft > 0 ? "text-emerald-700" : "text-slate-400")
+            (m.slotsLeft > 0 ? "text-emerald-700" : "text-slate-500")
           }
         >
           {m.slotsLeft > 0

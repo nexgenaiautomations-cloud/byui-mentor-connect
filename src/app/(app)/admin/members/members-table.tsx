@@ -128,11 +128,11 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 text-xs">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Major</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Major</p>
                 <p className="text-slate-700">{u.major || "—"}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Semester · Grad
                 </p>
                 <p className="text-slate-700">
@@ -275,7 +275,7 @@ function MemberProfileModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-slate-700 cursor-pointer"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-white hover:text-slate-700 cursor-pointer"
           >
             <svg
               viewBox="0 0 24 24"
@@ -420,7 +420,7 @@ function Field({
       <dd
         className={
           "mt-0.5 whitespace-pre-wrap break-words text-sm " +
-          (isFallback ? "text-slate-400 italic" : "text-slate-800")
+          (isFallback ? "text-slate-500 italic" : "text-slate-800")
         }
       >
         {value}

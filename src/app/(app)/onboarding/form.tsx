@@ -296,7 +296,7 @@ export function OnboardingForm({
                 <p
                   className={
                     "text-xs font-bold uppercase tracking-wider " +
-                    (active ? "text-navy-800" : done ? "text-emerald-700" : "text-slate-400")
+                    (active ? "text-navy-800" : done ? "text-emerald-700" : "text-slate-500")
                   }
                 >
                   {label}
@@ -353,8 +353,9 @@ export function OnboardingForm({
             )}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Major <span className="font-normal text-slate-400">(optional)</span></label>
+                <label className="label" htmlFor="profile-major">Major <span className="font-normal text-slate-500">(optional)</span></label>
                 <select
+                  id="profile-major"
                   className="input"
                   value={majorChoice}
                   onChange={(e) => setMajorChoice(e.target.value)}
@@ -376,8 +377,9 @@ export function OnboardingForm({
                 )}
               </div>
               <div>
-                <label className="label">Minor <span className="font-normal text-slate-400">(optional)</span></label>
+                <label className="label" htmlFor="profile-minor">Minor <span className="font-normal text-slate-500">(optional)</span></label>
                 <select
+                  id="profile-minor"
                   className="input"
                   value={minorChoice}
                   onChange={(e) => setMinorChoice(e.target.value)}
@@ -401,8 +403,9 @@ export function OnboardingForm({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Semester level <span className="font-normal text-slate-400">(optional)</span></label>
+                <label className="label" htmlFor="profile-semester">Semester level <span className="font-normal text-slate-500">(optional)</span></label>
                 <select
+                  id="profile-semester"
                   className="input"
                   value={form.semesterLevel}
                   onChange={(e) => setForm({ ...form, semesterLevel: e.target.value })}
@@ -414,8 +417,9 @@ export function OnboardingForm({
                 </select>
               </div>
               <div>
-                <label className="label">Expected Graduation Date <span className="font-normal text-slate-400">(optional)</span></label>
+                <label className="label" htmlFor="profile-graduation">Expected Graduation Date <span className="font-normal text-slate-500">(optional)</span></label>
                 <select
+                  id="profile-graduation"
                   className="input"
                   value={form.expectedGraduation}
                   onChange={(e) => setForm({ ...form, expectedGraduation: e.target.value })}
@@ -441,7 +445,7 @@ export function OnboardingForm({
               />
               <div className="flex-1">
                 <label htmlFor="onb-photo" className="label">
-                  Profile photo <span className="font-normal text-slate-400">(optional)</span>
+                  Profile photo <span className="font-normal text-slate-500">(optional)</span>
                 </label>
                 <input
                   id="onb-photo"
@@ -467,7 +471,7 @@ export function OnboardingForm({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Phone <span className="font-normal text-slate-400">(optional)</span></label>
+                <label className="label">Phone <span className="font-normal text-slate-500">(optional)</span></label>
                 <input
                   type="tel"
                   className="input"
@@ -476,7 +480,7 @@ export function OnboardingForm({
                 />
               </div>
               <div>
-                <label className="label">Preferred contact method <span className="font-normal text-slate-400">(optional)</span></label>
+                <label className="label">Preferred contact method <span className="font-normal text-slate-500">(optional)</span></label>
                 <select
                   className="input"
                   value={form.preferredContactMethod}
@@ -490,7 +494,7 @@ export function OnboardingForm({
               </div>
             </div>
             <div>
-              <label className="label">Short bio <span className="font-normal text-slate-400">(optional)</span></label>
+              <label className="label">Short bio <span className="font-normal text-slate-500">(optional)</span></label>
               <textarea
                 rows={3}
                 className="input"
