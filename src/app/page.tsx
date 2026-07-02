@@ -371,6 +371,13 @@ export default async function LandingPage() {
 
       <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs font-medium text-byui-gray">
         BYUI CAN (Career Advancement Network) — Student-built peer mentorship
+        {" · "}
+        <Link
+          href="/accessibility"
+          className="font-semibold text-byui-blue underline decoration-byui-blue-light underline-offset-2 hover:text-byui-blue-dark cursor-pointer"
+        >
+          Accessibility
+        </Link>
       </footer>
     </main>
   );
