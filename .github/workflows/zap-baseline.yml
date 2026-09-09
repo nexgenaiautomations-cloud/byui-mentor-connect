@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: ZAP baseline scan of production
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: "https://www.byuican.com"
           # Don't file GitHub issues automatically; findings are reviewed
