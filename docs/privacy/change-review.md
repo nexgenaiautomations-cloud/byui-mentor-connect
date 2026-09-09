@@ -39,6 +39,15 @@ narrowest available means (gate the feature off, restrict the field to
 admins, or shorten retention). Silent acceptance of a privacy risk is not
 permitted.
 
+## Notifying BYU-Idaho of policy changes
+
+BYU-Idaho is the data controller. Any material change to this document, the
+public privacy notice, the retention policy, or the information security
+policy is emailed to the BYUI CAN head admin **before it takes effect**,
+naming what changed and why. Routine edits (typos, clarifications that do not
+change practice) do not require notice. The updated document and its new
+effective date ship in the same pull request as the change itself.
+
 ## Records
 
 The PR itself is the review record — reviewers note "privacy: reviewed" in

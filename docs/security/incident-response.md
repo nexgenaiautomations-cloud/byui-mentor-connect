@@ -15,7 +15,7 @@
 ## On-call contact tree
 
 1. **Primary**: Head Admin (`harrelld@byui.edu`)
-2. **Engineering**: Project owner (`gabrieldilworth32@gmail.com`)
+2. **Engineering**: Project owner (`GabrielD@nexgenaiintegrations.com`)
 3. **Escalation**: BYU-Idaho IT Security (route through institution-side contact)
 
 The head admin coordinates. Engineering executes containment. BYU-Idaho IT
