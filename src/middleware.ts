@@ -19,6 +19,10 @@
 // access to those from middleware anyway and the CSP nonce doesn't need them.
 
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  isMaintenanceEnabled,
+  routeForMaintenance,
+} from "@/lib/maintenance";
 
 type CspMode = "disabled" | "report-only" | "enforce";
 
@@ -131,9 +135,32 @@ function applySecurityHeaders(headers: Headers) {
 export function middleware(request: NextRequest) {
   const mode = resolveMode();
 
-  if (mode === "disabled") {
-    const response = NextResponse.next();
+  // Maintenance gate (branding-approval hold — specs/maintenance-mode.md).
+  // Pages rewrite to /maintenance while MAINTENANCE_MODE is truthy; /api is
+  // outside the matcher so crons and API calls keep working. When the flag
+  // is off, a stale /maintenance visit bounces back to the landing page.
+  const maintenance = isMaintenanceEnabled(process.env.MAINTENANCE_MODE);
+  const routing = routeForMaintenance(request.nextUrl.pathname, maintenance);
+
+  if (routing.action === "redirect") {
+    const response = NextResponse.redirect(
+      new URL(routing.destination, request.url)
+    );
     applySecurityHeaders(response.headers);
+    return response;
+  }
+
+  const rewriteUrl =
+    routing.action === "rewrite"
+      ? new URL(routing.destination, request.url)
+      : null;
+
+  if (mode === "disabled") {
+    const response = rewriteUrl
+      ? NextResponse.rewrite(rewriteUrl)
+      : NextResponse.next();
+    applySecurityHeaders(response.headers);
+    if (maintenance) response.headers.set("X-Robots-Tag", "noindex");
     return response;
   }
 
@@ -149,9 +176,13 @@ export function middleware(request: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set(headerName, policy);
 
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  const init = { request: { headers: requestHeaders } };
+  const response = rewriteUrl
+    ? NextResponse.rewrite(rewriteUrl, init)
+    : NextResponse.next(init);
   response.headers.set(headerName, policy);
   applySecurityHeaders(response.headers);
+  if (maintenance) response.headers.set("X-Robots-Tag", "noindex");
   return response;
 }
 
