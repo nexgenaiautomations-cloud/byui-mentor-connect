@@ -20,6 +20,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { db } from "@/db/client";
 import { auditEvents } from "@/db/schema";
+import { getHashSecret } from "@/lib/hash-secret";
 
 // Keep this union in lockstep with the Postgres enum in schema.ts.
 export type AuditEventType =
@@ -98,9 +99,12 @@ export function extractIp(req: AuditEventInput["request"]): string | null {
 // gets a DB dump cannot brute-force the IP space (4 billion IPv4 hashes
 // are otherwise trivial). If the secret is unset (local dev), we still
 // hash — without the salt — so we never accidentally store the raw IP.
+// Production complains loudly about an unset salt via getHashSecret().
+// Do not change the construction below: it would invalidate every hash
+// already written.
 export function hashIp(ip: string | null | undefined): string | null {
   if (!ip) return null;
-  const secret = process.env.AUDIT_IP_HASH_SECRET ?? "";
+  const secret = getHashSecret();
   return createHash("sha256").update(`${ip}:${secret}`).digest("hex");
 }
 
