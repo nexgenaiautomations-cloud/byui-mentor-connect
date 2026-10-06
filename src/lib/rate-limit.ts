@@ -1,14 +1,21 @@
 import { createHash } from "node:crypto";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
+import { getHashSecret } from "@/lib/hash-secret";
 
 // Upstash counter keys include the identifier verbatim, which would put
 // student email addresses and raw IPs into a third-party Redis. Hash the
 // identifier first (keyed with AUDIT_IP_HASH_SECRET, same secret used for
 // audit-log IP hashing) so Redis only ever sees opaque digests. Limiting
 // semantics are unchanged — equal inputs still map to the same key.
+//
+// An unset salt matters more here than for IPs: an unsalted SHA-256 of
+// `firstname.lastname@byui.edu` is reversible by guessing, so the digest
+// would stop being pseudonymous. getHashSecret() makes that condition loud
+// in production. Do not change the construction below — it would reset every
+// in-flight rate-limit counter.
 function hashId(id: string): string {
-  const secret = process.env.AUDIT_IP_HASH_SECRET ?? "";
+  const secret = getHashSecret();
   return createHash("sha256").update(`${id}:${secret}`).digest("hex").slice(0, 32);
 }
 

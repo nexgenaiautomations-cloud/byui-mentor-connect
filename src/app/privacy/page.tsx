@@ -88,8 +88,8 @@ const SECTIONS = [
           <strong className="text-slate-800">Deletion:</strong> request full
           account deletion through the CAN head admin or the contact below;
           verified requests are completed and confirmed within 14 days.
-          Anonymized security-audit history is retained as required for
-          accountability.
+          Security-audit history is retained for accountability with your
+          account reference removed.
         </li>
         <li>
           <strong className="text-slate-800">Consent:</strong> by creating an
