@@ -2,6 +2,8 @@
 // `school_domain` table so new schools can be added without a deploy;
 // byui.edu is the launch school and the fallback if the table can't be read.
 
+import { isPlatformAdminEmail, parsePlatformAdminEmails } from "@/lib/platform-admin";
+
 export const DEFAULT_SCHOOL_DOMAINS = ["byui.edu"] as const;
 
 export const NOT_ALLOWED_MESSAGE =
@@ -47,6 +49,18 @@ export async function getActiveSchoolDomains(): Promise<string[]> {
   return [...DEFAULT_SCHOOL_DOMAINS];
 }
 
+// School emails, plus the platform admins (PLATFORM_ADMIN_EMAILS), who run
+// ICAN itself and may sign in with a non-school address.
+export function isAllowedSignupEmail(
+  email: string,
+  domains: readonly string[],
+  platformAdmins: readonly string[]
+): boolean {
+  return isAllowedDomain(email, domains) || isPlatformAdminEmail(email, platformAdmins);
+}
+
 export async function isAllowedSchoolEmail(email: string): Promise<boolean> {
-  return isAllowedDomain(email, await getActiveSchoolDomains());
+  const admins = parsePlatformAdminEmails(process.env.PLATFORM_ADMIN_EMAILS);
+  if (isPlatformAdminEmail(email, admins)) return true;
+  return isAllowedSignupEmail(email, await getActiveSchoolDomains(), admins);
 }

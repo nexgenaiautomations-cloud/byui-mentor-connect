@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   DEFAULT_SCHOOL_DOMAINS,
+  isAllowedSignupEmail,
   emailDomain,
   isAllowedDomain,
   normalizeDomain,
@@ -52,5 +53,19 @@ describe("normalizeDomain", () => {
 describe("DEFAULT_SCHOOL_DOMAINS", () => {
   it("keeps byui.edu as the launch school", () => {
     expect(DEFAULT_SCHOOL_DOMAINS).toContain("byui.edu");
+  });
+});
+
+describe("isAllowedSignupEmail", () => {
+  it("allows school domains", () => {
+    expect(isAllowedSignupEmail("a@byui.edu", ["byui.edu"], [])).toBe(true);
+  });
+
+  it("allows a platform admin's personal address", () => {
+    expect(isAllowedSignupEmail("Owner@Gmail.com", ["byui.edu"], ["owner@gmail.com"])).toBe(true);
+  });
+
+  it("still rejects other personal addresses", () => {
+    expect(isAllowedSignupEmail("someone@gmail.com", ["byui.edu"], ["owner@gmail.com"])).toBe(false);
   });
 });

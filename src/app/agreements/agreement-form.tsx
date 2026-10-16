@@ -12,7 +12,8 @@ export function AgreementForm() {
   const [checked, setChecked] = useState<Record<AgreementKey, boolean>>({
     independent: false,
     optional: false,
-    ownRisk: false,
+    outcomes: false,
+    safety: false,
     terms: false,
   });
   const [error, setError] = useState<string | null>(null);

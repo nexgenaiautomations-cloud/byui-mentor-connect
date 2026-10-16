@@ -5,6 +5,7 @@ import { db } from "@/db/client";
 import { matches, users } from "@/db/schema";
 import { requireAdmin } from "@/lib/session";
 import { auditEvent } from "@/lib/audit";
+import { sameSchool } from "@/lib/school-scope";
 
 const pairSchema = z.object({
   mentorId: z.string().min(1),
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
     const [mentor] = await db
       .select({
         id: users.id,
+        email: users.email,
         isMentor: users.isMentor,
         capacity: users.mentorCapacity,
         active: sql<number>`(select count(*)::int from "match" where mentor_id = "user".id and status = 'active')`,
@@ -51,6 +53,16 @@ export async function POST(req: Request) {
 
     if (!mentor || !mentor.isMentor) {
       skipped.push({ ...p, reason: "Mentor not found" });
+      continue;
+    }
+    // Mentoring stays within each school, and admins only match their own.
+    const [mentee] = await db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, p.menteeId))
+      .limit(1);
+    if (!mentee || !sameSchool(mentor.email, mentee.email) || !sameSchool(admin.email, mentor.email)) {
+      skipped.push({ ...p, reason: "Mentor and mentee must be at your school" });
       continue;
     }
     const cap = mentor.capacity ?? 0;

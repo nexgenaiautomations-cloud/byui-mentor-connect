@@ -44,6 +44,9 @@ function buildNav(
     );
   }
   // activeRole === "admin": skip primary, render the admin section below.
+  if (isPlatformAdmin && activeRole !== "admin") {
+    primary.push({ href: "/admin/schools", label: "Schools" });
+  }
 
   const admin: NavItem[] = [];
   if (activeRole === "admin") {

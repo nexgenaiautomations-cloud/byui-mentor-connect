@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { matches, requests, users } from "@/db/schema";
 import { and, eq, or, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { sameSchool } from "@/lib/school-scope";
 
 const requestSchema = z.object({
   mentorId: z.string().min(1),
@@ -39,7 +40,8 @@ export async function POST(req: Request) {
   }
 
   const [mentor] = await db.select().from(users).where(eq(users.id, parsed.data.mentorId)).limit(1);
-  if (!mentor || !mentor.isMentor) {
+  // Mentoring stays within each school; a mentor elsewhere is "not found".
+  if (!mentor || !mentor.isMentor || !sameSchool(me.email, mentor.email)) {
     return NextResponse.json({ error: "Mentor not found" }, { status: 404 });
   }
 

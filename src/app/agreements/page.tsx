@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { getCurrentUser } from "@/lib/session";
 import { needsAgreement } from "@/lib/agreements";
+import { isPlatformAdmin } from "@/lib/platform-admin";
 import { EMPLOYEE_NOTICE } from "@/lib/disclaimers";
 import { AgreementForm } from "./agreement-form";
 
@@ -16,7 +17,9 @@ export const metadata: Metadata = {
 export default async function AgreementsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (!needsAgreement(user)) redirect(user.onboardedAt ? "/dashboard" : "/onboarding");
+  if (!needsAgreement(user)) {
+    redirect(user.onboardedAt ? "/dashboard" : isPlatformAdmin(user) ? "/admin/schools" : "/onboarding");
+  }
 
   return (
     <main className="grid min-h-screen place-items-center bg-gradient-to-b from-brand-light/30 via-white to-white px-4 py-12">

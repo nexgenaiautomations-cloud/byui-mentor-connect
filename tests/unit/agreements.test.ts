@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { agreementSchema, needsAgreement } from "@/lib/agreements";
+import { AGREEMENT_ITEMS, agreementSchema, needsAgreement } from "@/lib/agreements";
 import { TERMS_VERSION } from "@/lib/disclaimers";
 
 const allChecked = {
   independent: true,
   optional: true,
-  ownRisk: true,
+  outcomes: true,
+  safety: true,
   terms: true,
 };
 
@@ -21,6 +22,13 @@ describe("agreementSchema", () => {
   it("rejects when an acknowledgment is missing", () => {
     const { terms: _omit, ...rest } = allChecked;
     expect(agreementSchema.safeParse(rest).success).toBe(false);
+  });
+});
+
+describe("AGREEMENT_ITEMS", () => {
+  it("names the operator and covers every schema key", () => {
+    expect(AGREEMENT_ITEMS.map((i) => i.key).sort()).toEqual(Object.keys(allChecked).sort());
+    expect(AGREEMENT_ITEMS.find((i) => i.key === "independent")?.label).toContain("GDW Innovations, LLC");
   });
 });
 

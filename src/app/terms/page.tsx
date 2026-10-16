@@ -1,7 +1,15 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Logo } from "@/components/logo";
-import { EMPLOYEE_NOTICE, STUDENT_NOTICE, THIRD_PARTY_NOTICE } from "@/lib/disclaimers";
+import {
+  EMPLOYEE_NOTICE,
+  OPERATOR,
+  SAFETY_NOTICE,
+  STUDENT_NOTICE,
+  THIRD_PARTY_NOTICE,
+  UNIVERSITY_EXIT_NOTICE,
+  VOLUNTARY_NOTICE,
+} from "@/lib/disclaimers";
 
 export const metadata: Metadata = {
   title: "Terms of Use — ICAN Mentor Connect",
@@ -21,10 +29,18 @@ const LINK =
 const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
   {
     id: "independent",
-    heading: "1. An independent, third-party website",
+    heading: "1. A third-party service",
     body: (
       <>
         <p className={P}>{THIRD_PARTY_NOTICE}</p>
+        <p className={`mt-3 ${P}`}>{VOLUNTARY_NOTICE}</p>
+        <blockquote className="mt-3 border-l-4 border-brand-light pl-4 text-[15px] italic leading-relaxed text-slate-600">
+          <span className="not-italic text-xs font-bold uppercase tracking-wider text-brand">
+            If you arrived from a BYU-Idaho website
+          </span>
+          <br />
+          {UNIVERSITY_EXIT_NOTICE}
+        </blockquote>
         <p className={`mt-3 ${P}`}>
           ICAN is not an official Brigham Young University–Idaho program, service,
           or website. BYU-Idaho&apos;s names, logos, and marks are not used here,
@@ -52,7 +68,7 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
   },
   {
     id: "employees",
-    heading: "3. Notice to BYU-Idaho faculty and employees",
+    heading: "3. Notice to university faculty and employees",
     body: (
       <>
         <p className={P}>
@@ -124,17 +140,18 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
     heading: "7. Assumption of risk and disclaimers",
     body: (
       <>
-        <p className={P}>
+        <p className={P}>{SAFETY_NOTICE}</p>
+        <p className={`mt-3 ${P}`}>
           You use ICAN at your own risk. The site is provided “as is” and “as
           available,” without warranties of any kind. We are not responsible for the
           conduct of other users, on or off the site, or for decisions you make based
           on advice you receive here.
         </p>
         <p className={`mt-3 ${P}`}>
-          To the fullest extent allowed by law, ICAN and its operators are not liable
-          for any indirect, incidental, or consequential damages arising from your use
-          of the site. Brigham Young University–Idaho is not a party to these terms
-          and has no responsibility for ICAN.
+          To the fullest extent allowed by law, {OPERATOR} is not liable for any
+          indirect, incidental, or consequential damages arising from your use of the
+          site. Brigham Young University–Idaho and other participating universities
+          are not parties to these terms and have no responsibility for ICAN.
         </p>
       </>
     ),
@@ -157,8 +174,9 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
     heading: "9. Changes and contact",
     body: (
       <p className={P}>
-        If these terms change materially, we will update the effective date below
-        and let active users know in the app. Questions go to{" "}
+        These terms are an agreement between you and {OPERATOR}, which operates
+        ICAN Mentor Connect. If they change materially, we will update the effective
+        date below and ask you to review them again in the app. Questions go to{" "}
         <a href="mailto:GabrielD@nexgenaiintegrations.com" className={LINK}>
           GabrielD@nexgenaiintegrations.com
         </a>
@@ -190,9 +208,10 @@ export default function TermsPage() {
         >
           <p className="text-xs font-bold uppercase tracking-wider text-plum-700">Key points</p>
           <ul className="mt-2 space-y-1 text-sm text-slate-700">
-            <li>• ICAN is independent and not affiliated with BYU-Idaho.</li>
-            <li>• It is optional — no class can require it, and it can&apos;t affect grades.</li>
-            <li>• You use it at your own risk.</li>
+            <li>• ICAN is operated by {OPERATOR}, not by BYU-Idaho or any university.</li>
+            <li>• It is voluntary — no class can require it, and it can&apos;t affect grades.</li>
+            <li>• No mentoring, career, or employment outcome is guaranteed.</li>
+            <li>• Use good judgment with other users and don&apos;t share sensitive personal information.</li>
           </ul>
         </nav>
 

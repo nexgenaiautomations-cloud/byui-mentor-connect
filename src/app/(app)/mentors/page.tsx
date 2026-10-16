@@ -8,6 +8,7 @@ import { readActiveRole } from "@/lib/roles-server";
 import { EmptyState } from "@/components/empty-state";
 import { MajorFilter } from "./major-filter";
 import { MentorProfileButton } from "./profile-modal";
+import { sameSchoolAs } from "@/lib/school-scope";
 
 export default async function MentorsPage({
   searchParams,
@@ -33,13 +34,19 @@ export default async function MentorsPage({
   const majorRows = await db
     .selectDistinct({ major: users.major })
     .from(users)
-    .where(and(eq(users.isMentor, true), eq(users.mentorAvailable, true)));
+    .where(and(eq(users.isMentor, true), eq(users.mentorAvailable, true), sameSchoolAs(me.email)));
   const mentorMajors = majorRows
     .map((r) => r.major)
     .filter((m): m is string => !!m && m.trim().length > 0)
     .sort((a, b) => a.localeCompare(b));
 
-  const conditions = [eq(users.isMentor, true), eq(users.mentorAvailable, true), ne(users.id, me.id)];
+  // Mentoring stays within each school.
+  const conditions = [
+    eq(users.isMentor, true),
+    eq(users.mentorAvailable, true),
+    ne(users.id, me.id),
+    sameSchoolAs(me.email),
+  ];
   if (filterMajor) conditions.push(eq(users.major, filterMajor));
   else if (filterMyMajor && me.major) conditions.push(eq(users.major, me.major));
 

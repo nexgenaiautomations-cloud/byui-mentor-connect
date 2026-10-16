@@ -9,11 +9,13 @@ import { readActiveRole } from "@/lib/roles-server";
 import { StatTile } from "@/components/stat-card";
 import { KpiStrip } from "@/components/kpi-strip";
 import { getStudentKpis } from "@/lib/kpis";
+import { isPlatformAdmin } from "@/lib/platform-admin";
 
 export default async function DashboardPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
-  if (!me.onboardedAt) redirect("/onboarding");
+  // Platform admins (who run ICAN, not students) skip student onboarding.
+  if (!me.onboardedAt) redirect(isPlatformAdmin(me) ? "/admin/schools" : "/onboarding");
 
   // Which face of the dashboard to render is driven by the active-role
   // cookie, not the DB identity flags. Admins are also mentors and

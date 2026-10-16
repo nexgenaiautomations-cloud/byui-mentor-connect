@@ -4,6 +4,7 @@ import { users } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { MatchmakerBoard, type MenteeCard, type MentorCard } from "./board";
+import { sameSchoolAs } from "@/lib/school-scope";
 
 // Score how well a mentor fits a mentee. Higher = better. Returns null when
 // the mentor has zero remaining slots — those are filtered out.
@@ -76,6 +77,8 @@ export default async function AdminMatchmakerPage() {
       and(
         eq(users.isMentor, false),
         eq(users.isAdmin, false),
+        // Admins match within their own school.
+        sameSchoolAs(me.email),
         sql`${users.onboardedAt} is not null`,
         sql`not exists (select 1 from "match" m where m.mentee_id = "user".id and m.status = 'active')`
       )
@@ -94,7 +97,7 @@ export default async function AdminMatchmakerPage() {
       activeCount: sql<number>`(select count(*)::int from "match" where mentor_id = "user".id and status = 'active')`,
     })
     .from(users)
-    .where(and(eq(users.isMentor, true), eq(users.mentorAvailable, true)))
+    .where(and(eq(users.isMentor, true), eq(users.mentorAvailable, true), sameSchoolAs(me.email)))
     .orderBy(users.name);
 
   const mentees: MenteeCard[] = menteeRows.map((m) => ({

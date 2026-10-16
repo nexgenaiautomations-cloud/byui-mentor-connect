@@ -6,9 +6,11 @@ import { requireUser } from "@/lib/session";
 import { agreementSchema } from "@/lib/agreements";
 import { TERMS_VERSION } from "@/lib/disclaimers";
 import { auditEvent } from "@/lib/audit";
+import { isPlatformAdmin } from "@/lib/platform-admin";
 
-// Records the user's acknowledgment of the ICAN disclaimers (independent
-// site, optional use, own risk, Terms + Privacy) for the current
+// Records the user's acknowledgment of the ICAN disclaimers (third-party
+// operator, voluntary use, no guaranteed outcomes, safety, Terms + Privacy)
+// for the current
 // TERMS_VERSION. Every box must be checked; the server re-validates.
 export async function POST(req: Request) {
   const result = await requireUser();
@@ -38,5 +40,10 @@ export async function POST(req: Request) {
     metadata: { termsVersion: TERMS_VERSION },
   });
 
-  return NextResponse.json({ ok: true, redirectTo: me.onboardedAt ? "/dashboard" : "/onboarding" });
+  const redirectTo = me.onboardedAt
+    ? "/dashboard"
+    : isPlatformAdmin(me)
+      ? "/admin/schools"
+      : "/onboarding";
+  return NextResponse.json({ ok: true, redirectTo });
 }

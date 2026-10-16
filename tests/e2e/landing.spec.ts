@@ -19,11 +19,11 @@ test.describe("Landing page", () => {
     const body = await page.locator("body").innerText();
     expect(body).not.toMatch(/BYUI CAN|BYU-I email/);
     // Every remaining BYU-Idaho mention must be a disclaimer.
-    await expect(page.getByText(/not owned, operated, sponsored, or endorsed by Brigham Young/i).first()).toBeVisible();
+    await expect(page.getByText(/operated by GDW Innovations, LLC/i).first()).toBeVisible();
     // Quotes are public-domain, not church leaders.
     await expect(page.getByText(/shoulders of Giants/i)).toBeVisible();
     expect(body).not.toMatch(/Prophets/);
-    await expect(page.getByText(/Notice to BYU-Idaho employees/i)).toBeVisible();
+    await expect(page.getByText(/Notice to university employees/i)).toBeVisible();
     await expect(page.getByText(/does not affect your grades/i).first()).toBeVisible();
     const srcs = await page.locator("img").evaluateAll((els) =>
       els.map((el) => (el as HTMLImageElement).getAttribute("src") ?? "")
@@ -40,7 +40,7 @@ test.describe("Landing page", () => {
   test("terms page shows the faculty and student notices", async ({ page }) => {
     await page.goto("/terms");
     await expect(page.getByRole("heading", { name: /Terms of use/i })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Notice to BYU-Idaho faculty/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Notice to university faculty/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Using ICAN is optional/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Assumption of risk/i })).toBeVisible();
   });

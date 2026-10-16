@@ -1,23 +1,28 @@
 import { z } from "zod";
 import { TERMS_VERSION } from "@/lib/disclaimers";
 
-// Acknowledgments every user checks at profile setup (/agreements). Each
-// maps to one of the notices BYU-Idaho asked for.
+// Acknowledgments every user checks at profile setup (/agreements), based on
+// the disclaimer language BYU-Idaho provided.
 export const AGREEMENT_ITEMS = [
   {
     key: "independent",
     label:
-      "I understand ICAN is an independent, third-party website. It is not owned, operated, sponsored, or endorsed by BYU-Idaho.",
+      "I understand ICAN Mentor Connect is a third-party service operated by GDW Innovations, LLC. It is not operated or maintained by BYU-Idaho or any other university.",
   },
   {
     key: "optional",
     label:
-      "I understand using ICAN is optional. No class or instructor can require it, and it does not affect my grades or credit.",
+      "I understand my use of Mentor Connect is voluntary. No class or instructor can require it, and it does not affect my grades or credit.",
   },
   {
-    key: "ownRisk",
+    key: "outcomes",
     label:
-      "I choose to use ICAN at my own risk, including any meetings or advice from other students.",
+      "I understand universities do not control the independent actions of mentors or other users, and do not guarantee mentoring, employment, career, educational, or other outcomes.",
+  },
+  {
+    key: "safety",
+    label:
+      "I will use appropriate judgment when communicating or meeting with other users, and I won't share sensitive personal information that isn't necessary for the program.",
   },
   {
     key: "terms",
@@ -34,7 +39,8 @@ const mustCheck = z.literal(true, {
 export const agreementSchema = z.object({
   independent: mustCheck,
   optional: mustCheck,
-  ownRisk: mustCheck,
+  outcomes: mustCheck,
+  safety: mustCheck,
   terms: mustCheck,
 });
 

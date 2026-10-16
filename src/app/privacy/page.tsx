@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Logo } from "@/components/logo";
-import { THIRD_PARTY_NOTICE, STUDENT_NOTICE } from "@/lib/disclaimers";
+import { OPERATOR, THIRD_PARTY_NOTICE, VOLUNTARY_NOTICE } from "@/lib/disclaimers";
 
 export const metadata: Metadata = {
   title: "Privacy Notice — ICAN Mentor Connect",
@@ -14,13 +14,14 @@ export const metadata: Metadata = {
 // docs/security/retention-policy.md — keep all three in sync.
 const SECTIONS = [
   {
-    heading: "An independent, third-party website",
+    heading: "A third-party service operated by GDW Innovations, LLC",
     body: (
       <>
         <p className="text-[15px] leading-relaxed text-slate-600">{THIRD_PARTY_NOTICE}</p>
         <p className="mt-3 text-[15px] leading-relaxed text-slate-600">
-          {STUDENT_NOTICE} BYU-Idaho does not receive, control, or process the data
-          described in this notice. See the{" "}
+          {VOLUNTARY_NOTICE} {OPERATOR} is responsible for the data described in this
+          notice; BYU-Idaho and other universities do not receive, control, or process
+          it. See the{" "}
           <Link
             href="/terms"
             className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer"
