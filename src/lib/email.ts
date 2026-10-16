@@ -4,7 +4,7 @@
 
 const RESEND_KEY = process.env.AUTH_RESEND_KEY ?? "";
 const EMAIL_FROM =
-  process.env.EMAIL_FROM ?? "ICAN Mentor Connect <noreply@byuican.com>";
+  process.env.EMAIL_FROM ?? "ICAN Mentor Connect <noreply@icareeradvancementnetwork.com>";
 
 export type SendEmailResult = { ok: true } | { ok: false; error: string };
 
@@ -14,12 +14,14 @@ export async function sendEmail({
   html,
   text,
   refId,
+  replyTo,
 }: {
   to: string;
   subject: string;
   html: string;
   text: string;
   refId?: string;
+  replyTo?: string;
 }): Promise<SendEmailResult> {
   if (!RESEND_KEY) {
     return { ok: false, error: "Email service is not configured (AUTH_RESEND_KEY missing)" };
@@ -37,6 +39,7 @@ export async function sendEmail({
       subject,
       html,
       text,
+      reply_to: replyTo,
       headers: refId ? { "X-Entity-Ref-ID": refId } : undefined,
     }),
   });

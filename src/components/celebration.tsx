@@ -103,7 +103,7 @@ export function GoldCongratulations({
       aria-label="Congratulations"
       className="fixed inset-0 z-[90] flex flex-col items-center justify-center bg-gradient-to-br from-gold-300 via-gold-400 to-gold-500 text-brand-dark"
     >
-      <p className="font-display text-xs font-black uppercase tracking-[0.35em] text-brand/80">
+      <p className="font-brand text-sm font-semibold uppercase tracking-[0.35em] text-brand/80">
         ICAN
       </p>
       <h1 className="mt-3 text-center font-display text-5xl font-black tracking-tight drop-shadow-[0_2px_0_rgba(255,255,255,0.4)] sm:text-7xl">

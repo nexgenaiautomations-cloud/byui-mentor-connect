@@ -70,7 +70,7 @@ export default async function LoginPage({
           <Link href="/" className="flex items-center gap-3">
             <Logo size={44} />
             <div className="leading-tight">
-              <p className="font-display text-sm font-black tracking-tight">ICAN</p>
+              <p className="font-brand text-base font-semibold tracking-[0.14em]">ICAN</p>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
                 Mentor Connect
               </p>
@@ -97,7 +97,7 @@ export default async function LoginPage({
         <div className="w-full max-w-md">
           <Link href="/" className="mb-6 flex items-center justify-center gap-3 lg:hidden">
             <Logo size={36} tile />
-            <span className="font-display text-base font-black tracking-tight text-plum-800">ICAN</span>
+            <span className="font-brand text-lg font-semibold tracking-[0.14em] text-plum-800">ICAN</span>
           </Link>
           <div className="card">
             <h1 className="font-display text-2xl font-bold text-plum-800">Sign in</h1>
@@ -108,7 +108,7 @@ export default async function LoginPage({
             {error && (
               <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {error === "AccessDenied"
-                  ? "Only @byui.edu addresses are allowed."
+                  ? "That email isn't from a school on ICAN yet. Use your school email."
                   : error === "RateLimited"
                     ? "Too many sign-in attempts. Please wait an hour and try again."
                     : error === "CredentialsSignin"

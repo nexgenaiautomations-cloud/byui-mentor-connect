@@ -21,7 +21,8 @@ type NavItem = { href: string; label: string };
 // computed server-side and passed in via props.
 function buildNav(
   activeRole: ActiveRole,
-  isHeadAdmin: boolean
+  isHeadAdmin: boolean,
+  isPlatformAdmin = false
 ): { primary: NavItem[]; admin: NavItem[] } {
   const primary: NavItem[] = [];
 
@@ -59,6 +60,9 @@ function buildNav(
     if (isHeadAdmin) {
       admin.push({ href: "/admin/admins", label: "Manage admins" });
     }
+    if (isPlatformAdmin) {
+      admin.push({ href: "/admin/schools", label: "Schools" });
+    }
     admin.push({ href: "/settings", label: "Settings" });
   }
   return { primary, admin };
@@ -74,13 +78,15 @@ export function Sidebar({
   user,
   activeRole,
   availableRoles,
+  isPlatformAdmin = false,
 }: {
   user: User;
   activeRole: ActiveRole;
   availableRoles: ActiveRole[];
+  isPlatformAdmin?: boolean;
 }) {
   const pathname = usePathname() || "/";
-  const { primary, admin } = buildNav(activeRole, user.isHeadAdmin);
+  const { primary, admin } = buildNav(activeRole, user.isHeadAdmin, isPlatformAdmin);
 
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 z-10 h-screen w-64 flex-col text-white bg-gradient-to-b from-brand-dark/55 via-brand-dark/45 to-brand-dark/40 backdrop-blur-[2px] border-r border-white/10">
@@ -89,7 +95,7 @@ export function Sidebar({
       <Link href="/dashboard" className="flex h-16 items-center gap-3 px-6 cursor-pointer">
         <Logo size={52} />
         <div className="leading-tight">
-          <p className="font-display text-sm font-black tracking-tight text-white">ICAN</p>
+          <p className="font-brand text-base font-semibold tracking-[0.14em] text-white">ICAN</p>
           <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
             Mentor Connect
           </p>

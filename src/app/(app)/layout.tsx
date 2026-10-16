@@ -6,10 +6,14 @@ import { getCurrentUser } from "@/lib/session";
 import { availableRoles } from "@/lib/roles";
 import { readActiveRole } from "@/lib/roles-server";
 import { IndependenceNotice } from "@/components/independence-notice";
+import { needsAgreement } from "@/lib/agreements";
+import { isPlatformAdmin } from "@/lib/platform-admin";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  // Disclaimers are acknowledged before any profile setup or app use.
+  if (needsAgreement(user)) redirect("/agreements");
   const activeRole = await readActiveRole(user);
   const roles = availableRoles(user);
   return (
@@ -30,7 +34,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       )}
 
       {/* Sidebar — pinned to viewport so sign out is always reachable */}
-      <Sidebar user={user} activeRole={activeRole} availableRoles={roles} />
+      <Sidebar
+        user={user}
+        activeRole={activeRole}
+        availableRoles={roles}
+        isPlatformAdmin={isPlatformAdmin(user)}
+      />
 
       {/* Right column — offset for the pinned sidebar on lg+ */}
       <div className="flex min-h-screen min-w-0 flex-col lg:pl-64">

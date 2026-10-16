@@ -24,6 +24,7 @@ let cachedClient: {
   passwordResetPerEmail: Ratelimit;
   passwordResetPerIp: Ratelimit;
   cspReportPerIp: Ratelimit;
+  schoolInquiryPerIp: Ratelimit;
 } | null = null;
 
 function getClient() {
@@ -84,6 +85,13 @@ function getClient() {
     // the audit table. 30/min per IP is plenty for legitimate browsers
     // (which coalesce identical reports server-side anyway) and brick-walls
     // anyone trying to abuse the endpoint.
+    // Public "bring ICAN to your school" form — 3 per IP per hour is plenty
+    // for a real school contact and stops inbox flooding.
+    schoolInquiryPerIp: new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(3, "1 h"),
+      prefix: "rl:si",
+    }),
     cspReportPerIp: new Ratelimit({
       redis,
       limiter: Ratelimit.slidingWindow(30, "1 m"),
@@ -158,6 +166,14 @@ export async function limitCspReport(ip: string | null): Promise<LimitResult> {
   const client = getClient();
   if (!client) return { ok: true };
   const res = await client.cspReportPerIp.limit(hashId(ip ?? "unknown"));
+  if (!res.success) return { ok: false, reason: "ip", resetAt: res.reset };
+  return { ok: true };
+}
+
+export async function limitSchoolInquiry(ip: string | null): Promise<LimitResult> {
+  const client = getClient();
+  if (!client) return { ok: true };
+  const res = await client.schoolInquiryPerIp.limit(hashId(ip ?? "unknown"));
   if (!res.success) return { ok: false, reason: "ip", resetAt: res.reset };
   return { ok: true };
 }

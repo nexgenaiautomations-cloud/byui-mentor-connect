@@ -100,7 +100,7 @@ export function buildMagicLinkEmail({
               <td style="padding:16px 32px 28px 32px;">
                 <p style="margin:0;font-size:12px;line-height:1.5;color:${BRAND_MUTED};">
                   Didn't request this? You can safely ignore the email — your account stays untouched.
-                  Only <strong>@byui.edu</strong> addresses can sign in to Mentor Connect.
+                  Only school email addresses can sign in to Mentor Connect.
                 </p>
               </td>
             </tr>
@@ -130,7 +130,7 @@ export function buildMagicLinkEmail({
     "",
     `The link expires in ${expiresMinutes} minutes and can only be used once.`,
     "Didn't request this? Ignore the email; your account stays untouched.",
-    "Only @byui.edu addresses can sign in.",
+    "Only school email addresses can sign in.",
     "",
     "— ICAN, Career Advancement Network (independent; not affiliated with BYU-Idaho)",
   ].join("\n");

@@ -119,7 +119,7 @@ export function MobileMenu({
               <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
                 <Logo size={36} />
                 <div className="leading-tight">
-                  <p className="font-display text-sm font-black tracking-tight text-white">ICAN</p>
+                  <p className="font-brand text-base font-semibold tracking-[0.14em] text-white">ICAN</p>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
                     Mentor Connect
                   </p>

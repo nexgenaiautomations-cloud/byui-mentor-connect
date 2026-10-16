@@ -38,7 +38,7 @@ const SECTIONS = [
       <>
         <p className="text-[15px] leading-relaxed text-slate-600">
           We collect only what the mentoring program needs to run: your name,
-          your <strong className="text-slate-800">@byui.edu</strong> email, an
+          your school email address, an
           optional phone number and profile photo, your major/minor and career
           interests, your mentor–mentee relationships, and the activity and
           meeting notes recorded in the app. Security telemetry (sign-in

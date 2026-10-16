@@ -45,7 +45,7 @@ function PromoteForm() {
     setSuccess(null);
     const value = email.trim().toLowerCase();
     if (!value) {
-      setError("Enter the user's student email (@byui.edu).");
+      setError("Enter the user's school email.");
       return;
     }
     startTransition(async () => {
@@ -84,7 +84,7 @@ function PromoteForm() {
             id="promote-email"
             type="email"
             className="input"
-            placeholder="newadmin@byui.edu"
+            placeholder="newadmin@school.edu"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

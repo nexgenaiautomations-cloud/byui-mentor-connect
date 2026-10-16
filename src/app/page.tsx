@@ -43,15 +43,6 @@ export default async function LandingPage() {
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-brand-ink/95 via-brand/85 to-brand-magenta/80" />
 
-        <p
-          role="note"
-          className="relative bg-black/25 px-6 py-2 text-center text-xs font-medium text-white/90 backdrop-blur"
-        >
-          Independent, student-run website — not affiliated with or endorsed by BYU-Idaho.{" "}
-          <Link href="/terms" className="font-semibold underline decoration-white/60 underline-offset-2 hover:decoration-white cursor-pointer">
-            Learn more
-          </Link>
-        </p>
 
         <nav className="relative flex items-center justify-between px-6 py-5 md:px-10">
           <Link href="/" aria-label="ICAN home" className="flex items-center gap-2 cursor-pointer">
@@ -63,7 +54,7 @@ export default async function LandingPage() {
               height={44}
               className="h-11 w-11 select-none"
             />
-            <span className="font-display text-lg font-black tracking-tight text-white">ICAN</span>
+            <span className="font-brand text-xl font-semibold tracking-[0.14em] text-white">ICAN</span>
           </Link>
           <div className="hidden items-center gap-6 md:flex">
             <a href="#why" className="text-sm font-semibold text-white/85 hover:text-white">
@@ -73,8 +64,11 @@ export default async function LandingPage() {
               Standards
             </a>
             <a href="#what" className="text-sm font-semibold text-white/85 hover:text-white">
-              Prophets&rsquo; &ldquo;Why&rdquo;
+              Inspiration
             </a>
+            <Link href="/schools" className="text-sm font-semibold text-white/85 hover:text-white">
+              For schools
+            </Link>
           </div>
           <div className="flex items-center gap-2">
             <InstallButton label="Install" />
@@ -90,9 +84,9 @@ export default async function LandingPage() {
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-6 pb-24 pt-16 md:grid-cols-[1.1fr_0.9fr] md:pb-32 md:pt-28">
           <div className="flex flex-col items-center text-center text-white md:items-start md:text-left">
             <Shield size={240} className="h-auto w-48 drop-shadow-2xl md:w-60" />
-            <h1 className="mt-6 font-display text-5xl font-black leading-[1.05] tracking-tight md:text-7xl">
+            <h1 className="mt-6 font-brand text-6xl font-semibold leading-[1.05] tracking-[0.12em] md:text-8xl">
               ICAN
-              <span className="mt-2 block text-base font-bold uppercase tracking-[0.2em] text-brand-light md:text-lg">
+              <span className="mt-3 block font-brand text-sm font-medium uppercase tracking-[0.28em] text-brand-light md:text-base">
                 Career Advancement Network
               </span>
             </h1>
@@ -115,7 +109,7 @@ export default async function LandingPage() {
               </Link>
             </div>
             <p className="mt-4 text-xs font-medium text-white/85">
-              Free and optional. Sign up with your @byui.edu student email.
+              Free and optional. Sign up with your school email.
             </p>
           </div>
 
@@ -287,12 +281,12 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ─────────────────────── PROPHETS' "WHY" ──────────────────────── */}
+      {/* ───────────────────────── INSPIRATION ────────────────────────── */}
       <section id="what" className="bg-white px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <header className="text-center">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">
-              Prophets&rsquo; &ldquo;Why&rdquo;
+              Words worth keeping
             </p>
             <h2 className="mt-2 font-display text-3xl font-black text-brand-dark md:text-4xl">
               ICAN will grow your career
@@ -301,32 +295,35 @@ export default async function LandingPage() {
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {[
+              // Public-domain quotes with verifiable primary sources.
               {
-                name: "President Dallin H. Oaks",
-                quote:
-                  "Do not limit yourself to a grudging compliance with minimum requirements of attendance, assignments, and degrees.",
+                name: "Isaac Newton",
+                source: "Letter to Robert Hooke, 1675",
+                quote: "If I have seen further it is by standing on the shoulders of Giants.",
               },
               {
-                name: "President Henry B. Eyring",
-                quote:
-                  "All people are happier and feel more self-respect when they can provide for themselves and their family and then reach out to take care of others.",
+                name: "Seneca",
+                source: "Letters to Lucilius, VII",
+                quote: "Men learn while they teach.",
               },
               {
-                name: "Elder David A. Bednar",
+                name: "Theodore Roosevelt",
+                source: "Labor Day address, 1903",
                 quote:
-                  "As learners, you and I are to act and be doers of the word and not simply hearers who are only acted upon. Are you and I agents who act... or are we waiting to be taught?",
+                  "Far and away the best prize that life offers is the chance to work hard at work worth doing.",
               },
             ].map((c) => (
               <figure
                 key={c.name}
-                className="flex flex-col rounded-2xl bg-white p-6 shadow-soft ring-1 ring-slate-100"
+                className="flex flex-col justify-between rounded-2xl bg-white p-6 shadow-soft ring-1 ring-slate-100"
               >
-                <figcaption className="font-display text-lg font-bold text-brand">
-                  {c.name}
-                </figcaption>
-                <blockquote className="mt-3 text-sm leading-6 text-slate-700">
+                <blockquote className="font-display text-lg font-semibold leading-7 text-brand-dark">
                   &ldquo;{c.quote}&rdquo;
                 </blockquote>
+                <figcaption className="mt-4 text-sm text-slate-600">
+                  <span className="font-semibold text-brand">{c.name}</span>
+                  <span className="block text-xs text-slate-500">{c.source}</span>
+                </figcaption>
               </figure>
             ))}
           </div>
@@ -403,6 +400,13 @@ export default async function LandingPage() {
       <footer className="border-t border-slate-200 bg-white px-6 py-8 text-center">
         <p className="text-xs font-medium text-slate-600">
           ICAN (Career Advancement Network) — Student-built peer mentorship
+          {" · "}
+          <Link
+            href="/schools"
+            className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer"
+          >
+            For schools
+          </Link>
           {" · "}
           <Link
             href="/terms"

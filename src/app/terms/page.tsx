@@ -28,9 +28,10 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
         <p className={`mt-3 ${P}`}>
           ICAN is not an official Brigham Young University–Idaho program, service,
           or website. BYU-Idaho&apos;s names, logos, and marks are not used here,
-          and nothing on this site speaks for BYU-Idaho. Requiring a @byui.edu
-          email address only confirms that members are students; it does not mean
-          BYU-Idaho operates, reviews, or endorses ICAN.
+          and nothing on this site speaks for BYU-Idaho. Requiring a school
+          email address (such as @byui.edu) only confirms that members are students;
+          it does not mean BYU-Idaho or any other school operates, reviews, or
+          endorses ICAN.
         </p>
       </>
     ),
@@ -74,7 +75,7 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
     heading: "4. Your account",
     body: (
       <ul className={LI}>
-        <li>You must be a current student with a @byui.edu email address to create an account.</li>
+        <li>You must be a current student with an email address from a participating school to create an account.</li>
         <li>Keep your password private. You are responsible for activity on your account.</li>
         <li>Give accurate information about yourself. Don&apos;t impersonate anyone.</li>
       </ul>

@@ -42,7 +42,9 @@ export type AuditEventType =
   | "RATE_LIMIT_TRIGGERED"
   | "ROLE_COOKIE_REJECTED"
   | "UNAUTHORIZED_ADMIN_ATTEMPT"
-  | "CSP_VIOLATION_REPORTED";
+  | "CSP_VIOLATION_REPORTED"
+  | "USER_ACCEPTED_TERMS"
+  | "SCHOOL_DOMAIN_CHANGED";
 
 export type AuditSeverity = "info" | "warning" | "critical";
 

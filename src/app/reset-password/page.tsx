@@ -22,7 +22,7 @@ export default async function ResetPasswordPage({
           className="mb-6 flex items-center justify-center gap-3"
         >
           <Logo size={36} tile />
-          <span className="font-display text-base font-black tracking-tight text-plum-800">
+          <span className="font-brand text-lg font-semibold tracking-[0.14em] text-plum-800">
             ICAN
           </span>
         </Link>

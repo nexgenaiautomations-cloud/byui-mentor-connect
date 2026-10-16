@@ -19,7 +19,10 @@ test.describe("Landing page", () => {
     const body = await page.locator("body").innerText();
     expect(body).not.toMatch(/BYUI CAN|BYU-I email/);
     // Every remaining BYU-Idaho mention must be a disclaimer.
-    await expect(page.getByText(/not affiliated with or endorsed by BYU-Idaho/i).first()).toBeVisible();
+    await expect(page.getByText(/not owned, operated, sponsored, or endorsed by Brigham Young/i).first()).toBeVisible();
+    // Quotes are public-domain, not church leaders.
+    await expect(page.getByText(/shoulders of Giants/i)).toBeVisible();
+    expect(body).not.toMatch(/Prophets/);
     await expect(page.getByText(/Notice to BYU-Idaho employees/i)).toBeVisible();
     await expect(page.getByText(/does not affect your grades/i).first()).toBeVisible();
     const srcs = await page.locator("img").evaluateAll((els) =>
@@ -40,6 +43,13 @@ test.describe("Landing page", () => {
     await expect(page.getByRole("heading", { name: /Notice to BYU-Idaho faculty/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Using ICAN is optional/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Assumption of risk/i })).toBeVisible();
+  });
+
+  test("schools page offers the contact form", async ({ page }) => {
+    await page.goto("/schools");
+    await expect(page.getByRole("heading", { name: /Bring ICAN to your school/i })).toBeVisible();
+    await expect(page.getByLabel(/Your name/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /Send to the ICAN team/i })).toBeVisible();
   });
 
   test("captures mobile screenshot", async ({ page, browserName }, testInfo) => {

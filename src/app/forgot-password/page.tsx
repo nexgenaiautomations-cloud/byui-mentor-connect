@@ -16,7 +16,7 @@ export default async function ForgotPasswordPage() {
           className="mb-6 flex items-center justify-center gap-3"
         >
           <Logo size={36} tile />
-          <span className="font-display text-base font-black tracking-tight text-plum-800">
+          <span className="font-brand text-lg font-semibold tracking-[0.14em] text-plum-800">
             ICAN
           </span>
         </Link>
@@ -25,7 +25,7 @@ export default async function ForgotPasswordPage() {
             Forgot your password?
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Enter your student email (@byui.edu) and we&apos;ll send you a reset link. It
+            Enter your school email and we&apos;ll send you a reset link. It
             expires in one hour.
           </p>
           <div className="mt-5">

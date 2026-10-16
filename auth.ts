@@ -9,8 +9,7 @@ import { buildMagicLinkEmail } from "@/lib/magic-link-email";
 import { verifyPassword } from "@/lib/password";
 import { auditEvent } from "@/lib/audit";
 import { limitPasswordSignIn } from "@/lib/rate-limit";
-
-const BYUI_DOMAIN = "@byui.edu";
+import { isAllowedSchoolEmail } from "@/lib/school-domains";
 
 // We don't throw if the Resend key is missing at startup — that crashes every
 // page render via the middleware/layout import chain. Instead the provider is
@@ -18,7 +17,7 @@ const BYUI_DOMAIN = "@byui.edu";
 // clear Resend API error if you try to use it without configuring.
 const RESEND_KEY = process.env.AUTH_RESEND_KEY ?? "";
 const EMAIL_FROM =
-  process.env.EMAIL_FROM ?? "ICAN Mentor Connect <noreply@byuican.com>";
+  process.env.EMAIL_FROM ?? "ICAN Mentor Connect <noreply@icareeradvancementnetwork.com>";
 
 // Match auth.js Resend provider's default token TTL (24h) — only used in the
 // email copy. Bump if you change the underlying expiry.
@@ -143,7 +142,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .toLowerCase();
         const password = String(rawCredentials?.password ?? "");
         if (!email || !password) return null;
-        if (!email.endsWith(BYUI_DOMAIN)) return null;
+        if (!(await isAllowedSchoolEmail(email))) return null;
 
         // Rate-limit here, not just in /api/auth/signin — Auth.js also exposes
         // this provider at /api/auth/callback/credentials, and without this
@@ -185,7 +184,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account }) {
       if (!user.email) return false;
       const email = user.email.toLowerCase();
-      if (!email.endsWith(BYUI_DOMAIN)) return false;
+      if (!(await isAllowedSchoolEmail(email))) return false;
 
       // Magic-link sign-ins go through the Resend provider and bypass our
       // /api/auth/signin route entirely, so we audit them here. Password

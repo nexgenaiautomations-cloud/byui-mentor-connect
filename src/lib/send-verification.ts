@@ -31,7 +31,7 @@ export async function sendVerificationEmail({
     email,
     expiresHours: TTL_HOURS,
   });
-  const from = process.env.EMAIL_FROM ?? "ICAN <noreply@byuican.com>";
+  const from = process.env.EMAIL_FROM ?? "ICAN <noreply@icareeradvancementnetwork.com>";
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

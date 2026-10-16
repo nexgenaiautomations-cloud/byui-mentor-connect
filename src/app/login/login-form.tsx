@@ -89,11 +89,7 @@ export function LoginForm({
     setInfo(null);
     const value = email.trim().toLowerCase();
     if (!value) {
-      setError("Enter your student email first.");
-      return;
-    }
-    if (!value.endsWith("@byui.edu")) {
-      setError("Only @byui.edu emails are allowed.");
+      setError("Enter your school email first.");
       return;
     }
     startTransition(async () => {
@@ -148,13 +144,13 @@ export function LoginForm({
       {mode === "password" ? (
         <form onSubmit={submitPassword} className="space-y-4">
           <div>
-            <label htmlFor="email" className="label">Student email (@byui.edu)</label>
+            <label htmlFor="email" className="label">School email</label>
             <input
               id="email"
               name="email"
               type="email"
               required
-              placeholder="yourname@byui.edu"
+              placeholder="yourname@school.edu"
               className="input"
               autoComplete="email"
               value={email}
@@ -193,13 +189,13 @@ export function LoginForm({
       ) : (
         <form onSubmit={submitMagic} className="space-y-4">
           <div>
-            <label htmlFor="email-magic" className="label">Student email (@byui.edu)</label>
+            <label htmlFor="email-magic" className="label">School email</label>
             <input
               id="email-magic"
               name="email"
               type="email"
               required
-              placeholder="yourname@byui.edu"
+              placeholder="yourname@school.edu"
               className="input"
               autoComplete="email"
               value={email}

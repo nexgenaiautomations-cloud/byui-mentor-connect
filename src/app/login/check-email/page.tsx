@@ -15,8 +15,8 @@ export default async function CheckEmailPage({
     purpose === "verify" ? "Verify your email." : "Check your inbox.";
   const body =
     purpose === "verify"
-      ? "We just emailed a verification link to your @byui.edu address. Click it to finish creating your account — then come back here and sign in."
-      : "We just emailed a sign-in link to your @byui.edu address. Open it from the same device you started on. The link expires in 24 hours and can only be used once.";
+      ? "We just emailed a verification link to your school email. Click it to finish creating your account — then come back here and sign in."
+      : "We just emailed a sign-in link to your school email. Open it from the same device you started on. The link expires in 24 hours and can only be used once.";
 
   return (
     <main className="grid min-h-screen place-items-center bg-gradient-to-b from-brand-light/30 via-white to-white px-6 py-12">
@@ -42,7 +42,7 @@ export default async function CheckEmailPage({
           <ul className="mt-1 list-disc space-y-0.5 pl-4">
             <li>Wait up to 3 minutes — university mail can lag.</li>
             <li>Check spam or Outlook&apos;s &ldquo;Other&rdquo; tab.</li>
-            <li>Make sure you used your <strong>@byui.edu</strong> address.</li>
+            <li>Make sure you used your school email address.</li>
           </ul>
         </div>
 

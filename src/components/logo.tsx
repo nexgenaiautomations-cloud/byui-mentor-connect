@@ -25,7 +25,7 @@ export function Logo({
       />
       {withText && (
         <span className="leading-tight">
-          <span className="block font-display text-sm font-black tracking-tight text-white">ICAN</span>
+          <span className="block font-brand text-base font-semibold tracking-[0.14em] text-white">ICAN</span>
           <span className="block text-[10px] font-semibold uppercase tracking-wider text-white/70">
             Career Advancement Network
           </span>

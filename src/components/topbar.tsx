@@ -25,7 +25,7 @@ export function TopBar({
       <div className="flex items-center gap-2">
         <Link href="/dashboard" className="lg:hidden flex items-center gap-2">
           <Logo size={32} />
-          <span className="font-display text-sm font-black tracking-tight text-white">
+          <span className="font-brand text-base font-semibold tracking-[0.14em] text-white">
             ICAN
           </span>
         </Link>

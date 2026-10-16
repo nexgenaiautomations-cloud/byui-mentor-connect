@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { isAllowedSchoolEmail } from "@/lib/school-domains";
 
 // Two-step magic-link confirmation. The email links to this page (not directly
 // to /api/auth/callback/resend) so that Microsoft Defender / Outlook Safe
@@ -15,9 +16,10 @@ export default async function VerifyPage({
 
   // The email param is attacker-choosable (it's just a query string), and this
   // page renders it as "you're signing in as X" before any token validation.
-  // Only sign-ins for @byui.edu addresses can succeed, so refuse to lend the
-  // page's credibility to anything else.
-  const displayEmail = /^[^\s@]+@byui\.edu$/i.test(email) ? email : "";
+  // Only sign-ins for registered school domains can succeed, so refuse to
+  // lend the page's credibility to anything else.
+  const displayEmail =
+    /^[^\s@]+@[^\s@]+$/.test(email) && (await isAllowedSchoolEmail(email)) ? email : "";
 
   if (!token || !email || !displayEmail) {
     return (

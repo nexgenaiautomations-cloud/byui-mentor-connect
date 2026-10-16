@@ -25,7 +25,7 @@ export default async function SignupPage() {
           <Link href="/" className="flex items-center gap-3">
             <Logo size={44} />
             <div className="leading-tight">
-              <p className="font-display text-sm font-black tracking-tight">ICAN</p>
+              <p className="font-brand text-base font-semibold tracking-[0.14em]">ICAN</p>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
                 Mentor Connect
               </p>
@@ -56,7 +56,7 @@ export default async function SignupPage() {
             className="mb-6 flex items-center justify-center gap-3 lg:hidden"
           >
             <Logo size={36} tile />
-            <span className="font-display text-base font-black tracking-tight text-plum-800">
+            <span className="font-brand text-lg font-semibold tracking-[0.14em] text-plum-800">
               ICAN
             </span>
           </Link>

@@ -47,6 +47,8 @@ export default {
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         display: ["Outfit", "Inter", "ui-sans-serif", "sans-serif"],
+        // ICAN wordmark only — classical Roman capitals.
+        brand: ["Cinzel", "Trajan Pro", "Georgia", "serif"],
       },
       boxShadow: {
         soft: "0 4px 24px rgba(74, 37, 133, 0.08)",

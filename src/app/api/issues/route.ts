@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       const h = await headers();
       const host = h.get("host") ?? "byui-can";
       const from =
-        process.env.EMAIL_FROM ?? "ICAN <noreply@byuican.com>";
+        process.env.EMAIL_FROM ?? "ICAN <noreply@icareeradvancementnetwork.com>";
       const labelMap: Record<string, string> = {
         it: "IT issue",
         mentor: "Issue with my mentor",

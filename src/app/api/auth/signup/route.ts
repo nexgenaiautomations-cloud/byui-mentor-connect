@@ -9,7 +9,7 @@ import { sendVerificationEmail } from "@/lib/send-verification";
 import { auditEvent } from "@/lib/audit";
 import { isUniqueViolation } from "@/lib/db-errors";
 import { signupSchema } from "@/lib/signup-schema";
-import { TERMS_VERSION } from "@/lib/disclaimers";
+import { isAllowedSchoolEmail, NOT_ALLOWED_MESSAGE } from "@/lib/school-domains";
 
 
 export async function POST(req: Request) {
@@ -47,6 +47,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: first }, { status: 400 });
   }
   const data = parsed.data;
+
+  if (!(await isAllowedSchoolEmail(data.email))) {
+    return NextResponse.json({ error: NOT_ALLOWED_MESSAGE }, { status: 400 });
+  }
 
   const pwIssues = passwordIssues(data.password);
   if (pwIssues.length) {
@@ -111,8 +115,6 @@ export async function POST(req: Request) {
     eventType: "USER_SIGNUP_CREATED",
     severity: "info",
     request: req,
-    // Record which Terms of Use / disclaimer text the user agreed to.
-    metadata: { termsVersion: TERMS_VERSION },
   });
 
   // Hand the Resend send off via Next 16's after() so the HTTP response

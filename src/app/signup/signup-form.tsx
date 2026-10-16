@@ -9,21 +9,14 @@ export function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function validate(): string | null {
     if (!email.trim()) return "Email is required.";
-    if (!email.trim().toLowerCase().endsWith("@byui.edu")) {
-      return "Only @byui.edu emails are allowed.";
-    }
     const pw = passwordIssues(password);
     if (pw.length) return pw[0];
     if (password !== confirm) return "Passwords don't match.";
-    if (!acceptTerms) {
-      return "Please agree to the Terms of Use and Privacy Notice to continue.";
-    }
     return null;
   }
 
@@ -42,7 +35,6 @@ export function SignupForm() {
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
           password,
-          acceptTerms,
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -58,12 +50,12 @@ export function SignupForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
-        <label htmlFor="email" className="label">Student email (@byui.edu)</label>
+        <label htmlFor="email" className="label">School email</label>
         <input
           id="email"
           type="email"
           required
-          placeholder="yourname@byui.edu"
+          placeholder="yourname@school.edu"
           className="input"
           autoComplete="email"
           value={email}
@@ -105,32 +97,6 @@ export function SignupForm() {
         />
       </div>
 
-      <div className="rounded-lg border border-brand-light/60 bg-plum-50 p-3">
-        <label htmlFor="accept-terms" className="flex cursor-pointer items-start gap-3 text-xs leading-5 text-slate-700">
-          <input
-            id="accept-terms"
-            type="checkbox"
-            required
-            checked={acceptTerms}
-            onChange={(e) => setAcceptTerms(e.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-slate-300 accent-brand"
-          />
-          <span>
-            I agree to the{" "}
-            <a href="/terms" target="_blank" rel="noreferrer" className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer">
-              Terms of Use
-            </a>{" "}
-            and{" "}
-            <a href="/privacy" target="_blank" rel="noreferrer" className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer">
-              Privacy Notice
-            </a>
-            . I understand ICAN is an independent website that is not affiliated with
-            BYU-Idaho, that using it is optional and does not affect my grades, and that
-            I use it at my own risk.
-          </span>
-        </label>
-      </div>
-
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
@@ -146,8 +112,18 @@ export function SignupForm() {
       </button>
 
       <p className="text-center text-[11px] text-slate-500">
-        We&apos;ll send a verification link to your student inbox. You can fill
-        out the rest of your profile after you verify.
+        We&apos;ll send a verification link to your school inbox. After you verify,
+        you&apos;ll review the ICAN notices and set up your profile.
+      </p>
+      <p className="text-center text-[11px] text-slate-500">
+        School not on ICAN yet?{" "}
+        <a
+          href="/schools"
+          className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer"
+        >
+          Have your school contact us
+        </a>
+        .
       </p>
     </form>
   );

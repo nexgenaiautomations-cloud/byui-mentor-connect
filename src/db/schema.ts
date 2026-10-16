@@ -85,6 +85,8 @@ export const auditEventType = pgEnum("audit_event_type", [
   "ROLE_COOKIE_REJECTED",
   "UNAUTHORIZED_ADMIN_ATTEMPT",
   "CSP_VIOLATION_REPORTED",
+  "USER_ACCEPTED_TERMS",
+  "SCHOOL_DOMAIN_CHANGED",
 ]);
 
 // Auth.js users table — also our "members". Everyone who registers is a member.
@@ -132,6 +134,12 @@ export const users = pgTable("user", {
   // Prior internship / career-related work bucket — populated by Phase 2.
   // Values: "None" | "1" | "2" | "3 or more"
   priorInternshipExperience: text("prior_internship_experience"),
+
+  // Which Terms of Use / disclaimer version the user acknowledged at profile
+  // setup (see src/lib/disclaimers.ts TERMS_VERSION), and when. Null until
+  // the user completes the /agreements step.
+  termsAcceptedVersion: text("terms_accepted_version"),
+  termsAcceptedAt: timestamp("terms_accepted_at", { mode: "date" }),
 
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
@@ -368,6 +376,38 @@ export const issueReports = pgTable(
   })
 );
 
+// Schools whose email domain may register. byui.edu is the launch school;
+// platform admins add others after a school signs on.
+export const schoolDomains = pgTable("school_domain", {
+  domain: text("domain").primaryKey(), // lowercase, e.g. "byui.edu"
+  schoolName: text("school_name").notNull(),
+  active: boolean("active").notNull().default(true),
+  createdByUserId: text("created_by_user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+// "Bring ICAN to your school" requests from school staff. Public form, so
+// every field is untrusted text; rate limited per IP.
+export const schoolInquiries = pgTable(
+  "school_inquiry",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    contactName: text("contact_name").notNull(),
+    contactEmail: text("contact_email").notNull(),
+    schoolName: text("school_name").notNull(),
+    role: text("role"),
+    emailDomain: text("email_domain"),
+    message: text("message"),
+    status: text("status").notNull().default("new"), // new | contacted | added | declined
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    createdIdx: index("school_inquiry_created_idx").on(t.createdAt),
+  })
+);
+
 // Earned-achievement rows. Each (student, achievementKey) is unique — a
 // student earns each badge at most once.
 export const achievements = pgTable(
@@ -451,3 +491,5 @@ export type IssueReport = typeof issueReports.$inferSelect;
 export type NewIssueReport = typeof issueReports.$inferInsert;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+export type SchoolDomain = typeof schoolDomains.$inferSelect;
+export type SchoolInquiry = typeof schoolInquiries.$inferSelect;

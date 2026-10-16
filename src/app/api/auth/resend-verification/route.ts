@@ -7,8 +7,7 @@ import { eq } from "drizzle-orm";
 import { sendVerificationEmail } from "@/lib/send-verification";
 import { limitPasswordReset } from "@/lib/rate-limit";
 import { auditEvent } from "@/lib/audit";
-
-const BYUI_DOMAIN = "@byui.edu";
+import { isAllowedSchoolEmail } from "@/lib/school-domains";
 
 const schema = z.object({
   email: z.string().trim().toLowerCase().email().max(200),
@@ -35,7 +34,7 @@ export async function POST(req: Request) {
     return NextResponse.json(NEUTRAL);
   }
   const email = parsed.data.email;
-  if (!email.endsWith(BYUI_DOMAIN)) {
+  if (!(await isAllowedSchoolEmail(email))) {
     return NextResponse.json(NEUTRAL);
   }
 

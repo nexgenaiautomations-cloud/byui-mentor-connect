@@ -6,6 +6,7 @@
 import sharp from "sharp";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import opentype from "opentype.js";
 
 const PUBLIC = resolve(process.cwd(), "public");
 const HANDSHAKE = resolve(PUBLIC, "ican-handshake-white.png");
@@ -16,7 +17,27 @@ const MAGENTA = "#A21CAF";
 const DARK = "#4C1D95";
 const LIGHT = "#C4B5FD";
 const GOLD = "#E9C46A";
+// Wordmark face: Cinzel (OFL, Google Fonts) — classical Roman capitals.
+// Rendered as outlined paths so the PNGs don't depend on installed fonts.
+const CINZEL = opentype.loadSync(resolve(process.cwd(), "scripts/fonts/Cinzel.ttf"));
 const FONT = "'Arial Black', 'Segoe UI Black', Arial, Helvetica, sans-serif";
+
+// Centered, letter-spaced text as an SVG path in the Cinzel face.
+function cinzel(text, cx, baseline, size, tracking = 0, fill = "#ffffff") {
+  const scale = size / CINZEL.unitsPerEm;
+  const glyphs = CINZEL.stringToGlyphs(text);
+  const widths = glyphs.map((g) => g.advanceWidth * scale);
+  const total = widths.reduce((a, b) => a + b, 0) + tracking * (glyphs.length - 1);
+  let x = cx - total / 2;
+  const d = glyphs
+    .map((g, i) => {
+      const path = g.getPath(x, baseline, size).toPathData(2);
+      x += widths[i] + tracking;
+      return path;
+    })
+    .join(" ");
+  return `<path d="${d}" fill="${fill}"/>`;
+}
 const FONT_TEXT = "'Segoe UI', Arial, Helvetica, sans-serif";
 
 const handshakeB64 = async (hex) => {
@@ -61,10 +82,10 @@ async function shieldSvg() {
   <path d="${shieldPath(22, H)}" fill="url(#g)"/>
   <path d="${shieldPath(52, H)}" fill="none" stroke="${LIGHT}" stroke-opacity="0.55" stroke-width="6"/>
   <image href="${hs}" xlink:href="${hs}" x="300" y="150" width="400" height="400"/>
-  <text x="500" y="760" text-anchor="middle" font-family="${FONT}" font-weight="900" font-size="250" fill="#ffffff" letter-spacing="6">ICAN</text>
-  <rect x="330" y="800" width="340" height="8" rx="4" fill="${GOLD}"/>
-  <text x="500" y="868" text-anchor="middle" font-family="${FONT_TEXT}" font-weight="700" font-size="40" fill="#ffffff" letter-spacing="5">CAREER ADVANCEMENT</text>
-  <text x="500" y="918" text-anchor="middle" font-family="${FONT_TEXT}" font-weight="700" font-size="40" fill="#ffffff" letter-spacing="5">NETWORK</text>
+  ${cinzel("ICAN", 500, 745, 230, 18)}
+  <rect x="350" y="790" width="300" height="4" rx="2" fill="${GOLD}"/>
+  ${cinzel("CAREER ADVANCEMENT", 500, 856, 38, 4)}
+  ${cinzel("NETWORK", 500, 906, 38, 4)}
 </svg>`;
 }
 
@@ -90,7 +111,7 @@ async function crestSvg() {
             `<text x="${c.x}" y="${720 + i * 36}" text-anchor="middle" font-family="${FONT_TEXT}" font-weight="700" font-size="28" fill="${LIGHT}">${l}</text>`
         )
         .join("");
-      return `<text x="${c.x}" y="460" text-anchor="middle" font-family="${FONT}" font-weight="900" font-size="150" fill="#ffffff">${c.n}</text>
+      return `${cinzel(c.n, c.x, 460, 150)}
         <rect x="${c.x - 50}" y="490" width="100" height="4" rx="2" fill="${GOLD}"/>
         ${lines}${subs}`;
     })
@@ -105,10 +126,10 @@ async function crestSvg() {
   <line x1="625" y1="320" x2="625" y2="800" stroke="${LIGHT}" stroke-opacity="0.5" stroke-width="4"/>
   ${colSvg}
   <rect x="140" y="830" width="720" height="4" rx="2" fill="#ffffff" fill-opacity="0.6"/>
-  <text x="500" y="1030" text-anchor="middle" font-family="${FONT}" font-weight="900" font-size="200" fill="#ffffff" letter-spacing="6">ICAN</text>
-  <rect x="340" y="1070" width="320" height="7" rx="3.5" fill="${GOLD}"/>
-  <text x="500" y="1130" text-anchor="middle" font-family="${FONT_TEXT}" font-weight="700" font-size="34" fill="#ffffff" letter-spacing="4">CAREER ADVANCEMENT</text>
-  <text x="500" y="1174" text-anchor="middle" font-family="${FONT_TEXT}" font-weight="700" font-size="34" fill="#ffffff" letter-spacing="4">NETWORK</text>
+  ${cinzel("ICAN", 500, 1025, 200, 16)}
+  <rect x="360" y="1068" width="280" height="4" rx="2" fill="${GOLD}"/>
+  ${cinzel("CAREER ADVANCEMENT", 500, 1128, 38, 5)}
+  ${cinzel("NETWORK", 500, 1176, 38, 5)}
 </svg>`;
 }
 
