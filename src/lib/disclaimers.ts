@@ -12,24 +12,24 @@ export const SITE_URL = "https://www.icareeradvancementnetwork.com";
 export const OPERATOR = "GDW Innovations, LLC";
 
 // BYU-Idaho's suggested exit notice, verbatim, for BYU-Idaho to show when it
-// links students to Mentor Connect. Also reproduced in the Terms of Use.
+// links students to ICAN. Also reproduced in the Terms of Use.
 export const UNIVERSITY_EXIT_NOTICE =
-  "You are leaving a Brigham Young University-Idaho website and accessing Mentor Connect, a third-party service operated by GDW Innovations, LLC. Mentor Connect is not operated or maintained by BYU-Idaho.";
+  "You are leaving a Brigham Young University-Idaho website and accessing ICAN, a third-party service operated by GDW Innovations, LLC. ICAN is not operated or maintained by BYU-Idaho.";
 
 // Short notice shown in footers, on the auth screens and the privacy notice.
 export const THIRD_PARTY_NOTICE =
-  "ICAN Mentor Connect is a third-party service operated by GDW Innovations, LLC. It is not operated or maintained by Brigham Young University–Idaho or any other university.";
+  "ICAN is a third-party service operated by GDW Innovations, LLC. It is not operated or maintained by Brigham Young University–Idaho or any other university.";
 
 export const VOLUNTARY_NOTICE =
-  "Your use of Mentor Connect is voluntary and is subject to the terms, privacy practices, and security practices applicable to this service. Universities do not control the independent actions of mentors or other users of the platform and do not guarantee mentoring, employment, career, educational, or other outcomes.";
+  "Your use of ICAN is voluntary and is subject to the terms, privacy practices, and security practices applicable to this service. Universities do not control the independent actions of mentors or other users of the platform and do not guarantee mentoring, employment, career, educational, or other outcomes.";
 
 export const SAFETY_NOTICE =
   "Please use appropriate judgment when communicating or meeting with other users, and do not provide sensitive personal information that is not necessary for participation in the program.";
 
 // Notice for university faculty and employees.
 export const EMPLOYEE_NOTICE =
-  "Notice to university employees: use of Mentor Connect may not be required in any class or course, and participation (or non-participation) may not be used for grades, credit, or any academic requirement.";
+  "Notice to university employees: use of ICAN may not be required in any class or course, and participation (or non-participation) may not be used for grades, credit, or any academic requirement.";
 
 // Notice for students.
 export const STUDENT_NOTICE =
-  "Mentor Connect is optional. No class, instructor, or university office can require you to use it, and it does not affect your grades.";
+  "ICAN is optional. No class, instructor, or university office can require you to use it, and it does not affect your grades.";

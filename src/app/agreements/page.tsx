@@ -8,7 +8,7 @@ import { EMPLOYEE_NOTICE } from "@/lib/disclaimers";
 import { AgreementForm } from "./agreement-form";
 
 export const metadata: Metadata = {
-  title: "Before you start — ICAN Mentor Connect",
+  title: "Before you start — ICAN",
 };
 
 // First stop after verifying an account (and for existing users whenever

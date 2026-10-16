@@ -7,12 +7,12 @@ export const AGREEMENT_ITEMS = [
   {
     key: "independent",
     label:
-      "I understand ICAN Mentor Connect is a third-party service operated by GDW Innovations, LLC. It is not operated or maintained by BYU-Idaho or any other university.",
+      "I understand ICAN is a third-party service operated by GDW Innovations, LLC. It is not operated or maintained by BYU-Idaho or any other university.",
   },
   {
     key: "optional",
     label:
-      "I understand my use of Mentor Connect is voluntary. No class or instructor can require it, and it does not affect my grades or credit.",
+      "I understand my use of ICAN is voluntary. No class or instructor can require it, and it does not affect my grades or credit.",
   },
   {
     key: "outcomes",

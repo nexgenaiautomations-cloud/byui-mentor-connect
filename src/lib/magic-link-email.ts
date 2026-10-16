@@ -1,4 +1,4 @@
-// Branded magic-link email for ICAN Mentor Connect. Returns the HTML
+// Branded magic-link email for ICAN. Returns the HTML
 // body, plain-text fallback, and subject. Inlined styles so it renders the
 // same in Gmail, Outlook, BYU-I's Microsoft tenant, and Apple Mail.
 
@@ -23,7 +23,7 @@ export function buildMagicLinkEmail({
   expiresMinutes: number;
 }) {
   const subject = "Your ICAN sign-in link";
-  const preheader = `Click the button to sign in to ICAN Mentor Connect. Link expires in ${expiresMinutes} minutes.`;
+  const preheader = `Click the button to sign in to ICAN. Link expires in ${expiresMinutes} minutes.`;
 
   const html = `<!doctype html>
 <html lang="en">
@@ -62,7 +62,7 @@ export function buildMagicLinkEmail({
             <tr>
               <td style="padding:32px 32px 8px 32px;">
                 <h1 style="margin:0 0 12px 0;font-size:24px;line-height:1.25;font-weight:800;color:${BRAND_TEXT};">
-                  Sign in to Mentor Connect
+                  Sign in to ICAN
                 </h1>
                 <p style="margin:0 0 20px 0;font-size:15px;line-height:1.5;color:${BRAND_MUTED};">
                   Tap the button below to sign in as
@@ -75,7 +75,7 @@ export function buildMagicLinkEmail({
                     <td align="center" style="border-radius:10px;background:${BRAND_BLUE};">
                       <a href="${escapeHtml(url)}"
                         style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;background:${BRAND_BLUE};line-height:1;">
-                        Sign in to Mentor Connect →
+                        Sign in to ICAN →
                       </a>
                     </td>
                   </tr>
@@ -100,7 +100,7 @@ export function buildMagicLinkEmail({
               <td style="padding:16px 32px 28px 32px;">
                 <p style="margin:0;font-size:12px;line-height:1.5;color:${BRAND_MUTED};">
                   Didn't request this? You can safely ignore the email — your account stays untouched.
-                  Only school email addresses can sign in to Mentor Connect.
+                  Only school email addresses can sign in to ICAN.
                 </p>
               </td>
             </tr>
@@ -123,7 +123,7 @@ export function buildMagicLinkEmail({
 </html>`;
 
   const text = [
-    "Sign in to ICAN Mentor Connect",
+    "Sign in to ICAN",
     "",
     `Hi — to sign in as ${email}, open this link in your browser:`,
     url,

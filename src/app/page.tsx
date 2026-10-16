@@ -116,7 +116,7 @@ export default async function LandingPage() {
           <div className="relative">
             <div className="rounded-3xl bg-white p-6 shadow-lift">
               <p className="text-xs font-bold uppercase tracking-wider text-brand">Welcome to</p>
-              <p className="mt-1 font-display text-2xl font-black text-brand-dark">ICAN Mentor Connect</p>
+              <p className="mt-1 font-display text-2xl font-black text-brand-dark">ICAN</p>
               <p className="mt-2 text-sm text-slate-600">Three quick steps to your first mentor match.</p>
               <ul className="mt-5 space-y-3">
                 {[
@@ -244,7 +244,7 @@ export default async function LandingPage() {
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600">
               One Career Task each week, two industry experiences before senior year, three Career
-              Chats every month. Mentor Connect is the digital backbone for these standards.
+              Chats every month. ICAN is the digital backbone for these standards.
             </p>
           </header>
 
@@ -345,7 +345,7 @@ export default async function LandingPage() {
             Built by students. For students.
           </h3>
           <p className="mt-3 text-base text-white/90">
-            ICAN Mentor Connect is the digital backbone for the Career Advancement Network —
+            ICAN is the digital home of the Career Advancement Network —
             peer mentorship that scales.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">

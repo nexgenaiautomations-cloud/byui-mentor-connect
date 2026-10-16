@@ -4,9 +4,9 @@ import { Logo } from "@/components/logo";
 import { OPERATOR, THIRD_PARTY_NOTICE, VOLUNTARY_NOTICE } from "@/lib/disclaimers";
 
 export const metadata: Metadata = {
-  title: "Privacy Notice — ICAN Mentor Connect",
+  title: "Privacy Notice — ICAN",
   description:
-    "What ICAN Mentor Connect collects, why, who processes it, how long it is kept, and the choices you have.",
+    "What ICAN collects, why, who processes it, how long it is kept, and the choices you have.",
 };
 
 // Public end-user privacy notice (linked from HECVAT PRGN-05/DRPV-02 and the
@@ -161,7 +161,7 @@ export default function PrivacyPage() {
           <Logo size={40} tile />
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand">
-              ICAN Mentor Connect
+              ICAN
             </p>
             <h1 className="font-display text-3xl font-black text-brand-dark md:text-4xl">
               Privacy notice

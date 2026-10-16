@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import { Logo } from "@/components/logo";
 
 export const metadata: Metadata = {
-  title: "Accessibility — ICAN Mentor Connect",
+  title: "Accessibility — ICAN",
   description:
-    "Accessibility statement for ICAN Mentor Connect: our conformance target, known limitations, and how to report barriers.",
+    "Accessibility statement for ICAN: our conformance target, known limitations, and how to report barriers.",
 };
 
 // Public accessibility statement (linked from HECVAT ITAC-05 and the site
@@ -19,7 +19,7 @@ export default function AccessibilityPage() {
           <Logo size={40} tile />
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand">
-              ICAN Mentor Connect
+              ICAN
             </p>
             <h1 className="font-display text-3xl font-black text-brand-dark md:text-4xl">
               Accessibility statement
@@ -33,7 +33,7 @@ export default function AccessibilityPage() {
               Our commitment
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-slate-600">
-              ICAN Mentor Connect is built for every student who uses it. We
+              ICAN is built for every student who uses it. We
               have adopted the{" "}
               <a
                 href="https://www.w3.org/TR/WCAG21/"
