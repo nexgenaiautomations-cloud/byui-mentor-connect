@@ -55,7 +55,7 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
   if (done) {
     return (
       <div className="text-center">
-        <p className="font-display text-lg font-bold text-navy-800">Application submitted.</p>
+        <p className="font-display text-lg font-bold text-plum-800">Application submitted.</p>
         <p className="mt-1 text-sm text-slate-600">
           An admin will review it shortly. You&apos;ll appear in the mentor directory once approved.
         </p>

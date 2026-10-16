@@ -38,7 +38,7 @@ export default async function TrophyCasePage() {
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           Trophy Case
         </p>
-        <h1 className="mt-1 font-display text-3xl font-black text-byui-blue-dark">
+        <h1 className="mt-1 font-display text-3xl font-black text-brand-dark">
           Your achievements
         </h1>
         <p className="mt-1 text-sm text-slate-600">
@@ -56,7 +56,7 @@ export default async function TrophyCasePage() {
           hint={
             stats.priorCareerChats > 0
               ? `Includes prior experience + logged chats`
-              : "Logged in BYUI CAN"
+              : "Logged in ICAN"
           }
           tone="emerald"
         />
@@ -131,7 +131,7 @@ function TierSection({
     <section>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+          <h2 className="text-[11px] font-bold uppercase tracking-wider text-brand">
             {title}
           </h2>
           <p className="text-xs text-slate-500">{blurb}</p>
@@ -156,7 +156,7 @@ function BadgeCard({ achievement }: { achievement: AchievementListing }) {
       className={
         "flex gap-3 rounded-2xl border p-4 transition " +
         (isEarned
-          ? "border-byui-blue-light/50 bg-white shadow-soft"
+          ? "border-brand-light/50 bg-white shadow-soft"
           : "border-slate-200 bg-slate-50/70")
       }
     >
@@ -165,7 +165,7 @@ function BadgeCard({ achievement }: { achievement: AchievementListing }) {
         <p
           className={
             "font-display text-sm font-black leading-tight " +
-            (isEarned ? "text-byui-blue-dark" : "text-slate-500")
+            (isEarned ? "text-brand-dark" : "text-slate-500")
           }
         >
           {title}
@@ -195,7 +195,7 @@ function BadgeCard({ achievement }: { achievement: AchievementListing }) {
             </div>
             <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
               <div
-                className="h-full bg-byui-blue transition-all"
+                className="h-full bg-brand transition-all"
                 style={{
                   width: `${Math.min(100, Math.round((progress.current / progress.target) * 100))}%`,
                 }}
@@ -224,7 +224,7 @@ function KpiCard({
       "border-emerald-200 bg-gradient-to-br from-emerald-50 to-white text-emerald-900",
     orange:
       "border-orange-200 bg-gradient-to-br from-orange-50 to-white text-orange-900",
-    navy: "border-byui-blue-light/60 bg-gradient-to-br from-byui-blue-light/40 to-white text-byui-blue-dark",
+    navy: "border-brand-light/60 bg-gradient-to-br from-brand-light/40 to-white text-brand-dark",
     violet:
       "border-violet-200 bg-gradient-to-br from-violet-50 to-white text-violet-900",
   }[tone];

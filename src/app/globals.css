@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: #f7f9fc;
+    --background: #f8f6fc;
     --foreground: #0f172a;
   }
   html, body { height: 100%; }
@@ -20,28 +20,28 @@
   /* Cards on top of the campus background — opaque white with a navy
      hairline to match the gold framing of the outer panel. */
   .card {
-    @apply rounded-xl bg-white p-4 shadow-soft border border-navy-700 sm:rounded-2xl sm:p-6;
+    @apply rounded-xl bg-white p-4 shadow-soft border border-plum-700 sm:rounded-2xl sm:p-6;
   }
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-navy-700 px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-navy-800 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-plum-700 px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-plum-800 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-plum-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-navy-200 bg-white px-5 py-2.5 text-sm font-semibold text-navy-700 transition hover:bg-navy-50 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-plum-200 bg-white px-5 py-2.5 text-sm font-semibold text-plum-700 transition hover:bg-plum-50 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-plum-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer;
   }
   .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gold-500 px-5 py-2.5 text-sm font-bold text-navy-900 shadow-soft transition hover:bg-gold-400 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gold-500 px-5 py-2.5 text-sm font-bold text-plum-900 shadow-soft transition hover:bg-gold-400 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-navy-700 transition hover:bg-navy-50 cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-plum-700 transition hover:bg-plum-50 cursor-pointer;
   }
   .input {
-    @apply block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-500 focus:border-navy-500 focus:outline-none focus:ring-2 focus:ring-navy-200;
+    @apply block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-500 focus:border-plum-500 focus:outline-none focus:ring-2 focus:ring-plum-200;
   }
   .label {
     @apply block text-sm font-medium text-slate-700 mb-1.5;
   }
   .pill {
-    @apply inline-flex items-center rounded-full bg-navy-50 px-2.5 py-0.5 text-xs font-medium text-navy-700 border border-navy-100;
+    @apply inline-flex items-center rounded-full bg-plum-50 px-2.5 py-0.5 text-xs font-medium text-plum-700 border border-plum-100;
   }
   /* Status pills — distinct color per state. Under-review pills get a gold ring
      to separate them visually from the similar accepted-blue. */

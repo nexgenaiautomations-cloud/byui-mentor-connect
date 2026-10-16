@@ -31,7 +31,7 @@ export async function sendVerificationEmail({
     email,
     expiresHours: TTL_HOURS,
   });
-  const from = process.env.EMAIL_FROM ?? "BYUI CAN <noreply@byuican.com>";
+  const from = process.env.EMAIL_FROM ?? "ICAN <noreply@byuican.com>";
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -45,7 +45,7 @@ export async function sendVerificationEmail({
         subject,
         html,
         text,
-        headers: { "X-Entity-Ref-ID": "byuican-verify-email" },
+        headers: { "X-Entity-Ref-ID": "ican-verify-email" },
       }),
     });
     if (!res.ok) {

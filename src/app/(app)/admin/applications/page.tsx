@@ -37,14 +37,14 @@ export default async function AdminApplicationsPage() {
     <div className="space-y-8">
       <header>
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Mentor pipeline</p>
-        <h1 className="mt-1 font-display text-3xl font-black text-navy-800">Applications</h1>
+        <h1 className="mt-1 font-display text-3xl font-black text-plum-800">Applications</h1>
         <p className="mt-1 text-sm text-slate-600">
           {pending.length} pending · {reviewed.length} reviewed.
         </p>
       </header>
 
       <section>
-        <h2 className="font-display text-lg font-bold text-navy-800">Pending</h2>
+        <h2 className="font-display text-lg font-bold text-plum-800">Pending</h2>
         <div className="mt-4 space-y-3">
           {pending.length === 0 && (
             <EmptyState
@@ -67,7 +67,7 @@ export default async function AdminApplicationsPage() {
                     className="h-11 w-11 rounded-full object-cover"
                   />
                   <div>
-                    <p className="font-semibold text-navy-800">{a.applicantName}</p>
+                    <p className="font-semibold text-plum-800">{a.applicantName}</p>
                     <p className="text-xs text-slate-500">{a.applicantEmail} · {a.applicantMajor}</p>
                   </div>
                 </div>
@@ -79,7 +79,7 @@ export default async function AdminApplicationsPage() {
                   <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Informational interviews
                   </dt>
-                  <dd className="mt-0.5 text-sm font-semibold text-navy-800">
+                  <dd className="mt-0.5 text-sm font-semibold text-plum-800">
                     {a.informationalInterviews ?? "—"}
                   </dd>
                 </div>
@@ -87,7 +87,7 @@ export default async function AdminApplicationsPage() {
                   <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Internships / career work
                   </dt>
-                  <dd className="mt-0.5 text-sm font-semibold text-navy-800">
+                  <dd className="mt-0.5 text-sm font-semibold text-plum-800">
                     {a.internshipsCount ?? "—"}
                   </dd>
                 </div>
@@ -100,12 +100,12 @@ export default async function AdminApplicationsPage() {
 
       {reviewed.length > 0 && (
         <section>
-          <h2 className="font-display text-lg font-bold text-navy-800">Reviewed</h2>
+          <h2 className="font-display text-lg font-bold text-plum-800">Reviewed</h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {reviewed.map((a) => (
               <div key={a.id} className="card flex items-center justify-between">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-navy-800">{a.applicantName}</p>
+                  <p className="truncate text-sm font-semibold text-plum-800">{a.applicantName}</p>
                   <p className="text-xs text-slate-500">{a.applicantEmail}</p>
                   {a.reviewedAt && (
                     <p className="mt-0.5 text-[11px] text-slate-500">

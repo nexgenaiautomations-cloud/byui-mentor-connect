@@ -25,9 +25,9 @@ export function CanTodosButton({ actions }: { actions: readonly string[] }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-lg border border-white bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white hover:text-byui-blue-dark cursor-pointer"
+        className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-lg border border-white bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white hover:text-brand-dark cursor-pointer"
       >
-        CAN To-Dos →
+        ICAN To-Dos →
       </button>
 
       {open && (
@@ -35,13 +35,13 @@ export function CanTodosButton({ actions }: { actions: readonly string[] }) {
           <div
             aria-hidden
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-byui-blue-dark/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
           />
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="can-todos-title"
-            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-byui-blue sm:p-6"
+            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-brand sm:p-6"
           >
             <button
               type="button"
@@ -62,14 +62,14 @@ export function CanTodosButton({ actions }: { actions: readonly string[] }) {
               </svg>
             </button>
 
-            <p className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
-              BYUI CAN
+            <p className="text-[11px] font-bold uppercase tracking-wider text-brand">
+              ICAN
             </p>
             <h2
               id="can-todos-title"
-              className="mt-1 font-display text-xl font-black leading-tight text-byui-blue-dark"
+              className="mt-1 font-display text-xl font-black leading-tight text-brand-dark"
             >
-              CAN To-Dos
+              ICAN To-Dos
             </h2>
             <p className="mt-1 text-xs text-slate-600">
               Career accomplishments mentors and mentees can work on together.
@@ -83,7 +83,7 @@ export function CanTodosButton({ actions }: { actions: readonly string[] }) {
                 >
                   <span
                     aria-hidden
-                    className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-byui-blue text-[10px] font-black text-white"
+                    className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand text-[10px] font-black text-white"
                   >
                     {i + 1}
                   </span>
@@ -96,7 +96,7 @@ export function CanTodosButton({ actions }: { actions: readonly string[] }) {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark cursor-pointer"
+                className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-dark cursor-pointer"
               >
                 Close
               </button>

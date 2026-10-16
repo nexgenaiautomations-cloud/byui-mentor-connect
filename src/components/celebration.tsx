@@ -51,10 +51,10 @@ export function AchievementToast({
       aria-live="polite"
       className="pointer-events-none fixed inset-x-0 top-4 z-[80] flex justify-center px-4"
     >
-      <div className="pointer-events-auto flex max-w-md items-center gap-3 rounded-2xl border-2 border-gold-400 bg-byui-blue-dark/95 px-4 py-3 text-white shadow-2xl backdrop-blur">
+      <div className="pointer-events-auto flex max-w-md items-center gap-3 rounded-2xl border-2 border-gold-400 bg-brand-dark/95 px-4 py-3 text-white shadow-2xl backdrop-blur">
         <div
           aria-hidden
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold-400 text-byui-blue-dark"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold-400 text-brand-dark"
         >
           <svg
             viewBox="0 0 24 24"
@@ -101,15 +101,15 @@ export function GoldCongratulations({
       role="dialog"
       aria-modal="true"
       aria-label="Congratulations"
-      className="fixed inset-0 z-[90] flex flex-col items-center justify-center bg-gradient-to-br from-gold-300 via-gold-400 to-gold-500 text-byui-blue-dark"
+      className="fixed inset-0 z-[90] flex flex-col items-center justify-center bg-gradient-to-br from-gold-300 via-gold-400 to-gold-500 text-brand-dark"
     >
-      <p className="font-display text-xs font-black uppercase tracking-[0.35em] text-byui-blue/80">
-        BYUI CAN
+      <p className="font-display text-xs font-black uppercase tracking-[0.35em] text-brand/80">
+        ICAN
       </p>
       <h1 className="mt-3 text-center font-display text-5xl font-black tracking-tight drop-shadow-[0_2px_0_rgba(255,255,255,0.4)] sm:text-7xl">
         Congratulations!
       </h1>
-      <p className="mt-4 max-w-md px-6 text-center text-sm font-semibold text-byui-blue-dark/85 sm:text-base">
+      <p className="mt-4 max-w-md px-6 text-center text-sm font-semibold text-brand-dark/85 sm:text-base">
         Huge win — your hard work just paid off.
       </p>
     </div>

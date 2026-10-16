@@ -377,7 +377,7 @@ export const LOG_ACCOMPLISHMENT_OPTIONS = [
   OTHER_ACCOMPLISHMENT,
 ] as const;
 
-// BYUI CAN program cadence — "1 Career Task weekly · 2 Internships before
+// ICAN program cadence — "1 Career Task weekly · 2 Internships before
 // senior year · 3 Career Chats each month".
 export const CAN_CADENCE = [
   { n: 1, label: "Career Task", cadence: "weekly" },

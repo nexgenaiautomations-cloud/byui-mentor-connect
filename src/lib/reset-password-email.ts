@@ -1,14 +1,14 @@
 // Branded password-reset email — same visual chassis as magic-link-email so
 // the two transactional emails feel like one family.
 
-const BRAND_BLUE = "#006EB6";
-const BRAND_DARK = "#214491";
-const BRAND_LIGHT = "#A0D4ED";
+const BRAND_BLUE = "#6D28D9";
+const BRAND_DARK = "#4C1D95";
+const BRAND_LIGHT = "#C4B5FD";
 const BRAND_TEXT = "#0f172a";
-const BRAND_MUTED = "#5d6b85";
+const BRAND_MUTED = "#6b5f85";
 const BRAND_BORDER = "#e2e8f0";
 
-const LOGO_URL = "https://www.byuican.com/byuican-icon.png";
+const LOGO_URL = "https://www.icareeradvancementnetwork.com/ican-icon.png";
 
 export function buildResetPasswordEmail({
   url,
@@ -21,8 +21,8 @@ export function buildResetPasswordEmail({
   host: string;
   expiresMinutes: number;
 }) {
-  const subject = "Reset your BYUI CAN password";
-  const preheader = `Click the button to choose a new password for BYUI CAN Mentor Connect. Link expires in ${expiresMinutes} minutes.`;
+  const subject = "Reset your ICAN password";
+  const preheader = `Click the button to choose a new password for ICAN Mentor Connect. Link expires in ${expiresMinutes} minutes.`;
 
   const html = `<!doctype html>
 <html lang="en">
@@ -31,10 +31,10 @@ export function buildResetPasswordEmail({
     <meta name="viewport" content="width=device-width" />
     <title>${subject}</title>
   </head>
-  <body style="margin:0;padding:0;background:#f3f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${BRAND_TEXT};">
-    <div style="display:none;font-size:1px;color:#f3f6fb;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preheader}</div>
+  <body style="margin:0;padding:0;background:#f6f2fc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${BRAND_TEXT};">
+    <div style="display:none;font-size:1px;color:#f6f2fc;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preheader}</div>
 
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f3f6fb;padding:32px 16px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f6f2fc;padding:32px 16px;">
       <tr>
         <td align="center">
           <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid ${BRAND_BORDER};">
@@ -44,11 +44,11 @@ export function buildResetPasswordEmail({
                 <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
                   <tr>
                     <td style="vertical-align:middle;">
-                      <img src="${LOGO_URL}" width="44" height="44" alt="BYUI CAN"
+                      <img src="${LOGO_URL}" width="44" height="44" alt="ICAN"
                         style="display:block;width:44px;height:44px;border:0;outline:none;text-decoration:none;border-radius:8px;background:#ffffff;" />
                     </td>
                     <td style="vertical-align:middle;padding-left:12px;">
-                      <div style="font-size:14px;font-weight:800;color:#ffffff;letter-spacing:0.2px;line-height:1.1;">BYUI CAN</div>
+                      <div style="font-size:14px;font-weight:800;color:#ffffff;letter-spacing:0.2px;line-height:1.1;">ICAN</div>
                       <div style="font-size:11px;font-weight:600;color:${BRAND_LIGHT};letter-spacing:0.6px;text-transform:uppercase;line-height:1.1;margin-top:2px;">Career Advancement Network</div>
                     </td>
                   </tr>
@@ -101,9 +101,9 @@ export function buildResetPasswordEmail({
             </tr>
 
             <tr>
-              <td style="background:#f7f9fc;padding:18px 32px;text-align:center;">
+              <td style="background:#f8f6fc;padding:18px 32px;text-align:center;">
                 <div style="font-size:11px;line-height:1.5;color:${BRAND_MUTED};">
-                  BYUI CAN — Career Advancement Network · BYU-Idaho<br />
+                  ICAN — Career Advancement Network<br />An independent, student-run program. Not affiliated with or endorsed by BYU-Idaho.<br />
                   Sent to ${escapeHtml(email)} from ${escapeHtml(host)}
                 </div>
               </td>
@@ -117,7 +117,7 @@ export function buildResetPasswordEmail({
 </html>`;
 
   const text = [
-    "Reset your BYUI CAN password",
+    "Reset your ICAN password",
     "",
     `Someone requested a password reset for ${email}. Open this link in your browser to choose a new password:`,
     url,
@@ -125,7 +125,7 @@ export function buildResetPasswordEmail({
     `The link expires in ${expiresMinutes} minutes and can only be used once.`,
     "Didn't request this? Ignore the email; your password stays the same.",
     "",
-    "— BYUI CAN, Career Advancement Network, BYU-Idaho",
+    "— ICAN, Career Advancement Network (independent; not affiliated with BYU-Idaho)",
   ].join("\n");
 
   return { subject, html, text };

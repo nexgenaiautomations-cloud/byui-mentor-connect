@@ -31,7 +31,7 @@ test.describe("CSP smoke", () => {
     await page.waitForLoadState("networkidle");
     const body = await page.locator("body").innerText();
     expect(body.length).toBeGreaterThan(100);
-    expect(body).toContain("BYUI CAN");
+    expect(body).toContain("ICAN");
     // No JS-level page errors regardless of CSP mode.
     expect(pageErrors).toEqual([]);
 

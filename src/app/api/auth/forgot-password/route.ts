@@ -99,7 +99,7 @@ export async function POST(req: Request) {
         expiresMinutes: TTL_MIN,
       });
       const from =
-        process.env.EMAIL_FROM ?? "BYUI CAN <noreply@byuican.com>";
+        process.env.EMAIL_FROM ?? "ICAN <noreply@byuican.com>";
       await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
           subject,
           html,
           text,
-          headers: { "X-Entity-Ref-ID": "byuican-password-reset" },
+          headers: { "X-Entity-Ref-ID": "ican-password-reset" },
         }),
       });
     } else {

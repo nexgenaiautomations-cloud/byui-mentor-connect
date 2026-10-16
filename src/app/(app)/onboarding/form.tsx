@@ -286,7 +286,7 @@ export function OnboardingForm({
                   (done
                     ? "bg-emerald-600 text-white"
                     : active
-                    ? "bg-navy-700 text-white"
+                    ? "bg-plum-700 text-white"
                     : "bg-slate-200 text-slate-500")
                 }
               >
@@ -296,7 +296,7 @@ export function OnboardingForm({
                 <p
                   className={
                     "text-xs font-bold uppercase tracking-wider " +
-                    (active ? "text-navy-800" : done ? "text-emerald-700" : "text-slate-500")
+                    (active ? "text-plum-800" : done ? "text-emerald-700" : "text-slate-500")
                   }
                 >
                   {label}
@@ -321,7 +321,7 @@ export function OnboardingForm({
         {step === 0 && (
           <div className="space-y-5">
             {nameAlreadySet ? (
-              <p className="rounded-lg bg-byui-blue-light/20 px-3 py-2 text-sm text-byui-blue-dark">
+              <p className="rounded-lg bg-brand-light/20 px-3 py-2 text-sm text-brand-dark">
                 Hi, <strong>{form.firstName}</strong> — let&apos;s finish your
                 profile so we can match you with the right mentors.
               </p>
@@ -451,7 +451,7 @@ export function OnboardingForm({
                   id="onb-photo"
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
-                  className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-byui-blue file:px-3 file:py-2 file:text-xs file:font-bold file:text-white file:cursor-pointer hover:file:bg-byui-blue-dark"
+                  className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand file:px-3 file:py-2 file:text-xs file:font-bold file:text-white file:cursor-pointer hover:file:bg-brand-dark"
                   onChange={(e) => void handleFile(e.target.files?.[0] ?? null)}
                 />
                 {form.image ? (
@@ -527,8 +527,8 @@ export function OnboardingForm({
                     onClick={() => toggleCareer(opt)}
                     className={`cursor-pointer rounded-lg border px-3 py-2 text-left text-sm transition ${
                       selected
-                        ? "border-navy-600 bg-navy-50 text-navy-800"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-navy-300"
+                        ? "border-plum-600 bg-plum-50 text-plum-800"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-plum-300"
                     }`}
                   >
                     {opt}
@@ -547,7 +547,7 @@ export function OnboardingForm({
               />
             )}
             {showCareerChats && (
-              <div className="mt-5 space-y-3 rounded-xl border border-byui-blue-light/40 bg-slate-50 p-3">
+              <div className="mt-5 space-y-3 rounded-xl border border-brand-light/40 bg-slate-50 p-3">
                 <div>
                   <label htmlFor="settings-prior-chats" className="label">
                     How many informational interviews or career chats have you done?
@@ -612,7 +612,7 @@ export function OnboardingForm({
         {step === 3 && showExperienceStep && (
           <div className="space-y-5">
             <div>
-              <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+              <h2 className="font-display text-lg font-bold text-brand-dark">
                 A bit about your experience
               </h2>
               <p className="mt-1 text-sm text-slate-600">
@@ -646,7 +646,7 @@ export function OnboardingForm({
               />
               <p className="mt-1 text-xs text-slate-500">
                 Whole number, 0 or greater. Trophy Case totals start from
-                here, plus anything you log in BYUI CAN.
+                here, plus anything you log in ICAN.
               </p>
             </div>
             <div>

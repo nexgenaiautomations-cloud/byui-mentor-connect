@@ -77,7 +77,7 @@ export default async function AdminMatchesPage() {
     <div className="space-y-8">
       <header>
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Pairings</p>
-        <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">Matches</h1>
+        <h1 className="mt-1 font-display text-2xl font-black text-plum-800 sm:text-3xl">Matches</h1>
         <p className="mt-1 text-sm text-slate-600">
           Every active and ended pairing across the program.
         </p>
@@ -95,13 +95,13 @@ export default async function AdminMatchesPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 font-display text-lg font-bold text-navy-800">Active</h2>
+        <h2 className="mb-3 font-display text-lg font-bold text-plum-800">Active</h2>
         <ActiveMatchesTable rows={activeRows} />
       </section>
 
       {endedRows.length > 0 && (
         <section>
-          <h2 className="mb-3 font-display text-lg font-bold text-navy-800">Ended</h2>
+          <h2 className="mb-3 font-display text-lg font-bold text-plum-800">Ended</h2>
           <EndedMatchesTable rows={endedRows} />
         </section>
       )}

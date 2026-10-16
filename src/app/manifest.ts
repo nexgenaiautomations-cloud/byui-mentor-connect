@@ -2,16 +2,16 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "BYUI CAN Mentor Connect",
+    name: "ICAN Mentor Connect",
     short_name: "Mentor Connect",
     description:
-      "Peer mentorship for BYU-Idaho students — find a mentor, request, match, and check in monthly.",
+      "Independent, student-run peer mentorship — find a mentor, request, match, and check in monthly.",
     start_url: "/dashboard",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#1B3A6B",
-    theme_color: "#1B3A6B",
+    background_color: "#4A2585",
+    theme_color: "#4A2585",
     categories: ["education", "productivity", "social"],
     icons: [
       { src: "/favicon-128.png", sizes: "128x128", type: "image/png", purpose: "any" },

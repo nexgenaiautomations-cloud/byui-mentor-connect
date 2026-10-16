@@ -101,7 +101,7 @@ export default async function MentorsPage({
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-display text-2xl font-black text-navy-800 sm:text-3xl lg:text-4xl">Find a mentor.</h1>
+        <h1 className="font-display text-2xl font-black text-plum-800 sm:text-3xl lg:text-4xl">Find a mentor.</h1>
         <p className="text-sm font-medium text-slate-600">
           {mentors.length} accepting requests · sorted by overlap with your major and interests
         </p>
@@ -134,7 +134,7 @@ export default async function MentorsPage({
           {recommended.length > 0 && (
             <section>
               <div className="mb-3 flex items-baseline justify-between">
-                <h2 className="font-display text-lg font-bold text-navy-800">Recommended for you</h2>
+                <h2 className="font-display text-lg font-bold text-plum-800">Recommended for you</h2>
                 <span className="text-xs text-slate-500">based on major and career interests</span>
               </div>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -158,7 +158,7 @@ export default async function MentorsPage({
 
           {others.length > 0 && (
             <section>
-              <h2 className="mb-3 font-display text-lg font-bold text-navy-800">
+              <h2 className="mb-3 font-display text-lg font-bold text-plum-800">
                 {recommended.length > 0 ? "All other mentors" : "All mentors"}
               </h2>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -199,8 +199,8 @@ function FilterChip({
       className={
         "inline-flex select-none items-center rounded-full border px-3 py-1 text-xs font-semibold transition cursor-pointer " +
         (active
-          ? "border-navy-700 bg-navy-700 text-white"
-          : "border-slate-200 bg-white text-slate-600 hover:border-navy-300 hover:text-navy-700")
+          ? "border-plum-700 bg-plum-700 text-white"
+          : "border-slate-200 bg-white text-slate-600 hover:border-plum-300 hover:text-plum-700")
       }
     >
       {label}
@@ -253,7 +253,7 @@ function MentorCard({
           className="h-14 w-14 rounded-full border border-slate-200 object-cover"
         />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-base font-bold text-navy-800">{m.name || "Mentor"}</p>
+          <p className="truncate font-display text-base font-bold text-plum-800">{m.name || "Mentor"}</p>
           <p className="truncate text-xs text-slate-600">
             {m.major}{m.minor ? ` · ${m.minor}` : ""}
           </p>

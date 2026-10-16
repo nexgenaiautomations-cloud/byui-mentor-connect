@@ -5,18 +5,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: {
-          DEFAULT: "#1B3A6B",
-          50: "#f1f5fb",
-          100: "#dde7f3",
-          200: "#b8cce5",
-          300: "#86a8d0",
-          400: "#5483b8",
-          500: "#34669f",
-          600: "#26517f",
-          700: "#1B3A6B",
-          800: "#152c52",
-          900: "#101f3a",
+        // ICAN purple ink — headings, sidebar, primary buttons.
+        plum: {
+          DEFAULT: "#4A2585",
+          50: "#f7f3fd",
+          100: "#ede4fb",
+          200: "#d9c8f5",
+          300: "#bb9eec",
+          400: "#9a71df",
+          500: "#7c4dcc",
+          600: "#6234ad",
+          700: "#4A2585",
+          800: "#391b68",
+          900: "#26124a",
         },
         gold: {
           DEFAULT: "#C9A227",
@@ -31,13 +32,15 @@ export default {
           800: "#4d3e0e",
           900: "#332907",
         },
-        // BYU-Idaho brand palette. Primary = #006EB6. Accents used sparingly.
-        // Gray is the official #949598.
-        byui: {
-          blue: "#006EB6",
-          "blue-dark": "#214491",
-          "blue-mid": "#4F9ACF",
-          "blue-light": "#A0D4ED",
+        // ICAN brand palette. Primary = #6D28D9 (7:1 on white). The hero
+        // gradient runs brand-ink -> brand -> brand-magenta.
+        brand: {
+          DEFAULT: "#6D28D9",
+          dark: "#4C1D95",
+          mid: "#8B5CF6",
+          light: "#C4B5FD",
+          ink: "#2E1065",
+          magenta: "#A21CAF",
           gray: "#949598",
         },
       },
@@ -46,8 +49,8 @@ export default {
         display: ["Outfit", "Inter", "ui-sans-serif", "sans-serif"],
       },
       boxShadow: {
-        soft: "0 4px 24px rgba(27, 58, 107, 0.08)",
-        lift: "0 12px 40px rgba(27, 58, 107, 0.14)",
+        soft: "0 4px 24px rgba(74, 37, 133, 0.08)",
+        lift: "0 12px 40px rgba(74, 37, 133, 0.14)",
       },
     },
   },

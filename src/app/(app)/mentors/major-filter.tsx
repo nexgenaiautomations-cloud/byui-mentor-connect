@@ -31,7 +31,7 @@ export function MajorFilter({
       <select
         value={selected}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-navy-700 shadow-sm focus:border-navy-500 focus:outline-none focus:ring-2 focus:ring-navy-200 cursor-pointer"
+        className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-plum-700 shadow-sm focus:border-plum-500 focus:outline-none focus:ring-2 focus:ring-plum-200 cursor-pointer"
         aria-label="Filter mentors by major"
       >
         <option value="">All majors</option>

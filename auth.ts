@@ -18,7 +18,7 @@ const BYUI_DOMAIN = "@byui.edu";
 // clear Resend API error if you try to use it without configuring.
 const RESEND_KEY = process.env.AUTH_RESEND_KEY ?? "";
 const EMAIL_FROM =
-  process.env.EMAIL_FROM ?? "BYUI CAN Mentor Connect <noreply@byuican.com>";
+  process.env.EMAIL_FROM ?? "ICAN Mentor Connect <noreply@byuican.com>";
 
 // Match auth.js Resend provider's default token TTL (24h) — only used in the
 // email copy. Bump if you change the underlying expiry.
@@ -65,7 +65,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       from: EMAIL_FROM,
       apiKey: RESEND_KEY,
       // Branded HTML + plain-text body. Replaces the auth.js default plain
-      // template so the email looks like part of BYUI CAN, not a debug dump.
+      // template so the email looks like part of ICAN, not a debug dump.
       async sendVerificationRequest({ identifier: email, url, provider }) {
         // Rewrite the magic link to a confirmation page so Outlook/Defender
         // Safe Links and Gmail link-preview can scan the URL without burning
@@ -97,7 +97,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             text,
             // Helps inbox providers thread + de-prioritize as transactional.
             headers: {
-              "X-Entity-Ref-ID": "byuican-magic-link",
+              "X-Entity-Ref-ID": "ican-magic-link",
             },
           }),
         });

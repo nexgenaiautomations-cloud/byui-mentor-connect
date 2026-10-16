@@ -101,7 +101,7 @@ export function MentorWorkspace({
       <div className="card flex min-h-[280px] flex-col">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+            <h2 className="font-display text-lg font-bold text-brand-dark">
               {selectedMatch?.menteeName
                 ? `${selectedMatch.menteeName}'s history`
                 : "Mentee history"}
@@ -115,7 +115,7 @@ export function MentorWorkspace({
             type="button"
             onClick={() => void fetchLogs()}
             disabled={loading}
-            className="text-[11px] font-bold uppercase tracking-wider text-byui-blue hover:underline disabled:opacity-40 cursor-pointer"
+            className="text-[11px] font-bold uppercase tracking-wider text-brand hover:underline disabled:opacity-40 cursor-pointer"
             aria-label="Refresh activity"
           >
             {loading ? "Loading…" : "Refresh"}
@@ -143,7 +143,7 @@ export function MentorWorkspace({
                   className={"rounded-xl border p-3 " + RECORD_BG[t]}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-xs font-bold text-byui-blue-dark">
+                    <p className="text-xs font-bold text-brand-dark">
                       {new Date(l.meetingDate).toLocaleDateString(undefined, {
                         month: "short",
                         day: "numeric",
@@ -230,13 +230,13 @@ const RECORD_LABEL: Record<HistoryEventType, string> = {
 };
 
 const RECORD_BG: Record<HistoryEventType, string> = {
-  mentee_activity: "border-byui-blue-light/40 bg-byui-blue-light/15",
+  mentee_activity: "border-brand-light/40 bg-brand-light/15",
   mentor_meeting: "border-emerald-200 bg-emerald-50/50",
   system_goal: "border-slate-200 bg-slate-100/60",
 };
 
 const RECORD_PILL: Record<HistoryEventType, string> = {
-  mentee_activity: "bg-byui-blue-light/40 text-byui-blue-dark",
+  mentee_activity: "bg-brand-light/40 text-brand-dark",
   mentor_meeting: "bg-emerald-100 text-emerald-800",
   system_goal: "bg-slate-200 text-slate-700",
 };

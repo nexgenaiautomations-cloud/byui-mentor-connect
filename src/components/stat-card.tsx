@@ -6,7 +6,7 @@ export type Tone = "navy" | "emerald" | "amber" | "gold" | "violet" | "rose" | "
 // 10–11px sizes these tiles use — checked with axe. Darker shades (e.g.
 // amber-700 over amber-500) are deliberate; don't lighten without re-checking.
 const TONES: Record<Tone, { bg: string; label: string; hint: string }> = {
-  navy:    { bg: "bg-navy-700",     label: "text-navy-100",    hint: "text-navy-200" },
+  navy:    { bg: "bg-plum-700",     label: "text-plum-100",    hint: "text-plum-200" },
   emerald: { bg: "bg-emerald-700",  label: "text-emerald-100", hint: "text-emerald-100" },
   amber:   { bg: "bg-amber-700",    label: "text-amber-50",    hint: "text-amber-50" },
   gold:    { bg: "bg-gold-700",     label: "text-gold-50",     hint: "text-gold-100" },

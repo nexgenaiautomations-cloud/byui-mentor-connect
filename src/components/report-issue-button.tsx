@@ -23,7 +23,7 @@ export function ReportIssueButton({
   const triggerCls =
     variant === "sidebar"
       ? "mt-3 w-full rounded-md border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold text-white/85 transition hover:bg-white/15 hover:text-white cursor-pointer"
-      : "inline-flex items-center justify-center rounded-lg border border-byui-blue/40 bg-white px-3 py-1.5 text-xs font-semibold text-byui-blue-dark hover:bg-byui-blue-light/20 cursor-pointer";
+      : "inline-flex items-center justify-center rounded-lg border border-brand/40 bg-white px-3 py-1.5 text-xs font-semibold text-brand-dark hover:bg-brand-light/20 cursor-pointer";
 
   return (
     <>
@@ -92,13 +92,13 @@ function IssueModal({ onClose }: { onClose: () => void }) {
       <div
         aria-hidden
         onClick={() => !submitting && onClose()}
-        className="absolute inset-0 bg-byui-blue-dark/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="issue-title"
-        className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-byui-blue sm:p-6"
+        className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-brand sm:p-6"
       >
         <button
           type="button"
@@ -119,12 +119,12 @@ function IssueModal({ onClose }: { onClose: () => void }) {
           </svg>
         </button>
 
-        <p className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-brand">
           Support
         </p>
         <h2
           id="issue-title"
-          className="mt-1 font-display text-xl font-black text-byui-blue-dark"
+          className="mt-1 font-display text-xl font-black text-brand-dark"
         >
           Report an issue
         </h2>
@@ -154,7 +154,7 @@ function IssueModal({ onClose }: { onClose: () => void }) {
               <select
                 id="issue-category"
                 className="input text-slate-900"
-                style={{ color: "#13294B" }}
+                style={{ color: "#2E1065" }}
                 value={category}
                 onChange={(e) =>
                   setCategory(e.target.value as typeof category)
@@ -176,7 +176,7 @@ function IssueModal({ onClose }: { onClose: () => void }) {
                 id="issue-message"
                 rows={5}
                 className="input text-slate-900"
-                style={{ color: "#13294B" }}
+                style={{ color: "#2E1065" }}
                 placeholder="Describe what happened and what you'd like us to do about it."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}

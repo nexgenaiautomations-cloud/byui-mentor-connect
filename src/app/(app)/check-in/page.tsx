@@ -68,7 +68,7 @@ export default async function CheckInPage() {
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           {now.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
         </p>
-        <h1 className="mt-1 font-display text-3xl font-black text-byui-blue-dark">
+        <h1 className="mt-1 font-display text-3xl font-black text-brand-dark">
           Monthly Check-in
         </h1>
         <p className="mt-1 text-sm text-slate-600">

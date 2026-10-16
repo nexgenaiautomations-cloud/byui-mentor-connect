@@ -33,7 +33,7 @@ export default async function SettingsPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Settings
           </p>
-          <h1 className="font-display text-2xl font-black text-navy-800 sm:text-3xl">
+          <h1 className="font-display text-2xl font-black text-plum-800 sm:text-3xl">
             Your account
           </h1>
           <p className="mt-1 text-sm text-slate-600">
@@ -45,7 +45,7 @@ export default async function SettingsPage() {
 
       {/* Profile editor */}
       <section className="card">
-        <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+        <h2 className="font-display text-lg font-bold text-brand-dark">
           Profile
         </h2>
         <p className="mt-1 text-sm text-slate-600">
@@ -83,7 +83,7 @@ export default async function SettingsPage() {
         <section className="card">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+              <h2 className="font-display text-lg font-bold text-brand-dark">
                 Trophy Case
               </h2>
               <p className="mt-0.5 text-xs text-slate-500">
@@ -94,7 +94,7 @@ export default async function SettingsPage() {
             </div>
             <Link
               href="/trophy-case"
-              className="text-xs font-semibold text-byui-blue hover:underline"
+              className="text-xs font-semibold text-brand hover:underline"
             >
               View all →
             </Link>
@@ -117,7 +117,7 @@ export default async function SettingsPage() {
                     className={
                       "w-full truncate text-center text-[10px] " +
                       (a.isEarned
-                        ? "font-semibold text-byui-blue-dark"
+                        ? "font-semibold text-brand-dark"
                         : "text-slate-500")
                     }
                   >
@@ -132,17 +132,17 @@ export default async function SettingsPage() {
 
       {/* PWA install */}
       <section className="card">
-        <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+        <h2 className="font-display text-lg font-bold text-brand-dark">
           Install the App
         </h2>
         <p className="mt-1 text-sm text-slate-600">
-          Add BYUI CAN to your phone or desktop for faster access. Works offline
+          Add ICAN to your phone or desktop for faster access. Works offline
           for everything you&apos;ve already loaded.
         </p>
         <div className="mt-3">
           <InstallButton
             variant="primary"
-            label="Install BYUI CAN"
+            label="Install ICAN"
             fallback="instructions"
           />
         </div>
@@ -151,7 +151,7 @@ export default async function SettingsPage() {
       {/* Want to be a mentor? — only show for non-mentor, non-admin users */}
       {!isMentor && !user.isAdmin && (
         <section className="card">
-          <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+          <h2 className="font-display text-lg font-bold text-brand-dark">
             Want to be a mentor?
           </h2>
           <p className="mt-1 text-sm text-slate-600">
@@ -161,7 +161,7 @@ export default async function SettingsPage() {
           </p>
           <Link
             href="/apply-mentor"
-            className="mt-3 inline-flex items-center justify-center rounded-lg border border-byui-blue/40 bg-white px-4 py-2 text-sm font-bold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+            className="mt-3 inline-flex items-center justify-center rounded-lg border border-brand/40 bg-white px-4 py-2 text-sm font-bold text-brand-dark transition hover:bg-brand-light/20 cursor-pointer"
           >
             Apply to mentor →
           </Link>
@@ -171,7 +171,7 @@ export default async function SettingsPage() {
       {/* Career experience — what they told us at signup */}
       {(user.priorCareerChats || user.priorInternshipExperience) && (
         <section className="card">
-          <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+          <h2 className="font-display text-lg font-bold text-brand-dark">
             Career experience
           </h2>
           <p className="mt-1 text-xs text-slate-500">
@@ -205,7 +205,7 @@ export default async function SettingsPage() {
 
       {/* Account / security stub */}
       <section className="card">
-        <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+        <h2 className="font-display text-lg font-bold text-brand-dark">
           Account
         </h2>
         <dl className="mt-3 space-y-2 text-sm">

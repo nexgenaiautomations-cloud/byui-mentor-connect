@@ -89,7 +89,7 @@ export function LoginForm({
     setInfo(null);
     const value = email.trim().toLowerCase();
     if (!value) {
-      setError("Enter your BYU-I email first.");
+      setError("Enter your student email first.");
       return;
     }
     if (!value.endsWith("@byui.edu")) {
@@ -125,7 +125,7 @@ export function LoginForm({
           className={
             "flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition cursor-pointer " +
             (mode === "password"
-              ? "bg-white text-navy-800 shadow-soft"
+              ? "bg-white text-plum-800 shadow-soft"
               : "text-slate-600 hover:text-slate-700")
           }
         >
@@ -137,7 +137,7 @@ export function LoginForm({
           className={
             "flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition cursor-pointer " +
             (mode === "magic"
-              ? "bg-white text-navy-800 shadow-soft"
+              ? "bg-white text-plum-800 shadow-soft"
               : "text-slate-600 hover:text-slate-700")
           }
         >
@@ -148,7 +148,7 @@ export function LoginForm({
       {mode === "password" ? (
         <form onSubmit={submitPassword} className="space-y-4">
           <div>
-            <label htmlFor="email" className="label">BYU-I email</label>
+            <label htmlFor="email" className="label">Student email (@byui.edu)</label>
             <input
               id="email"
               name="email"
@@ -166,7 +166,7 @@ export function LoginForm({
               <label htmlFor="password" className="label">Password</label>
               <Link
                 href="/forgot-password"
-                className="text-xs font-semibold text-byui-blue hover:underline"
+                className="text-xs font-semibold text-brand hover:underline"
               >
                 Forgot password?
               </Link>
@@ -193,7 +193,7 @@ export function LoginForm({
       ) : (
         <form onSubmit={submitMagic} className="space-y-4">
           <div>
-            <label htmlFor="email-magic" className="label">BYU-I email</label>
+            <label htmlFor="email-magic" className="label">Student email (@byui.edu)</label>
             <input
               id="email-magic"
               name="email"
@@ -228,7 +228,7 @@ export function LoginForm({
                 type="button"
                 onClick={resendVerification}
                 disabled={resending}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-byui-blue/40 bg-white px-3 py-1.5 text-xs font-bold text-byui-blue-dark transition hover:bg-byui-blue-light/20 disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-brand/40 bg-white px-3 py-1.5 text-xs font-bold text-brand-dark transition hover:bg-brand-light/20 disabled:opacity-50 cursor-pointer"
               >
                 {resending ? "Sending…" : "Resend verification email"}
               </button>
@@ -243,10 +243,10 @@ export function LoginForm({
       )}
 
       <p className="text-center text-sm text-slate-600">
-        New to BYUI CAN?{" "}
+        New to ICAN?{" "}
         <Link
           href="/signup"
-          className="font-semibold text-byui-blue hover:underline"
+          className="font-semibold text-brand hover:underline"
         >
           Create an account →
         </Link>

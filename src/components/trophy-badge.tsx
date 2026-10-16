@@ -58,7 +58,7 @@ export function TrophyBadge({
       className={
         "flex items-center justify-center rounded-2xl " +
         (earned
-          ? "bg-gradient-to-br from-byui-blue to-byui-blue-dark shadow-soft"
+          ? "bg-gradient-to-br from-brand to-brand-dark shadow-soft"
           : "bg-slate-100")
       }
       style={{ width: size, height: size }}

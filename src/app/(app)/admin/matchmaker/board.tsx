@@ -256,8 +256,8 @@ export function MatchmakerBoard({
 
   if (menteeList.length === 0) {
     return (
-      <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-byui-blue-light/40">
-        <p className="font-display text-lg font-bold text-byui-blue-dark">
+      <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-brand-light/40">
+        <p className="font-display text-lg font-bold text-brand-dark">
           All matched up.
         </p>
         <p className="mt-1 text-sm text-slate-600">
@@ -272,7 +272,7 @@ export function MatchmakerBoard({
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-slate-600">
-          <span className="font-bold text-byui-blue-dark">{readyToMatchCount}</span> of{" "}
+          <span className="font-bold text-brand-dark">{readyToMatchCount}</span> of{" "}
           {menteeList.length} ready to match
           {readyToMatchCount > 0 ? " — review suggestions and adjust." : "."}
         </p>
@@ -280,7 +280,7 @@ export function MatchmakerBoard({
           type="button"
           onClick={() => setConfirmAllOpen(true)}
           disabled={readyToMatchCount === 0 || busy !== null}
-          className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-5 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          className="inline-flex items-center justify-center rounded-lg bg-brand px-5 py-2 text-sm font-bold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
         >
           Match All
         </button>
@@ -329,7 +329,7 @@ export function MatchmakerBoard({
                     type="button"
                     onClick={() => matchOne(m.id)}
                     disabled={!assignedMentor || busy !== null}
-                    className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                    className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                   >
                     {busy === m.id ? "Matching…" : "Match"}
                   </button>
@@ -353,17 +353,17 @@ export function MatchmakerBoard({
           <div
             aria-hidden
             onClick={() => busy !== "all" && setConfirmAllOpen(false)}
-            className="absolute inset-0 bg-byui-blue-dark/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
           />
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="match-all-title"
-            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-byui-blue sm:p-6"
+            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-brand sm:p-6"
           >
             <h2
               id="match-all-title"
-              className="font-display text-xl font-black leading-tight text-byui-blue-dark"
+              className="font-display text-xl font-black leading-tight text-brand-dark"
             >
               Confirm Match All
             </h2>
@@ -389,7 +389,7 @@ export function MatchmakerBoard({
                 type="button"
                 onClick={matchAll}
                 disabled={busy === "all" || readyToMatchCount === 0}
-                className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-5 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center justify-center rounded-lg bg-brand px-5 py-2 text-sm font-bold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 {busy === "all" ? "Matching…" : "Match All"}
               </button>
@@ -428,12 +428,12 @@ function MentorPool({ mentors }: { mentors: MentorCard[] }) {
       className={
         "sticky top-16 z-10 rounded-2xl bg-white p-3 shadow-soft ring-1 transition " +
         (isOver
-          ? "ring-2 ring-byui-blue"
-          : "ring-byui-blue-light/50")
+          ? "ring-2 ring-brand"
+          : "ring-brand-light/50")
       }
     >
       <div className="mb-2 flex items-baseline justify-between">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-brand">
           Mentor pool
         </p>
         <p className="text-[11px] text-slate-500">
@@ -512,10 +512,10 @@ function MentorChip({
       className={
         "flex items-center gap-2 rounded-lg border bg-white px-2 py-2 transition " +
         (dragging
-          ? "border-byui-blue shadow-lift ring-2 ring-byui-blue"
+          ? "border-brand shadow-lift ring-2 ring-brand"
           : disabled
           ? "border-slate-200 opacity-50"
-          : "border-slate-200 hover:border-byui-blue-light")
+          : "border-slate-200 hover:border-brand-light")
       }
     >
       <button
@@ -540,7 +540,7 @@ function MentorChip({
         className="h-8 w-8 shrink-0 rounded-full object-cover"
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-bold text-byui-blue-dark">
+        <p className="truncate text-[13px] font-bold text-brand-dark">
           {mentor.name ?? "Mentor"}
         </p>
         <p className="truncate text-[11px] text-slate-500">{mentor.major ?? "—"}</p>
@@ -549,7 +549,7 @@ function MentorChip({
             {mentor.topics.slice(0, 3).map((t) => (
               <span
                 key={t}
-                className="rounded-full bg-byui-blue-light/30 px-1.5 py-0.5 text-[10px] font-semibold text-byui-blue-dark"
+                className="rounded-full bg-brand-light/30 px-1.5 py-0.5 text-[10px] font-semibold text-brand-dark"
               >
                 {t}
               </span>
@@ -583,7 +583,7 @@ function MenteeRow({ mentee }: { mentee: MenteeCard }) {
         className="h-10 w-10 shrink-0 rounded-full object-cover"
       />
       <div className="min-w-0">
-        <p className="truncate font-semibold text-navy-800">
+        <p className="truncate font-semibold text-plum-800">
           {mentee.name ?? "Mentee"}
         </p>
         <p className="truncate text-[11px] text-slate-500">{mentee.email}</p>
@@ -626,7 +626,7 @@ function MentorSlot({
       className={
         "min-h-[72px] rounded-xl p-2 transition " +
         (isOver
-          ? "bg-byui-blue-light/30 ring-2 ring-byui-blue"
+          ? "bg-brand-light/30 ring-2 ring-brand"
           : mentor
           ? "bg-white ring-1 ring-slate-200"
           : "bg-slate-50 ring-1 ring-dashed ring-slate-300")
@@ -641,7 +641,7 @@ function MentorSlot({
                 className={
                   "mt-1 px-1 text-[10px] font-semibold " +
                   (matchTier.tier === "major"
-                    ? "text-byui-blue"
+                    ? "text-brand"
                     : "text-slate-500")
                 }
               >

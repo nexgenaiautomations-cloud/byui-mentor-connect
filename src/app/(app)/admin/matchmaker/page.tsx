@@ -131,7 +131,7 @@ export default async function AdminMatchmakerPage() {
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
           Pairings
         </p>
-        <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">
+        <h1 className="mt-1 font-display text-2xl font-black text-plum-800 sm:text-3xl">
           Matchmaker
         </h1>
         <p className="mt-1 text-sm text-slate-600">

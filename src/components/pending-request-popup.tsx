@@ -114,18 +114,18 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         aria-hidden
-        className="absolute inset-0 bg-byui-blue-dark/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="pending-popup-title"
-        className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-byui-blue sm:p-6"
+        className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-brand sm:p-6"
       >
-        <p className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">{positionLabel}</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-brand">{positionLabel}</p>
         <h2
           id="pending-popup-title"
-          className="mt-1 font-display text-xl font-black leading-tight text-navy-800"
+          className="mt-1 font-display text-xl font-black leading-tight text-plum-800"
         >
           {current.menteeName} wants you as a mentor.
         </h2>
@@ -141,7 +141,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
             className="h-12 w-12 shrink-0 rounded-full object-cover ring-2 ring-white"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-navy-800">{current.menteeName}</p>
+            <p className="truncate text-sm font-semibold text-plum-800">{current.menteeName}</p>
             <p className="truncate text-xs text-slate-500">
               {current.menteeMajor}
               {current.menteeSemester ? ` · ${current.menteeSemester}` : ""}
@@ -151,7 +151,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
         </div>
 
         {current.message && (
-          <blockquote className="mt-3 rounded-xl border-l-4 border-byui-blue bg-byui-blue-light/15 px-3 py-2 text-sm italic text-byui-blue-dark">
+          <blockquote className="mt-3 rounded-xl border-l-4 border-brand bg-brand-light/15 px-3 py-2 text-sm italic text-brand-dark">
             &ldquo;{current.message}&rdquo;
           </blockquote>
         )}
@@ -163,7 +163,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
             </div>
             <Link
               href="/matches"
-              className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white hover:bg-byui-blue-dark cursor-pointer"
+              className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-dark cursor-pointer"
             >
               Open match →
             </Link>
@@ -174,7 +174,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
           </div>
         ) : confirmingDecline ? (
           <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="font-display text-base font-black text-byui-blue-dark">
+            <p className="font-display text-base font-black text-brand-dark">
               Are you sure?
             </p>
             <p className="mt-1 text-sm text-slate-600">
@@ -219,7 +219,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
               type="button"
               onClick={() => act("accept")}
               disabled={busy}
-              className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-5 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center justify-center rounded-lg bg-brand px-5 py-2 text-sm font-bold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
               {busy ? "…" : "Accept"}
             </button>

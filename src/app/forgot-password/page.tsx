@@ -9,23 +9,23 @@ export default async function ForgotPasswordPage() {
   if (session?.user?.id) redirect("/dashboard");
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#F7F8FB] px-6 py-12">
+    <main className="grid min-h-screen place-items-center bg-[#F8F6FC] px-6 py-12">
       <div className="w-full max-w-md">
         <Link
           href="/"
           className="mb-6 flex items-center justify-center gap-3"
         >
-          <Logo size={36} />
-          <span className="font-display text-base font-black tracking-tight text-navy-800">
-            BYUI CAN
+          <Logo size={36} tile />
+          <span className="font-display text-base font-black tracking-tight text-plum-800">
+            ICAN
           </span>
         </Link>
         <div className="card">
-          <h1 className="font-display text-2xl font-bold text-navy-800">
+          <h1 className="font-display text-2xl font-bold text-plum-800">
             Forgot your password?
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Enter your BYU-I email and we&apos;ll send you a reset link. It
+            Enter your student email (@byui.edu) and we&apos;ll send you a reset link. It
             expires in one hour.
           </p>
           <div className="mt-5">
@@ -34,13 +34,13 @@ export default async function ForgotPasswordPage() {
           <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4 text-sm">
             <Link
               href="/login"
-              className="font-semibold text-byui-blue hover:underline"
+              className="font-semibold text-brand hover:underline"
             >
               ← Back to sign in
             </Link>
             <Link
               href="/signup"
-              className="font-semibold text-byui-blue hover:underline"
+              className="font-semibold text-brand hover:underline"
             >
               Create account →
             </Link>

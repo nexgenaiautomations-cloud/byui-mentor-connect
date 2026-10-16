@@ -83,7 +83,7 @@ export function InstallButton({
       return (
         <button
           onClick={install}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-navy-200 bg-navy-50 px-3 py-2 text-xs font-semibold text-navy-700 hover:bg-navy-100 cursor-pointer"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-plum-200 bg-plum-50 px-3 py-2 text-xs font-semibold text-plum-700 hover:bg-plum-100 cursor-pointer"
         >
           <DownloadIcon /> {label}
         </button>
@@ -109,12 +109,12 @@ export function InstallButton({
       <button
         onClick={() => setShowSteps((s) => !s)}
         aria-expanded={showSteps}
-        className="inline-flex items-center gap-2 rounded-lg border border-byui-blue/30 bg-white px-4 py-2 text-sm font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+        className="inline-flex items-center gap-2 rounded-lg border border-brand/30 bg-white px-4 py-2 text-sm font-semibold text-brand-dark transition hover:bg-brand-light/20 cursor-pointer"
       >
         <DownloadIcon /> {showSteps ? "Hide install steps" : "Show install steps"}
       </button>
       {showSteps && (
-        <div className="mt-3 rounded-xl border border-byui-blue-light/40 bg-byui-blue-light/10 p-4 text-sm text-slate-700">
+        <div className="mt-3 rounded-xl border border-brand-light/40 bg-brand-light/10 p-4 text-sm text-slate-700">
           <InstallSteps platform={platform} />
         </div>
       )}
@@ -126,7 +126,7 @@ function InstallSteps({ platform }: { platform: Platform }) {
   if (platform === "ios") {
     return (
       <>
-        <p className="font-semibold text-byui-blue-dark">On iPhone or iPad (Safari)</p>
+        <p className="font-semibold text-brand-dark">On iPhone or iPad (Safari)</p>
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
           <li>Tap the <strong>Share</strong> button at the bottom of the screen.</li>
           <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
@@ -141,7 +141,7 @@ function InstallSteps({ platform }: { platform: Platform }) {
   if (platform === "android") {
     return (
       <>
-        <p className="font-semibold text-byui-blue-dark">On Android (Chrome)</p>
+        <p className="font-semibold text-brand-dark">On Android (Chrome)</p>
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
           <li>Tap the <strong>⋮</strong> menu in the top-right corner.</li>
           <li>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
@@ -153,7 +153,7 @@ function InstallSteps({ platform }: { platform: Platform }) {
   if (platform === "desktop-chromium") {
     return (
       <>
-        <p className="font-semibold text-byui-blue-dark">On desktop (Chrome or Edge)</p>
+        <p className="font-semibold text-brand-dark">On desktop (Chrome or Edge)</p>
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
           <li>
             Look for the install icon{" "}
@@ -162,7 +162,7 @@ function InstallSteps({ platform }: { platform: Platform }) {
             </span>{" "}
             on the right side of the address bar.
           </li>
-          <li>Or open the <strong>⋮</strong> menu and choose <strong>Install BYUI CAN…</strong></li>
+          <li>Or open the <strong>⋮</strong> menu and choose <strong>Install ICAN…</strong></li>
           <li>Click <strong>Install</strong> to confirm.</li>
         </ol>
         <p className="mt-2 text-xs text-slate-500">
@@ -175,10 +175,10 @@ function InstallSteps({ platform }: { platform: Platform }) {
   if (platform === "firefox") {
     return (
       <>
-        <p className="font-semibold text-byui-blue-dark">Firefox</p>
+        <p className="font-semibold text-brand-dark">Firefox</p>
         <p className="mt-2 text-sm">
           Firefox doesn&apos;t support installing this app on desktop. For the full
-          experience, open BYUI CAN in <strong>Chrome</strong> or <strong>Edge</strong> and
+          experience, open ICAN in <strong>Chrome</strong> or <strong>Edge</strong> and
           install from there. On Firefox for Android, tap the <strong>⋮</strong> menu →{" "}
           <strong>Install</strong>.
         </p>
@@ -187,7 +187,7 @@ function InstallSteps({ platform }: { platform: Platform }) {
   }
   return (
     <>
-      <p className="font-semibold text-byui-blue-dark">Install from your browser</p>
+      <p className="font-semibold text-brand-dark">Install from your browser</p>
       <p className="mt-2 text-sm">
         Look for an <strong>Install</strong> or <strong>Add to Home Screen</strong> option in
         your browser&apos;s menu. The exact location varies by browser — Chrome and Edge

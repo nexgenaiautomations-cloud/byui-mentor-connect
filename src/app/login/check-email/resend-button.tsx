@@ -30,7 +30,7 @@ export function ResendVerifyButton({ email }: { email: string }) {
         type="button"
         onClick={resend}
         disabled={pending}
-        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-byui-blue/40 bg-white px-4 py-2 text-sm font-bold text-byui-blue-dark transition hover:bg-byui-blue-light/20 disabled:opacity-50 cursor-pointer"
+        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-brand/40 bg-white px-4 py-2 text-sm font-bold text-brand-dark transition hover:bg-brand-light/20 disabled:opacity-50 cursor-pointer"
       >
         {pending ? "Sending…" : "Resend verification email"}
       </button>

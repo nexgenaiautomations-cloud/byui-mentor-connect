@@ -54,7 +54,7 @@ export default async function AdminMeetingsPage() {
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
           Program logs
         </p>
-        <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">
+        <h1 className="mt-1 font-display text-2xl font-black text-plum-800 sm:text-3xl">
           Activity
         </h1>
         <p className="mt-1 text-sm text-slate-600">
@@ -84,7 +84,7 @@ export default async function AdminMeetingsPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 font-display text-lg font-bold text-navy-800">
+        <h2 className="mb-3 font-display text-lg font-bold text-plum-800">
           Recent
         </h2>
         {logs.length === 0 ? (
@@ -127,7 +127,7 @@ export default async function AdminMeetingsPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-navy-800">
+                        <p className="text-sm font-semibold text-plum-800">
                           {l.studentName}
                           {l.mentorName ? (
                             <>

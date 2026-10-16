@@ -423,7 +423,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     key: "can_standard_keeper",
-    title: "CAN Standard Keeper",
+    title: "ICAN Standard Keeper",
     description:
       "Completed your weekly Career Task and the monthly Career Chats goal in the same period.",
     tier: "progressive",

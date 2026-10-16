@@ -49,7 +49,7 @@ export default async function LogActivityPage({
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Mentor tools
           </p>
-          <h1 className="mt-1 font-display text-3xl font-black text-byui-blue-dark">
+          <h1 className="mt-1 font-display text-3xl font-black text-brand-dark">
             Log a Meeting
           </h1>
           <p className="mt-1 text-sm text-slate-600">
@@ -103,7 +103,7 @@ export default async function LogActivityPage({
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           Career Action Network
         </p>
-        <h1 className="mt-1 font-display text-3xl font-black text-byui-blue-dark">
+        <h1 className="mt-1 font-display text-3xl font-black text-brand-dark">
           Log an Activity
         </h1>
         <p className="mt-1 text-sm text-slate-600">
@@ -121,7 +121,7 @@ export default async function LogActivityPage({
           {activeMatch ? (
             <p className="mb-4 text-xs text-slate-500">
               Logging will also notify your mentor{" "}
-              <span className="font-semibold text-byui-blue-dark">
+              <span className="font-semibold text-brand-dark">
                 {activeMatch.mentorName}
               </span>
               .
@@ -148,12 +148,12 @@ function LoggingGuidance({ role }: { role: "mentor" | "mentee" }) {
   return (
     <section
       role="note"
-      className="rounded-2xl border border-byui-blue-light/60 bg-byui-blue-light/15 p-4 sm:p-5"
+      className="rounded-2xl border border-brand-light/60 bg-brand-light/15 p-4 sm:p-5"
     >
       <div className="flex items-start gap-3">
         <span
           aria-hidden
-          className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-byui-blue text-white"
+          className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand text-white"
         >
           <svg
             viewBox="0 0 24 24"
@@ -171,7 +171,7 @@ function LoggingGuidance({ role }: { role: "mentor" | "mentee" }) {
         <div className="min-w-0 flex-1">
           {role === "mentee" ? (
             <>
-              <h2 className="font-display text-base font-bold text-byui-blue-dark sm:text-lg">
+              <h2 className="font-display text-base font-bold text-brand-dark sm:text-lg">
                 Report career progress you complete on your own.
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-700">
@@ -187,7 +187,7 @@ function LoggingGuidance({ role }: { role: "mentor" | "mentee" }) {
             </>
           ) : (
             <>
-              <h2 className="font-display text-base font-bold text-byui-blue-dark sm:text-lg">
+              <h2 className="font-display text-base font-bold text-brand-dark sm:text-lg">
                 Record what happened during a 1-on-1 mentoring meeting.
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-700">
@@ -220,7 +220,7 @@ function RecentList({
 }) {
   return (
     <div className="card">
-      <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+      <h2 className="font-display text-lg font-bold text-brand-dark">
         Recent activity
       </h2>
       {recent.length === 0 ? (
@@ -238,7 +238,7 @@ function RecentList({
               }
             >
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-byui-blue-dark">
+                <p className="text-sm font-semibold text-brand-dark">
                   {new Date(l.meetingDate).toLocaleDateString(undefined, {
                     month: "short",
                     day: "numeric",
@@ -249,7 +249,7 @@ function RecentList({
                     "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider capitalize " +
                     (l.isSystemGenerated
                       ? "bg-emerald-100 text-emerald-800"
-                      : "bg-byui-blue-light/30 text-byui-blue-dark")
+                      : "bg-brand-light/30 text-brand-dark")
                   }
                 >
                   {l.isSystemGenerated

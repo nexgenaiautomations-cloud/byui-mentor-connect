@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BYUI CAN Mentor Connect",
-  description: "A peer mentorship platform for BYU-Idaho students.",
+  title: "ICAN Mentor Connect",
+  description: "An independent, student-run peer mentorship platform for college students.",
   manifest: "/manifest.webmanifest",
-  applicationName: "BYUI CAN Mentor Connect",
+  applicationName: "ICAN Mentor Connect",
   appleWebApp: {
     capable: true,
     title: "Mentor Connect",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1B3A6B",
+  themeColor: "#4A2585",
   width: "device-width",
   initialScale: 1,
 };

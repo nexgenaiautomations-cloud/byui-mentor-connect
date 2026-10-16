@@ -83,13 +83,13 @@ export function Sidebar({
   const { primary, admin } = buildNav(activeRole, user.isHeadAdmin);
 
   return (
-    <aside className="hidden lg:flex fixed left-0 top-0 z-10 h-screen w-64 flex-col text-white bg-gradient-to-b from-byui-blue-dark/55 via-byui-blue-dark/45 to-byui-blue-dark/40 backdrop-blur-[2px] border-r border-white/10">
+    <aside className="hidden lg:flex fixed left-0 top-0 z-10 h-screen w-64 flex-col text-white bg-gradient-to-b from-brand-dark/55 via-brand-dark/45 to-brand-dark/40 backdrop-blur-[2px] border-r border-white/10">
       {/* Logo block matches the topbar height (h-16) so the nav below lines
           up with the white content card on the right. */}
       <Link href="/dashboard" className="flex h-16 items-center gap-3 px-6 cursor-pointer">
         <Logo size={52} />
         <div className="leading-tight">
-          <p className="font-display text-sm font-black tracking-tight text-white">BYUI CAN</p>
+          <p className="font-display text-sm font-black tracking-tight text-white">ICAN</p>
           <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
             Mentor Connect
           </p>
@@ -146,7 +146,7 @@ export function Sidebar({
           </div>
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-sm font-semibold text-white">{user.name || "Member"}</p>
-            <p className="truncate text-[11px] font-medium uppercase tracking-wider text-byui-blue-light">
+            <p className="truncate text-[11px] font-medium uppercase tracking-wider text-brand-light">
               {user.isHeadAdmin
                 ? `Head Admin · viewing as ${ROLE_LABELS[activeRole]}`
                 : `Viewing as ${ROLE_LABELS[activeRole]}`}
@@ -158,7 +158,7 @@ export function Sidebar({
         <form action={signOutAction} className="mt-2">
           <button
             type="submit"
-            className="w-full rounded-lg bg-byui-blue px-3 py-1.5 text-center text-xs font-bold text-white transition hover:bg-byui-blue-dark cursor-pointer"
+            className="w-full rounded-lg bg-brand px-3 py-1.5 text-center text-xs font-bold text-white transition hover:bg-brand-dark cursor-pointer"
           >
             Sign out →
           </button>
@@ -196,7 +196,7 @@ function RoleSwitcher({
             router.push("/dashboard");
           });
         }}
-        className="mt-1 w-full rounded-lg border border-white/30 bg-white/10 px-2 py-1.5 text-xs font-semibold text-white outline-none ring-byui-blue-light focus:ring-2 disabled:opacity-50 cursor-pointer"
+        className="mt-1 w-full rounded-lg border border-white/30 bg-white/10 px-2 py-1.5 text-xs font-semibold text-white outline-none ring-brand-light focus:ring-2 disabled:opacity-50 cursor-pointer"
       >
         {availableRoles.map((r) => (
           <option key={r} value={r} className="text-slate-800">
@@ -216,7 +216,7 @@ function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
         className={
           "block rounded-lg px-3 py-1 text-[14px] font-semibold tracking-tight transition cursor-pointer " +
           (active
-            ? "bg-white text-byui-blue-dark shadow-soft"
+            ? "bg-white text-brand-dark shadow-soft"
             : "bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20 hover:ring-white/40")
         }
       >
@@ -326,7 +326,7 @@ export function MobileBar({
   }
   return (
     <nav
-      className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex border-t border-white/10 bg-navy-900/95 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] backdrop-blur"
+      className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex border-t border-white/10 bg-plum-900/95 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] backdrop-blur"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {items.map((it) => {
@@ -339,7 +339,7 @@ export function MobileBar({
             className={
               "flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 px-2 py-2 text-center text-[11px] font-semibold tracking-wide transition cursor-pointer " +
               (active
-                ? "text-byui-blue-light"
+                ? "text-brand-light"
                 : "text-white/80 hover:text-white")
             }
           >
