@@ -12,9 +12,9 @@ import {
 } from "@/lib/disclaimers";
 
 export const metadata: Metadata = {
-  title: "Terms of Use — ICAN Mentor Connect",
+  title: "Terms of Use — ICAN",
   description:
-    "Terms of Use for ICAN Mentor Connect, an independent, student-run peer mentorship website that is not affiliated with BYU-Idaho.",
+    "Terms of Use for ICAN, an independent, student-run peer mentorship website that is not affiliated with BYU-Idaho.",
 };
 
 const P = "text-[15px] leading-relaxed text-slate-600";
@@ -175,7 +175,7 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
     body: (
       <p className={P}>
         These terms are an agreement between you and {OPERATOR}, which operates
-        ICAN Mentor Connect. If they change materially, we will update the effective
+        ICAN. If they change materially, we will update the effective
         date below and ask you to review them again in the app. Questions go to{" "}
         <a href="mailto:GabrielD@nexgenaiintegrations.com" className={LINK}>
           GabrielD@nexgenaiintegrations.com
@@ -194,7 +194,7 @@ export default function TermsPage() {
           <Logo size={40} tile />
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand">
-              ICAN Mentor Connect
+              ICAN
             </p>
             <h1 className="font-display text-3xl font-black text-brand-dark md:text-4xl">
               Terms of use

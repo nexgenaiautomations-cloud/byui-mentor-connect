@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ICAN Mentor Connect",
+  title: "ICAN",
   description: "An independent, student-run peer mentorship platform for college students.",
   manifest: "/manifest.webmanifest",
-  applicationName: "ICAN Mentor Connect",
+  applicationName: "ICAN",
   appleWebApp: {
     capable: true,
-    title: "Mentor Connect",
+    title: "ICAN",
     statusBarStyle: "black-translucent",
   },
   icons: {

@@ -17,7 +17,7 @@ import { isAllowedSchoolEmail } from "@/lib/school-domains";
 // clear Resend API error if you try to use it without configuring.
 const RESEND_KEY = process.env.AUTH_RESEND_KEY ?? "";
 const EMAIL_FROM =
-  process.env.EMAIL_FROM ?? "ICAN Mentor Connect <noreply@icareeradvancementnetwork.com>";
+  process.env.EMAIL_FROM ?? "ICAN <noreply@icareeradvancementnetwork.com>";
 
 // Match auth.js Resend provider's default token TTL (24h) — only used in the
 // email copy. Bump if you change the underlying expiry.

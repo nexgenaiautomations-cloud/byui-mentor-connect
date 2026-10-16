@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "ICAN Mentor Connect",
-    short_name: "Mentor Connect",
+    name: "ICAN",
+    short_name: "ICAN",
     description:
       "Independent, student-run peer mentorship — find a mentor, request, match, and check in monthly.",
     start_url: "/dashboard",

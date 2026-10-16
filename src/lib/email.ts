@@ -4,7 +4,7 @@
 
 const RESEND_KEY = process.env.AUTH_RESEND_KEY ?? "";
 const EMAIL_FROM =
-  process.env.EMAIL_FROM ?? "ICAN Mentor Connect <noreply@icareeradvancementnetwork.com>";
+  process.env.EMAIL_FROM ?? "ICAN <noreply@icareeradvancementnetwork.com>";
 
 export type SendEmailResult = { ok: true } | { ok: false; error: string };
 

@@ -62,7 +62,7 @@ export default async function VerifyPage({
             type="submit"
             className="w-full rounded-lg bg-brand px-5 py-3 text-sm font-bold text-white shadow-soft transition hover:bg-brand-dark active:scale-[0.98] cursor-pointer"
           >
-            Sign in to Mentor Connect →
+            Sign in to ICAN →
           </button>
         </form>
 

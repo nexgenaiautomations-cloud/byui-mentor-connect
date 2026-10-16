@@ -22,7 +22,7 @@ export function buildResetPasswordEmail({
   expiresMinutes: number;
 }) {
   const subject = "Reset your ICAN password";
-  const preheader = `Click the button to choose a new password for ICAN Mentor Connect. Link expires in ${expiresMinutes} minutes.`;
+  const preheader = `Click the button to choose a new password for ICAN. Link expires in ${expiresMinutes} minutes.`;
 
   const html = `<!doctype html>
 <html lang="en">

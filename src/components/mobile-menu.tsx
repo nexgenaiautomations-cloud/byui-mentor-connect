@@ -121,7 +121,7 @@ export function MobileMenu({
                 <div className="leading-tight">
                   <p className="font-brand text-base font-semibold tracking-[0.14em] text-white">ICAN</p>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
-                    Mentor Connect
+                    Career Advancement Network
                   </p>
                 </div>
               </Link>
