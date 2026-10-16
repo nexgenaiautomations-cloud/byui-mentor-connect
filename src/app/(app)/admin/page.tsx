@@ -88,14 +88,14 @@ export default async function AdminPage() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Program</p>
-          <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">Admin dashboard</h1>
+          <h1 className="mt-1 font-display text-2xl font-black text-plum-800 sm:text-3xl">Admin dashboard</h1>
           <p className="mt-1 text-sm text-slate-600">
             Program overview, mentor application review, recent activity.
           </p>
         </div>
         <Link
           href="/admin/analytics"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-byui-blue px-5 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-byui-blue-dark active:scale-[0.98] cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-brand-dark active:scale-[0.98] cursor-pointer"
         >
           Full analytics →
         </Link>
@@ -113,7 +113,7 @@ export default async function AdminPage() {
       <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="card">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-bold text-navy-800">
+            <h2 className="font-display text-lg font-bold text-plum-800">
               Mentor applications · pending
             </h2>
             <span className="pill">{pendingApps.length}</span>
@@ -136,7 +136,7 @@ export default async function AdminPage() {
                       className="h-11 w-11 rounded-full object-cover"
                     />
                     <div>
-                      <p className="font-semibold text-navy-800">{a.applicantName}</p>
+                      <p className="font-semibold text-plum-800">{a.applicantName}</p>
                       <p className="text-xs text-slate-500">{a.applicantEmail} · {a.applicantMajor}</p>
                     </div>
                   </div>
@@ -159,7 +159,7 @@ export default async function AdminPage() {
 
         <div className="space-y-6">
           <div className="card">
-            <h2 className="font-display text-lg font-bold text-navy-800">Recent matches</h2>
+            <h2 className="font-display text-lg font-bold text-plum-800">Recent matches</h2>
             {recentMatchesRows.length === 0 ? (
               <p className="mt-3 text-sm text-slate-500">No matches yet.</p>
             ) : (
@@ -175,14 +175,14 @@ export default async function AdminPage() {
           </div>
 
           <div className="card">
-            <h2 className="font-display text-lg font-bold text-navy-800">Recent meeting logs</h2>
+            <h2 className="font-display text-lg font-bold text-plum-800">Recent meeting logs</h2>
             {recentLogs.length === 0 ? (
               <p className="mt-3 text-sm text-slate-500">No meetings logged yet.</p>
             ) : (
               <ul className="mt-3 space-y-2 text-sm">
                 {recentLogs.map((l) => (
                   <li key={l.id} className="rounded-lg bg-slate-50 px-3 py-2">
-                    <p className="text-xs font-semibold text-navy-800">
+                    <p className="text-xs font-semibold text-plum-800">
                       {new Date(l.meetingDate).toLocaleDateString()}
                     </p>
                     {l.topicsDiscussed && (
@@ -195,7 +195,7 @@ export default async function AdminPage() {
           </div>
 
           <div className="card">
-            <h2 className="font-display text-lg font-bold text-navy-800">
+            <h2 className="font-display text-lg font-bold text-plum-800">
               New signups (last 7 days)
             </h2>
             {recentSignups.length === 0 ? (
@@ -217,7 +217,7 @@ export default async function AdminPage() {
                       className="h-8 w-8 shrink-0 rounded-full object-cover"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-semibold text-navy-800">
+                      <p className="truncate text-xs font-semibold text-plum-800">
                         {u.name || u.email}
                       </p>
                       <p className="truncate text-[10px] text-slate-500">
@@ -238,12 +238,12 @@ export default async function AdminPage() {
 
       {reviewedApps.length > 0 && (
         <section>
-          <h2 className="font-display text-lg font-bold text-navy-800">Reviewed applications</h2>
+          <h2 className="font-display text-lg font-bold text-plum-800">Reviewed applications</h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {reviewedApps.map((a) => (
               <div key={a.id} className="card flex items-center justify-between">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-navy-800">{a.applicantName}</p>
+                  <p className="truncate text-sm font-semibold text-plum-800">{a.applicantName}</p>
                   <p className="text-xs text-slate-500">{a.applicantEmail}</p>
                 </div>
                 <span className={a.status === "approved" ? "pill-accepted" : "pill-declined"}>

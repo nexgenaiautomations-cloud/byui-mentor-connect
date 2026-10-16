@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import { Logo } from "@/components/logo";
 
 export const metadata: Metadata = {
-  title: "Accessibility — BYUI CAN Mentor Connect",
+  title: "Accessibility — ICAN Mentor Connect",
   description:
-    "Accessibility statement for BYUI CAN Mentor Connect: our conformance target, known limitations, and how to report barriers.",
+    "Accessibility statement for ICAN Mentor Connect: our conformance target, known limitations, and how to report barriers.",
 };
 
 // Public accessibility statement (linked from HECVAT ITAC-05 and the site
@@ -13,31 +13,31 @@ export const metadata: Metadata = {
 // the roadmap or reporting process changes.
 export default function AccessibilityPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-byui-blue-light/30 via-white to-white">
+    <main className="min-h-screen bg-gradient-to-b from-brand-light/30 via-white to-white">
       <div className="mx-auto w-full max-w-3xl px-6 py-12 md:py-16">
         <div className="flex items-center gap-3">
-          <Logo size={40} />
+          <Logo size={40} tile />
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-byui-blue">
-              BYUI CAN Mentor Connect
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand">
+              ICAN Mentor Connect
             </p>
-            <h1 className="font-display text-3xl font-black text-byui-blue-dark md:text-4xl">
+            <h1 className="font-display text-3xl font-black text-brand-dark md:text-4xl">
               Accessibility statement
             </h1>
           </div>
         </div>
 
         <div className="mt-8 space-y-6">
-          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-byui-blue-light/40 md:p-8">
-            <h2 className="font-display text-xl font-bold text-byui-blue-dark">
+          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-brand-light/40 md:p-8">
+            <h2 className="font-display text-xl font-bold text-brand-dark">
               Our commitment
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-slate-600">
-              BYUI CAN Mentor Connect is built for every BYU-Idaho student. We
+              ICAN Mentor Connect is built for every student who uses it. We
               have adopted the{" "}
               <a
                 href="https://www.w3.org/TR/WCAG21/"
-                className="font-semibold text-byui-blue underline decoration-byui-blue-light underline-offset-2 hover:text-byui-blue-dark cursor-pointer"
+                className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer"
               >
                 Web Content Accessibility Guidelines (WCAG) 2.1 Level AA
               </a>{" "}
@@ -48,8 +48,8 @@ export default function AccessibilityPage() {
             </p>
           </section>
 
-          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-byui-blue-light/40 md:p-8">
-            <h2 className="font-display text-xl font-bold text-byui-blue-dark">
+          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-brand-light/40 md:p-8">
+            <h2 className="font-display text-xl font-bold text-brand-dark">
               Where we are today
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-slate-600">
@@ -65,8 +65,8 @@ export default function AccessibilityPage() {
             </p>
           </section>
 
-          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-byui-blue-light/40 md:p-8">
-            <h2 className="font-display text-xl font-bold text-byui-blue-dark">
+          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-brand-light/40 md:p-8">
+            <h2 className="font-display text-xl font-bold text-brand-dark">
               Known limitations
             </h2>
             <ul className="mt-3 list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-slate-600">
@@ -83,8 +83,8 @@ export default function AccessibilityPage() {
             </ul>
           </section>
 
-          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-byui-blue-light/40 md:p-8">
-            <h2 className="font-display text-xl font-bold text-byui-blue-dark">
+          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-brand-light/40 md:p-8">
+            <h2 className="font-display text-xl font-bold text-brand-dark">
               Report an accessibility barrier
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-slate-600">
@@ -102,12 +102,12 @@ export default function AccessibilityPage() {
                 Email the program owner:{" "}
                 <a
                   href="mailto:GabrielD@nexgenaiintegrations.com"
-                  className="font-semibold text-byui-blue underline decoration-byui-blue-light underline-offset-2 hover:text-byui-blue-dark cursor-pointer"
+                  className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer"
                 >
                   GabrielD@nexgenaiintegrations.com
                 </a>
                 . If the barrier prevents you from using either channel, any
-                CAN program staff member can file the report for you.
+                ICAN program staff member can file the report for you.
               </li>
             </ul>
           </section>
@@ -119,7 +119,7 @@ export default function AccessibilityPage() {
           </p>
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white shadow-soft transition-colors duration-200 hover:bg-byui-blue-dark cursor-pointer"
+            className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white shadow-soft transition-colors duration-200 hover:bg-brand-dark cursor-pointer"
           >
             Back to home
           </Link>

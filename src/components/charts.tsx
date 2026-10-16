@@ -41,7 +41,7 @@ function pickLabelIndices(n: number): Set<number> {
 
 export function MonthlyLine({
   points,
-  color = "#1B3A6B",
+  color = "#4A2585",
   unit = "",
   format,
   compact = false,
@@ -315,7 +315,7 @@ function Sparkline({
 export function HBarList({
   rows,
   format = (n: number) => `${n}`,
-  color = "#1B3A6B",
+  color = "#4A2585",
 }: {
   rows: { label: string; value: number }[];
   format?: (n: number) => string;
@@ -355,7 +355,7 @@ export function Donut({
   value,
   total,
   size = 96,
-  color = "#1B3A6B",
+  color = "#4A2585",
   trackColor = "#E2E8F0",
   label,
 }: {

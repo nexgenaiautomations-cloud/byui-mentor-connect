@@ -50,7 +50,7 @@ AUTH_URL=http://localhost:3000
 # Email for magic links — Resend (https://resend.com).
 # Verify byuican.com in Resend → Domains before going live.
 AUTH_RESEND_KEY=re_xxx
-EMAIL_FROM="BYUI CAN Mentor Connect <noreply@byuican.com>"
+EMAIL_FROM="ICAN Mentor Connect <noreply@icareeradvancementnetwork.com>"
 ```
 
 ### 4. Push schema to Neon
@@ -88,7 +88,7 @@ vercel env add DATABASE_URL
 vercel env add AUTH_SECRET
 vercel env add AUTH_URL          # production URL, e.g. https://byuican.com
 vercel env add AUTH_RESEND_KEY
-vercel env add EMAIL_FROM        # "BYUI CAN Mentor Connect <noreply@byuican.com>"
+vercel env add EMAIL_FROM        # "ICAN Mentor Connect <noreply@icareeradvancementnetwork.com>"
 vercel --prod
 ```
 

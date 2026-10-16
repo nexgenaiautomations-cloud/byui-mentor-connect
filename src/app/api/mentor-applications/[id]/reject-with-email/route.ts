@@ -71,7 +71,7 @@ export async function POST(
     subject: parsed.data.subject,
     html,
     text,
-    refId: `byuican-mentor-rejection-${id}`,
+    refId: `ican-mentor-rejection-${id}`,
   });
   if (!send.ok) {
     return NextResponse.json({ error: send.error }, { status: 502 });

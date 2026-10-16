@@ -8,8 +8,7 @@ import { verifyPassword } from "@/lib/password";
 import { attachSessionCookie } from "@/lib/auth-cookie";
 import { limitPasswordSignIn } from "@/lib/rate-limit";
 import { auditEvent } from "@/lib/audit";
-
-const BYUI_DOMAIN = "@byui.edu";
+import { isAllowedSchoolEmail, NOT_ALLOWED_MESSAGE } from "@/lib/school-domains";
 
 const schema = z.object({
   email: z.string().trim().toLowerCase().email().max(200),
@@ -33,9 +32,9 @@ export async function POST(req: Request) {
     );
   }
   const { email, password } = parsed.data;
-  if (!email.endsWith(BYUI_DOMAIN)) {
+  if (!(await isAllowedSchoolEmail(email))) {
     return NextResponse.json(
-      { error: "Only @byui.edu emails are allowed." },
+      { error: NOT_ALLOWED_MESSAGE },
       { status: 400 }
     );
   }

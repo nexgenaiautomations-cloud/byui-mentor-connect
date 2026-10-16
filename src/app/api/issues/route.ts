@@ -51,14 +51,14 @@ export async function POST(req: Request) {
       const h = await headers();
       const host = h.get("host") ?? "byui-can";
       const from =
-        process.env.EMAIL_FROM ?? "BYUI CAN <noreply@byuican.com>";
+        process.env.EMAIL_FROM ?? "ICAN <noreply@icareeradvancementnetwork.com>";
       const labelMap: Record<string, string> = {
         it: "IT issue",
         mentor: "Issue with my mentor",
         mentee: "Issue with a mentee",
         other: "Other",
       };
-      const subject = `BYUI CAN issue report — ${labelMap[category] ?? category}`;
+      const subject = `ICAN issue report — ${labelMap[category] ?? category}`;
       const text = [
         `Category: ${labelMap[category] ?? category}`,
         `From: ${me.name ?? me.email} <${me.email}>`,
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
           reply_to: me.email,
           subject,
           text,
-          headers: { "X-Entity-Ref-ID": "byuican-issue-report" },
+          headers: { "X-Entity-Ref-ID": "ican-issue-report" },
         }),
       });
     } catch (e) {

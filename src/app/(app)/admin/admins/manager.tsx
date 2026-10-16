@@ -45,7 +45,7 @@ function PromoteForm() {
     setSuccess(null);
     const value = email.trim().toLowerCase();
     if (!value) {
-      setError("Enter the user's BYU-I email.");
+      setError("Enter the user's school email.");
       return;
     }
     startTransition(async () => {
@@ -67,7 +67,7 @@ function PromoteForm() {
 
   return (
     <section className="card">
-      <h2 className="font-display text-lg font-bold text-navy-800">
+      <h2 className="font-display text-lg font-bold text-plum-800">
         Promote a new admin
       </h2>
       <p className="mt-1 text-xs text-slate-500">
@@ -78,13 +78,13 @@ function PromoteForm() {
       <form onSubmit={submit} className="mt-3 flex flex-wrap items-end gap-2">
         <div className="min-w-[260px] flex-1">
           <label htmlFor="promote-email" className="label">
-            BYU-I email
+            Student email
           </label>
           <input
             id="promote-email"
             type="email"
             className="input"
-            placeholder="newadmin@byui.edu"
+            placeholder="newadmin@school.edu"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -121,7 +121,7 @@ function AdminList({
 }) {
   return (
     <section className="card">
-      <h2 className="font-display text-lg font-bold text-navy-800">
+      <h2 className="font-display text-lg font-bold text-plum-800">
         Current admins ({admins.length})
       </h2>
       <ul className="mt-3 divide-y divide-slate-100">
@@ -189,7 +189,7 @@ function AdminRowItem({
         className="h-10 w-10 shrink-0 rounded-full object-cover"
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-navy-800">
+        <p className="truncate text-sm font-semibold text-plum-800">
           {a.name || a.email}{" "}
           {a.isHeadAdmin && (
             <span className="ml-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 ring-1 ring-amber-200">

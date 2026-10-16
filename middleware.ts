@@ -166,7 +166,7 @@ export const config = {
   matcher: [
     {
       source:
-        "/((?!api|_next/static|_next/image|favicon\\.ico|manifest\\.json|icon-.+\\.png|byui-.+\\.png|byui-.+\\.jpg|byuican-.+\\.png|.+\\.(?:png|jpg|jpeg|svg|webp|ico|css|js|woff|woff2|ttf|map)).*)",
+        "/((?!api|_next/static|_next/image|favicon\\.ico|manifest\\.json|icon-.+\\.png|ican-.+\\.png|.+\\.(?:png|jpg|jpeg|svg|webp|ico|css|js|woff|woff2|ttf|map)).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

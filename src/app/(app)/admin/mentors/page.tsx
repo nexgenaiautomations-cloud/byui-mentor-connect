@@ -32,7 +32,7 @@ export default async function AdminMentorsPage() {
     <div className="space-y-6">
       <header>
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Directory</p>
-        <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">Mentors</h1>
+        <h1 className="mt-1 font-display text-2xl font-black text-plum-800 sm:text-3xl">Mentors</h1>
         <p className="mt-1 text-sm text-slate-600">
           {rows.length} approved · {rows.filter((r) => r.mentorAvailable).length} accepting requests right now
         </p>
@@ -54,7 +54,7 @@ export default async function AdminMentorsPage() {
                   className="h-14 w-14 rounded-full border border-slate-200 object-cover"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-display text-base font-bold text-navy-800">
+                  <p className="truncate font-display text-base font-bold text-plum-800">
                     {m.name || "Mentor"}
                   </p>
                   <p className="truncate text-xs text-slate-500">{m.email}</p>
@@ -79,7 +79,7 @@ export default async function AdminMentorsPage() {
               <div className="grid grid-cols-3 gap-2 rounded-xl bg-slate-50 px-3 py-2 text-center">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Capacity</p>
-                  <p className="font-display text-sm font-bold text-navy-800">
+                  <p className="font-display text-sm font-bold text-plum-800">
                     {m.activeCount}/{m.mentorCapacity}
                   </p>
                 </div>
@@ -89,7 +89,7 @@ export default async function AdminMentorsPage() {
                 </div>
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Meetings</p>
-                  <p className="font-display text-sm font-bold text-navy-800">{m.totalMeetings}</p>
+                  <p className="font-display text-sm font-bold text-plum-800">{m.totalMeetings}</p>
                 </div>
               </div>
 
@@ -97,7 +97,7 @@ export default async function AdminMentorsPage() {
                 <span className={m.mentorAvailable ? "text-emerald-700" : "text-slate-500"}>
                   {m.mentorAvailable ? "Accepting requests" : "Paused"}
                 </span>
-                <a href={`mailto:${m.email}`} className="font-semibold text-navy-700 hover:underline">
+                <a href={`mailto:${m.email}`} className="font-semibold text-plum-700 hover:underline">
                   Email mentor →
                 </a>
               </div>

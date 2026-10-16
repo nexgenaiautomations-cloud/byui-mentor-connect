@@ -58,7 +58,7 @@ export default async function AdminActivityPage() {
     <div className="space-y-8">
       <header>
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Program pulse</p>
-        <h1 className="mt-1 font-display text-3xl font-black text-navy-800">Activity</h1>
+        <h1 className="mt-1 font-display text-3xl font-black text-plum-800">Activity</h1>
         <p className="mt-1 text-sm text-slate-600">
           Recent meeting logs and monthly check-ins across the program.
         </p>
@@ -66,7 +66,7 @@ export default async function AdminActivityPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <div className="card">
-          <h2 className="font-display text-lg font-bold text-navy-800">Recent meeting logs</h2>
+          <h2 className="font-display text-lg font-bold text-plum-800">Recent meeting logs</h2>
           {recentLogs.length === 0 ? (
             <p className="mt-3 text-sm text-slate-500">No activity logged yet.</p>
           ) : (
@@ -79,7 +79,7 @@ export default async function AdminActivityPage() {
                   className="py-3"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-navy-800">
+                    <p className="text-sm font-semibold text-plum-800">
                       {l.studentName}
                       {l.mentorName ? (
                         <span className="text-slate-500"> · with {l.mentorName}</span>
@@ -120,14 +120,14 @@ export default async function AdminActivityPage() {
         <div className="space-y-6">
           <div className="card text-center">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Avg monthly rating</p>
-            <p className="mt-1 font-display text-5xl font-black text-navy-800">
+            <p className="mt-1 font-display text-5xl font-black text-plum-800">
               {feedbackAvg?.avg ? Number(feedbackAvg.avg).toFixed(1) : "—"}
             </p>
             <p className="text-xs text-slate-500">across {feedbackAvg?.n ?? 0} check-ins</p>
           </div>
 
           <div className="card">
-            <h2 className="font-display text-lg font-bold text-navy-800">Recent check-ins</h2>
+            <h2 className="font-display text-lg font-bold text-plum-800">Recent check-ins</h2>
             {recentFeedback.length === 0 ? (
               <p className="mt-3 text-sm text-slate-500">None yet.</p>
             ) : (
@@ -137,7 +137,7 @@ export default async function AdminActivityPage() {
                     <span className="text-slate-700">
                       {f.submittedByRole} · {f.month}/{f.year}
                     </span>
-                    <span className="font-bold text-navy-800">{f.rating}/5</span>
+                    <span className="font-bold text-plum-800">{f.rating}/5</span>
                   </li>
                 ))}
               </ul>

@@ -18,7 +18,7 @@ const HEAD_ADMIN: NewUser = {
   semesterLevel: "Graduate",
   expectedGraduation: "",
   preferredContactMethod: "email",
-  bio: "Head admin for BYUI CAN. Runs the program day-to-day and promotes new admins from the Manage admins page.",
+  bio: "Head admin for ICAN. Runs the program day-to-day and promotes new admins from the Manage admins page.",
   isAdmin: true,
   isHeadAdmin: true,
   // Every admin is also a mentor — they coach students directly too.

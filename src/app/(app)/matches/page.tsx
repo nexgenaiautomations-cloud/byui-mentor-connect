@@ -38,13 +38,13 @@ const RECORD_LABEL: Record<HistoryEventType, string> = {
 };
 
 const RECORD_BG: Record<HistoryEventType, string> = {
-  mentee_activity: "border-byui-blue-light/40 bg-byui-blue-light/15",
+  mentee_activity: "border-brand-light/40 bg-brand-light/15",
   mentor_meeting: "border-emerald-200 bg-emerald-50/50",
   system_goal: "border-slate-200 bg-slate-100/60",
 };
 
 const RECORD_PILL: Record<HistoryEventType, string> = {
-  mentee_activity: "bg-byui-blue-light/40 text-byui-blue-dark",
+  mentee_activity: "bg-brand-light/40 text-brand-dark",
   mentor_meeting: "bg-emerald-100 text-emerald-800",
   system_goal: "bg-slate-200 text-slate-700",
 };
@@ -205,7 +205,7 @@ export default async function MatchesPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-2xl font-black text-byui-blue-dark sm:text-3xl lg:text-4xl">
+        <h1 className="font-display text-2xl font-black text-brand-dark sm:text-3xl lg:text-4xl">
           {isMember ? "My Mentors." : "My Mentees."}
         </h1>
         <p className="mt-1 text-sm text-slate-600">
@@ -216,8 +216,8 @@ export default async function MatchesPage() {
       </header>
 
       {fresh.length > 0 && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-byui-blue-dark to-byui-blue p-5 text-white ring-4 ring-byui-blue-light/60">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-byui-blue-light">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-dark to-brand p-5 text-white ring-4 ring-brand-light/60">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-light">
             {isMember ? "✨ New connection" : "✨ Fresh match"}
           </p>
           <p className="mt-1 font-display text-xl font-black">
@@ -230,18 +230,18 @@ export default async function MatchesPage() {
                 : `${fresh.length} new matches. Pick one to start.`}
           </p>
           <div className="mt-3">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-byui-blue-light">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-light">
               Quick start
             </p>
             <ol className="mt-2 space-y-1.5 text-sm text-white/95">
               <li className="flex items-start gap-2">
-                <span aria-hidden className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-black text-byui-blue-dark">
+                <span aria-hidden className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-black text-brand-dark">
                   1
                 </span>
                 <span><strong>Call or text.</strong></span>
               </li>
               <li className="flex items-start gap-2">
-                <span aria-hidden className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-black text-byui-blue-dark">
+                <span aria-hidden className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-black text-brand-dark">
                   2
                 </span>
                 <span>
@@ -250,7 +250,7 @@ export default async function MatchesPage() {
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span aria-hidden className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-black text-byui-blue-dark">
+                <span aria-hidden className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-black text-brand-dark">
                   3
                 </span>
                 <span><strong>Do a career accomplishment together.</strong></span>
@@ -325,17 +325,17 @@ export default async function MatchesPage() {
                       `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(other.name || "")}&backgroundColor=006EB6&textColor=ffffff`
                     }
                     alt=""
-                    className="h-14 w-14 shrink-0 rounded-full border border-byui-blue-light/40 object-cover"
+                    className="h-14 w-14 shrink-0 rounded-full border border-brand-light/40 object-cover"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-lg font-black text-byui-blue-dark">
+                    <p className="truncate font-display text-lg font-black text-brand-dark">
                       {other.name}
                     </p>
                     {other.major && (
                       <p className="truncate text-xs font-medium text-slate-600">{other.major}</p>
                     )}
                     <div className="mt-1 flex flex-wrap items-center gap-1">
-                      <span className="inline-flex items-center rounded-full bg-byui-blue-light/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-byui-blue-dark">
+                      <span className="inline-flex items-center rounded-full bg-brand-light/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-dark">
                         {other.role}
                       </span>
                       <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-200">
@@ -349,7 +349,7 @@ export default async function MatchesPage() {
                 {iAmMentor && (
                   <Link
                     href={`/log-meeting?matchId=${m.id}`}
-                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-byui-blue px-4 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-byui-blue-dark active:scale-[0.98] cursor-pointer"
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand px-4 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-brand-dark active:scale-[0.98] cursor-pointer"
                   >
                     Log a Meeting
                   </Link>
@@ -370,14 +370,14 @@ export default async function MatchesPage() {
                 <div className="grid grid-cols-3 gap-2">
                   <a
                     href={`mailto:${other.email}`}
-                    className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                    className="inline-flex items-center justify-center rounded-lg border border-brand-light bg-white px-2 py-1.5 text-xs font-semibold text-brand-dark transition hover:bg-brand-light/20 cursor-pointer"
                   >
                     Email
                   </a>
                   {other.phone ? (
                     <a
                       href={`tel:${other.phone}`}
-                      className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                      className="inline-flex items-center justify-center rounded-lg border border-brand-light bg-white px-2 py-1.5 text-xs font-semibold text-brand-dark transition hover:bg-brand-light/20 cursor-pointer"
                     >
                       Call
                     </a>
@@ -390,7 +390,7 @@ export default async function MatchesPage() {
                     href={teamsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center rounded-lg border border-byui-blue-light bg-white px-2 py-1.5 text-xs font-semibold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+                    className="inline-flex items-center justify-center rounded-lg border border-brand-light bg-white px-2 py-1.5 text-xs font-semibold text-brand-dark transition hover:bg-brand-light/20 cursor-pointer"
                   >
                     Teams
                   </a>
@@ -401,7 +401,7 @@ export default async function MatchesPage() {
                   <div className="min-w-0">
                     <dt className="font-semibold uppercase tracking-wider text-slate-500">Email</dt>
                     <dd className="mt-0.5">
-                      <a href={`mailto:${other.email}`} className="truncate text-byui-blue-dark hover:underline block">
+                      <a href={`mailto:${other.email}`} className="truncate text-brand-dark hover:underline block">
                         {other.email}
                       </a>
                     </dd>
@@ -460,24 +460,24 @@ export default async function MatchesPage() {
                   return (
                     <div className="mt-auto">
                       <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-byui-blue">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-brand">
                           {(other.name?.split(" ")[0] ?? "Mentee")}&apos;s History
                         </p>
                         {items.length > 0 && (
                           <Link
                             href={`/log-meeting?matchId=${m.id}`}
-                            className="text-[10px] font-bold uppercase tracking-wider text-byui-blue hover:underline"
+                            className="text-[10px] font-bold uppercase tracking-wider text-brand hover:underline"
                           >
                             Log →
                           </Link>
                         )}
                       </div>
                       {items.length === 0 ? (
-                        <div className="mt-2 rounded-xl border border-dashed border-byui-blue-light/60 bg-slate-50 p-3 text-center">
+                        <div className="mt-2 rounded-xl border border-dashed border-brand-light/60 bg-slate-50 p-3 text-center">
                           <p className="text-xs text-slate-600">No activities logged yet.</p>
                           <Link
                             href={`/log-meeting?matchId=${m.id}`}
-                            className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-byui-blue hover:underline"
+                            className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-brand hover:underline"
                           >
                             Log a Meeting →
                           </Link>
@@ -494,7 +494,7 @@ export default async function MatchesPage() {
                                 }
                               >
                                 <div className="flex flex-wrap items-center justify-between gap-1">
-                                  <p className="text-xs font-bold text-byui-blue-dark">
+                                  <p className="text-xs font-bold text-brand-dark">
                                     {new Date(a.meetingDate).toLocaleDateString(
                                       undefined,
                                       { month: "short", day: "numeric" }
@@ -562,7 +562,7 @@ export default async function MatchesPage() {
       {isMember && pendingOutgoing.length > 0 && (
         <section className="space-y-3 pt-4">
           <header>
-            <h2 className="font-display text-lg font-bold text-navy-800">Pending Requests</h2>
+            <h2 className="font-display text-lg font-bold text-plum-800">Pending Requests</h2>
             <p className="mt-1 text-xs text-slate-500">
               Waiting for the mentor to respond. You can cancel any time.
             </p>
@@ -584,7 +584,7 @@ export default async function MatchesPage() {
                     className="h-11 w-11 shrink-0 rounded-full object-cover"
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-navy-800">
+                    <p className="truncate text-sm font-bold text-plum-800">
                       {p.mentorName || "Mentor"}
                     </p>
                     <p className="truncate text-xs text-slate-500">

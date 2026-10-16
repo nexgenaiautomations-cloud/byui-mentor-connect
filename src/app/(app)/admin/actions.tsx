@@ -103,13 +103,13 @@ export function ApplicationActions({
           <div
             aria-hidden
             onClick={() => !busy && setRejectOpen(false)}
-            className="absolute inset-0 bg-byui-blue-dark/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
           />
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="reject-email-title"
-            className="relative w-full max-w-2xl rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-byui-blue sm:p-6"
+            className="relative w-full max-w-2xl rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-brand sm:p-6"
           >
             <button
               type="button"
@@ -131,12 +131,12 @@ export function ApplicationActions({
               </svg>
             </button>
 
-            <p className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-brand">
               Application review
             </p>
             <h2
               id="reject-email-title"
-              className="mt-1 font-display text-xl font-black leading-tight text-byui-blue-dark"
+              className="mt-1 font-display text-xl font-black leading-tight text-brand-dark"
             >
               Send Rejection Email
             </h2>
@@ -209,7 +209,7 @@ export function ApplicationActions({
                 type="button"
                 onClick={sendAndReject}
                 disabled={busy || !toEmail || !subject || !body}
-                className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-5 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center justify-center rounded-lg bg-brand px-5 py-2 text-sm font-bold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 {busy ? "Sending…" : "Send Email & Reject"}
               </button>

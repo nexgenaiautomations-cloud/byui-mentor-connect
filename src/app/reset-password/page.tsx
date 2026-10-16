@@ -15,19 +15,19 @@ export default async function ResetPasswordPage({
   const { token } = await searchParams;
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#F7F8FB] px-6 py-12">
+    <main className="grid min-h-screen place-items-center bg-[#F8F6FC] px-6 py-12">
       <div className="w-full max-w-md">
         <Link
           href="/"
           className="mb-6 flex items-center justify-center gap-3"
         >
-          <Logo size={36} />
-          <span className="font-display text-base font-black tracking-tight text-navy-800">
-            BYUI CAN
+          <Logo size={36} tile />
+          <span className="font-brand text-lg font-semibold tracking-[0.14em] text-plum-800">
+            ICAN
           </span>
         </Link>
         <div className="card">
-          <h1 className="font-display text-2xl font-bold text-navy-800">
+          <h1 className="font-display text-2xl font-bold text-plum-800">
             Choose a new password
           </h1>
           {!token ? (
@@ -37,7 +37,7 @@ export default async function ResetPasswordPage({
               </p>
               <Link
                 href="/forgot-password"
-                className="mt-5 inline-flex items-center justify-center rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark cursor-pointer"
+                className="mt-5 inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-dark cursor-pointer"
               >
                 Request a new reset link
               </Link>
@@ -56,7 +56,7 @@ export default async function ResetPasswordPage({
           <div className="mt-6 border-t border-slate-100 pt-4 text-center text-sm">
             <Link
               href="/login"
-              className="font-semibold text-byui-blue hover:underline"
+              className="font-semibold text-brand hover:underline"
             >
               ← Back to sign in
             </Link>

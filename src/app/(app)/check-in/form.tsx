@@ -116,7 +116,7 @@ export function CheckInForm({
               className={
                 "h-10 w-10 rounded-full border text-sm font-bold transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 " +
                 (rating === n
-                  ? "border-byui-blue bg-byui-blue text-white shadow-soft"
+                  ? "border-brand bg-brand text-white shadow-soft"
                   : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")
               }
             >

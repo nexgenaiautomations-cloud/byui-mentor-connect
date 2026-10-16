@@ -77,7 +77,7 @@ function KpiCard({
         "rounded-2xl border p-4 shadow-soft " +
         (complete
           ? "border-emerald-200 bg-emerald-50/60"
-          : "border-byui-blue-light/40 bg-white")
+          : "border-brand-light/40 bg-white")
       }
     >
       <div className="flex items-start justify-between gap-2">
@@ -107,14 +107,14 @@ function KpiCard({
           </span>
         )}
       </div>
-      <p className="mt-1 font-display text-2xl font-black text-byui-blue-dark">
+      <p className="mt-1 font-display text-2xl font-black text-brand-dark">
         {value}
       </p>
       <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
         <div
           className={
             "h-full transition-all " +
-            (complete ? "bg-emerald-500" : "bg-byui-blue")
+            (complete ? "bg-emerald-500" : "bg-brand")
           }
           style={{ width: `${Math.round(progress * 100)}%` }}
         />

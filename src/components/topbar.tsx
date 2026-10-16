@@ -25,8 +25,8 @@ export function TopBar({
       <div className="flex items-center gap-2">
         <Link href="/dashboard" className="lg:hidden flex items-center gap-2">
           <Logo size={32} />
-          <span className="font-display text-sm font-black tracking-tight text-white">
-            BYUI CAN
+          <span className="font-brand text-base font-semibold tracking-[0.14em] text-white">
+            ICAN
           </span>
         </Link>
         {title && (
@@ -34,7 +34,7 @@ export function TopBar({
         )}
       </div>
       <div className="flex items-center gap-2 sm:gap-3">
-        <span className="hidden sm:inline-flex items-center rounded-full bg-byui-blue/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-byui-blue-light ring-1 ring-byui-blue/40">
+        <span className="hidden sm:inline-flex items-center rounded-full bg-brand/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-light ring-1 ring-brand/40">
           {user.isHeadAdmin
             ? `Head Admin · ${ROLE_LABELS[activeRole]}`
             : ROLE_LABELS[activeRole]}

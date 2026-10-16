@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { and, eq, ne } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { sameSchoolAs } from "@/lib/school-scope";
 
 const queryParams = z.object({
   major: z.string().max(120).optional(),
@@ -24,7 +25,13 @@ export async function GET(req: Request) {
   }
   const { major, semester } = parsed.data;
 
-  const conditions = [eq(users.isMentor, true), eq(users.mentorAvailable, true), ne(users.id, me.id)];
+  // Mentoring stays within each school.
+  const conditions = [
+    eq(users.isMentor, true),
+    eq(users.mentorAvailable, true),
+    ne(users.id, me.id),
+    sameSchoolAs(me.email),
+  ];
   if (major) conditions.push(eq(users.major, major));
   if (semester) conditions.push(eq(users.semesterLevel, semester));
 

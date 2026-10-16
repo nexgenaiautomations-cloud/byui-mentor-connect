@@ -234,7 +234,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
                       avatarFor(selectedMatch.menteeName)
                     }
                     alt=""
-                    className="h-10 w-10 shrink-0 rounded-full border border-byui-blue-light/40 object-cover"
+                    className="h-10 w-10 shrink-0 rounded-full border border-brand-light/40 object-cover"
                   />
                   <p className="text-sm font-medium text-slate-700">
                     {selectedMatch.menteeMajor || (
@@ -312,8 +312,8 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
           </legend>
           <p className="-mt-1 text-xs text-slate-500">
             {isMentor
-              ? "Check anything you covered together. Each section maps to one of the BYUI CAN program goals."
-              : "Check anything you worked on. Each section maps to one of the BYUI CAN program goals."}
+              ? "Check anything you covered together. Each section maps to one of the ICAN program goals."
+              : "Check anything you worked on. Each section maps to one of the ICAN program goals."}
           </p>
           {roleGroups.map((group) => (
             <AccomplishmentGroupBlock
@@ -393,13 +393,13 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
           <div
             aria-hidden
             onClick={() => !submitting && setConfirmOpen(false)}
-            className="absolute inset-0 bg-byui-blue-dark/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
           />
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="confirm-log-title"
-            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-byui-blue sm:p-6"
+            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-brand sm:p-6"
           >
             <button
               type="button"
@@ -421,12 +421,12 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
               </svg>
             </button>
 
-            <p className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-brand">
               Review
             </p>
             <h2
               id="confirm-log-title"
-              className="mt-1 font-display text-xl font-black leading-tight text-byui-blue-dark"
+              className="mt-1 font-display text-xl font-black leading-tight text-brand-dark"
             >
               {isMentor ? "Confirm Meeting" : "Confirm Activity Log"}
             </h2>
@@ -539,7 +539,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
                 type="button"
                 onClick={onConfirmSubmit}
                 disabled={submitting}
-                className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-5 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center justify-center rounded-lg bg-brand px-5 py-2 text-sm font-bold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? "Saving…" : "Confirm & Submit"}
               </button>
@@ -563,8 +563,8 @@ function AccomplishmentGroupBlock({
   onToggle: (s: string) => void;
 }) {
   return (
-    <div className="rounded-xl border border-byui-blue-light/40 bg-slate-50 p-3">
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-byui-blue-dark">
+    <div className="rounded-xl border border-brand-light/40 bg-slate-50 p-3">
+      <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-brand-dark">
         {heading}
       </p>
       <div className="grid gap-1 sm:grid-cols-2">
@@ -576,7 +576,7 @@ function AccomplishmentGroupBlock({
               className={
                 "flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs leading-snug transition " +
                 (isChecked
-                  ? "bg-byui-blue/10 text-byui-blue-dark ring-1 ring-byui-blue/40"
+                  ? "bg-brand/10 text-brand-dark ring-1 ring-brand/40"
                   : "text-slate-700 hover:bg-white")
               }
             >
@@ -584,7 +584,7 @@ function AccomplishmentGroupBlock({
                 type="checkbox"
                 checked={isChecked}
                 onChange={() => onToggle(a)}
-                className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer accent-byui-blue"
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer accent-brand"
               />
               <span>{a}</span>
             </label>

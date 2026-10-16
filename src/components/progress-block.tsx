@@ -21,9 +21,9 @@ export function ProgressBlock({
   return (
     <section
       aria-label="Progress this week and month"
-      className="rounded-xl border border-byui-blue-light/40 bg-gradient-to-br from-byui-blue-light/30 to-white p-3"
+      className="rounded-xl border border-brand-light/40 bg-gradient-to-br from-brand-light/30 to-white p-3"
     >
-      <p className="text-xs font-bold uppercase tracking-wider text-byui-blue-dark">
+      <p className="text-xs font-bold uppercase tracking-wider text-brand-dark">
         Progress This Week / Month
       </p>
       <div className="mt-2 grid grid-cols-3 gap-2">

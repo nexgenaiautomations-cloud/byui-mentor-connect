@@ -290,7 +290,7 @@ export default async function AnalyticsPage() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Program</p>
-          <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">
+          <h1 className="mt-1 font-display text-2xl font-black text-plum-800 sm:text-3xl">
             Analytics
           </h1>
           <p className="mt-1 text-sm text-slate-600">
@@ -316,7 +316,7 @@ export default async function AnalyticsPage() {
       {/* Month-over-month deltas */}
       <section className="card">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold text-navy-800">Month over month</h2>
+          <h2 className="font-display text-lg font-bold text-plum-800">Month over month</h2>
           <span className="text-xs text-slate-500">Last 12 months in trend</span>
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -325,7 +325,7 @@ export default async function AnalyticsPage() {
             value={membersThis}
             previous={membersPrev}
             series={newMembersSeries}
-            color="#1B3A6B"
+            color="#4A2585"
             goodWhen="up"
           />
           <MoMTile
@@ -333,7 +333,7 @@ export default async function AnalyticsPage() {
             value={matchesThis}
             previous={matchesPrev}
             series={matchesSeries}
-            color="#006EB6"
+            color="#6D28D9"
             goodWhen="up"
           />
           <MoMTile
@@ -349,7 +349,7 @@ export default async function AnalyticsPage() {
             value={accThis}
             previous={accPrev}
             series={acceptanceRateSeries}
-            color="#4F9ACF"
+            color="#8B5CF6"
             asPercentPoints
             goodWhen="up"
             valueSuffix="%"
@@ -360,7 +360,7 @@ export default async function AnalyticsPage() {
       {/* Trends */}
       <section className="grid gap-4 lg:grid-cols-2">
         <ChartCard title="Requests submitted" subtitle="By month, last 12">
-          <MonthlyBars points={requestsSeries} color="#4F9ACF" />
+          <MonthlyBars points={requestsSeries} color="#8B5CF6" />
         </ChartCard>
         <ChartCard title="Requests accepted" subtitle="By month, last 12">
           <MonthlyBars points={acceptedSeries} color="#0F766E" />
@@ -368,7 +368,7 @@ export default async function AnalyticsPage() {
         <ChartCard title="Meeting minutes" subtitle="Total time logged per month">
           <MonthlyLine
             points={minutesSeries}
-            color="#214491"
+            color="#4C1D95"
             format={(n) => `${Math.round(n / 60)}h`}
             unit=""
           />
@@ -376,7 +376,7 @@ export default async function AnalyticsPage() {
         <ChartCard title="Avg feedback rating" subtitle="Mentee + mentor monthly check-ins">
           <MonthlyLine
             points={ratingSeries}
-            color="#006EB6"
+            color="#6D28D9"
             format={(n) => n.toFixed(2)}
           />
         </ChartCard>
@@ -385,12 +385,12 @@ export default async function AnalyticsPage() {
       {/* Mentor utilization + at-risk */}
       <section className="grid gap-4 lg:grid-cols-[1fr_1fr_1.4fr]">
         <div className="card">
-          <h3 className="font-display text-base font-bold text-navy-800">Capacity utilization</h3>
+          <h3 className="font-display text-base font-bold text-plum-800">Capacity utilization</h3>
           <p className="mt-1 text-xs text-slate-500">Active matches vs total mentor capacity</p>
           <div className="mt-3 flex items-center gap-4">
-            <Donut value={capFilled} total={Math.max(1, capTotal)} color="#006EB6" />
+            <Donut value={capFilled} total={Math.max(1, capTotal)} color="#6D28D9" />
             <div className="text-sm">
-              <p className="font-display text-2xl font-black text-navy-800">
+              <p className="font-display text-2xl font-black text-plum-800">
                 {capFilled}<span className="text-base font-medium text-slate-500"> / {capTotal}</span>
               </p>
               <p className="text-xs text-slate-500">slots filled</p>
@@ -398,7 +398,7 @@ export default async function AnalyticsPage() {
           </div>
         </div>
         <div className="card">
-          <h3 className="font-display text-base font-bold text-navy-800">At-risk matches</h3>
+          <h3 className="font-display text-base font-bold text-plum-800">At-risk matches</h3>
           <p className="mt-1 text-xs text-slate-500">No activity in 30/60 days</p>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <RiskTile label="30d stale" value={atRisk?.stale30 ?? 0} tone="amber" />
@@ -409,7 +409,7 @@ export default async function AnalyticsPage() {
           </p>
         </div>
         <div className="card">
-          <h3 className="font-display text-base font-bold text-navy-800">Top mentors (active load)</h3>
+          <h3 className="font-display text-base font-bold text-plum-800">Top mentors (active load)</h3>
           <ul className="mt-3 space-y-2 text-sm">
             {topMentors.length === 0 && <li className="text-xs text-slate-500">No mentors yet.</li>}
             {topMentors.map((m) => {
@@ -418,7 +418,7 @@ export default async function AnalyticsPage() {
               return (
                 <li key={m.id} className="rounded-lg bg-slate-50 px-3 py-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="truncate font-semibold text-navy-800">{m.name}</span>
+                    <span className="truncate font-semibold text-plum-800">{m.name}</span>
                     <span className="font-bold text-slate-700">
                       {m.active}/{cap} · {pct}%
                     </span>
@@ -426,7 +426,7 @@ export default async function AnalyticsPage() {
                   <div className="mt-1 h-1.5 rounded-full bg-white">
                     <div
                       className="h-1.5 rounded-full"
-                      style={{ width: `${Math.max(2, pct)}%`, background: "#006EB6" }}
+                      style={{ width: `${Math.max(2, pct)}%`, background: "#6D28D9" }}
                     />
                   </div>
                   <p className="mt-0.5 text-[10px] text-slate-500">{m.lifetime} mentees lifetime</p>
@@ -440,30 +440,30 @@ export default async function AnalyticsPage() {
       {/* Distributions */}
       <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
         <ChartCard title="Mentors by major" subtitle="Top 8">
-          <HBarList rows={topMajors.rows as { label: string; value: number }[]} color="#006EB6" />
+          <HBarList rows={topMajors.rows as { label: string; value: number }[]} color="#6D28D9" />
         </ChartCard>
         <ChartCard title="Members by semester" subtitle="Class composition">
-          <HBarList rows={semesterDistribution.rows as { label: string; value: number }[]} color="#214491" />
+          <HBarList rows={semesterDistribution.rows as { label: string; value: number }[]} color="#4C1D95" />
         </ChartCard>
         <ChartCard title="Top career interests" subtitle="Across all members">
-          <HBarList rows={topInterests.rows as { label: string; value: number }[]} color="#4F9ACF" />
+          <HBarList rows={topInterests.rows as { label: string; value: number }[]} color="#8B5CF6" />
         </ChartCard>
         <ChartCard title="Meeting types" subtitle="Format breakdown">
-          <HBarList rows={meetingTypes.rows as { label: string; value: number }[]} color="#A0D4ED" />
+          <HBarList rows={meetingTypes.rows as { label: string; value: number }[]} color="#C4B5FD" />
         </ChartCard>
       </section>
 
       {/* Overall acceptance + activity feed */}
       <section className="grid gap-4 lg:grid-cols-[1fr_2fr]">
         <div className="card">
-          <h3 className="font-display text-base font-bold text-navy-800">Acceptance rate (12 mo)</h3>
+          <h3 className="font-display text-base font-bold text-plum-800">Acceptance rate (12 mo)</h3>
           <p className="mt-1 text-xs text-slate-500">
             Of {totalReq12} requests submitted in the last year
           </p>
           <div className="mt-3 flex items-center gap-4">
-            <Donut value={totalAcc12} total={Math.max(1, totalReq12)} color="#006EB6" />
+            <Donut value={totalAcc12} total={Math.max(1, totalReq12)} color="#6D28D9" />
             <div className="text-sm">
-              <p className="font-display text-2xl font-black text-navy-800">
+              <p className="font-display text-2xl font-black text-plum-800">
                 {overallAcceptance}%
               </p>
               <p className="text-xs text-slate-500">{totalAcc12} accepted</p>
@@ -471,12 +471,12 @@ export default async function AnalyticsPage() {
           </div>
           <div className="mt-4">
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Monthly rate</p>
-            <MonthlyLine points={acceptanceRateSeries} color="#006EB6" format={(n) => `${n}%`} />
+            <MonthlyLine points={acceptanceRateSeries} color="#6D28D9" format={(n) => `${n}%`} />
           </div>
         </div>
 
         <div className="card">
-          <h3 className="font-display text-base font-bold text-navy-800">Recent activity</h3>
+          <h3 className="font-display text-base font-bold text-plum-800">Recent activity</h3>
           <ul className="mt-3 space-y-2 text-sm">
             {[
               ...recentRequests.map((r) => ({
@@ -501,7 +501,7 @@ export default async function AnalyticsPage() {
               .map((e, i) => (
                 <li key={i} className="flex items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-semibold text-navy-800">{e.text}</p>
+                    <p className="truncate text-xs font-semibold text-plum-800">{e.text}</p>
                     <p className="text-[10px] uppercase tracking-wider text-slate-500">
                       {e.kind}
                       {"status" in e ? ` · ${e.status}` : ""}
@@ -535,7 +535,7 @@ function ChartCard({
   return (
     <div className="card">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="font-display text-base font-bold text-navy-800">{title}</h3>
+        <h3 className="font-display text-base font-bold text-plum-800">{title}</h3>
         {subtitle && <p className="text-[11px] text-slate-500">{subtitle}</p>}
       </div>
       <div className="mt-3">{children}</div>
@@ -573,7 +573,7 @@ function MoMTile({
           goodWhen={goodWhen}
         />
       </div>
-      <p className="mt-1 font-display text-2xl font-black text-navy-800">
+      <p className="mt-1 font-display text-2xl font-black text-plum-800">
         {value}
         {valueSuffix}
       </p>

@@ -57,12 +57,12 @@ export function ForgotPasswordForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
-        <label htmlFor="email" className="label">BYU-I email</label>
+        <label htmlFor="email" className="label">School email</label>
         <input
           id="email"
           type="email"
           required
-          placeholder="yourname@byui.edu"
+          placeholder="yourname@school.edu"
           className="input"
           autoComplete="email"
           value={email}

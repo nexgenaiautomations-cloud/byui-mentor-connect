@@ -8,8 +8,8 @@ import { issueResetToken, RESET_TOKEN_TTL_MS } from "@/lib/password-reset";
 import { limitPasswordReset } from "@/lib/rate-limit";
 import { buildResetPasswordEmail } from "@/lib/reset-password-email";
 import { auditEvent } from "@/lib/audit";
+import { isAllowedSchoolEmail } from "@/lib/school-domains";
 
-const BYUI_DOMAIN = "@byui.edu";
 const TTL_MIN = Math.round(RESET_TOKEN_TTL_MS / 60000);
 
 const schema = z.object({
@@ -41,9 +41,9 @@ export async function POST(req: Request) {
 
   const email = parsed.data.email;
 
-  // Only @byui.edu accounts exist — block other emails up front to save
-  // both the DB lookup and a Resend send.
-  if (!email.endsWith(BYUI_DOMAIN)) {
+  // Only school-domain accounts exist — block other emails up front to
+  // save both the DB lookup and a Resend send.
+  if (!(await isAllowedSchoolEmail(email))) {
     return NextResponse.json({
       ok: true,
       message:
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
         expiresMinutes: TTL_MIN,
       });
       const from =
-        process.env.EMAIL_FROM ?? "BYUI CAN <noreply@byuican.com>";
+        process.env.EMAIL_FROM ?? "ICAN <noreply@icareeradvancementnetwork.com>";
       await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
           subject,
           html,
           text,
-          headers: { "X-Entity-Ref-ID": "byuican-password-reset" },
+          headers: { "X-Entity-Ref-ID": "ican-password-reset" },
         }),
       });
     } else {

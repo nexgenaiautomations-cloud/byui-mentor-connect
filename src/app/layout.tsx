@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BYUI CAN Mentor Connect",
-  description: "A peer mentorship platform for BYU-Idaho students.",
+  title: "ICAN Mentor Connect",
+  description: "An independent, student-run peer mentorship platform for college students.",
   manifest: "/manifest.webmanifest",
-  applicationName: "BYUI CAN Mentor Connect",
+  applicationName: "ICAN Mentor Connect",
   appleWebApp: {
     capable: true,
     title: "Mentor Connect",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1B3A6B",
+  themeColor: "#4A2585",
   width: "device-width",
   initialScale: 1,
 };
@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;700;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;700;900&family=Cinzel:wght@500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>

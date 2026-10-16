@@ -14,9 +14,6 @@ export function SignupForm() {
 
   function validate(): string | null {
     if (!email.trim()) return "Email is required.";
-    if (!email.trim().toLowerCase().endsWith("@byui.edu")) {
-      return "Only @byui.edu emails are allowed.";
-    }
     const pw = passwordIssues(password);
     if (pw.length) return pw[0];
     if (password !== confirm) return "Passwords don't match.";
@@ -53,12 +50,12 @@ export function SignupForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
-        <label htmlFor="email" className="label">BYU-I email</label>
+        <label htmlFor="email" className="label">School email</label>
         <input
           id="email"
           type="email"
           required
-          placeholder="yourname@byui.edu"
+          placeholder="yourname@school.edu"
           className="input"
           autoComplete="email"
           value={email}
@@ -115,18 +112,16 @@ export function SignupForm() {
       </button>
 
       <p className="text-center text-[11px] text-slate-500">
-        We&apos;ll send a verification link to your BYU-I inbox. You can fill
-        out the rest of your profile after you verify.
+        We&apos;ll send a verification link to your school inbox. After you verify,
+        you&apos;ll review the ICAN notices and set up your profile.
       </p>
       <p className="text-center text-[11px] text-slate-500">
-        By creating an account you agree to the{" "}
+        School not on ICAN yet?{" "}
         <a
-          href="/privacy"
-          target="_blank"
-          rel="noreferrer"
-          className="font-semibold text-byui-blue underline decoration-byui-blue-light underline-offset-2 hover:text-byui-blue-dark cursor-pointer"
+          href="/schools"
+          className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer"
         >
-          privacy notice
+          Have your school contact us
         </a>
         .
       </p>

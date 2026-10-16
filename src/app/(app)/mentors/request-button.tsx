@@ -62,7 +62,7 @@ export function RequestButton({
     <>
       {/* Modal backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-navy-900/60 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-plum-900/60 backdrop-blur-sm"
         onClick={() => setOpen(false)}
       />
       <div className="fixed inset-0 z-50 grid place-items-center px-4">
@@ -70,7 +70,7 @@ export function RequestButton({
           className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lift"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="font-display text-lg font-bold text-navy-800">
+          <p className="font-display text-lg font-bold text-plum-800">
             Request {mentorName || "this mentor"}
           </p>
           <p className="mt-1 text-sm text-slate-600">

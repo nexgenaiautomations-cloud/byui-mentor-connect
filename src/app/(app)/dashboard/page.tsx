@@ -9,11 +9,13 @@ import { readActiveRole } from "@/lib/roles-server";
 import { StatTile } from "@/components/stat-card";
 import { KpiStrip } from "@/components/kpi-strip";
 import { getStudentKpis } from "@/lib/kpis";
+import { isPlatformAdmin } from "@/lib/platform-admin";
 
 export default async function DashboardPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
-  if (!me.onboardedAt) redirect("/onboarding");
+  // Platform admins (who run ICAN, not students) skip student onboarding.
+  if (!me.onboardedAt) redirect(isPlatformAdmin(me) ? "/admin/schools" : "/onboarding");
 
   // Which face of the dashboard to render is driven by the active-role
   // cookie, not the DB identity flags. Admins are also mentors and
@@ -162,11 +164,11 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-5 md:space-y-6">
       {showWelcome && (
-        <section className="rounded-2xl border-2 border-byui-blue-light bg-gradient-to-r from-byui-blue-light/30 to-byui-blue-light/10 p-5 shadow-soft md:p-6">
-          <p className="text-xs font-bold uppercase tracking-wider text-byui-blue">
-            Welcome to BYUI CAN
+        <section className="rounded-2xl border-2 border-brand-light bg-gradient-to-r from-brand-light/30 to-brand-light/10 p-5 shadow-soft md:p-6">
+          <p className="text-xs font-bold uppercase tracking-wider text-brand">
+            Welcome to ICAN
           </p>
-          <h2 className="mt-1 font-display text-2xl font-black tracking-tight text-byui-blue-dark md:text-3xl">
+          <h2 className="mt-1 font-display text-2xl font-black tracking-tight text-brand-dark md:text-3xl">
             Let&apos;s find your mentor.
           </h2>
           <p className="mt-2 max-w-xl text-sm text-slate-700">
@@ -177,13 +179,13 @@ export default async function DashboardPage() {
           <div className="mt-4 flex flex-wrap gap-2">
             <Link
               href="/mentors"
-              className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white transition hover:bg-byui-blue-dark cursor-pointer"
+              className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-dark cursor-pointer"
             >
               Find a Mentor
             </Link>
             <Link
               href="/log-meeting"
-              className="inline-flex items-center justify-center rounded-lg border border-byui-blue/40 bg-white px-4 py-2 text-sm font-bold text-byui-blue-dark transition hover:bg-byui-blue-light/20 cursor-pointer"
+              className="inline-flex items-center justify-center rounded-lg border border-brand/40 bg-white px-4 py-2 text-sm font-bold text-brand-dark transition hover:bg-brand-light/20 cursor-pointer"
             >
               Log an Activity
             </Link>
@@ -191,8 +193,8 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      <section className="rounded-2xl bg-gradient-to-r from-byui-blue-dark to-byui-blue p-5 text-white shadow-lift md:p-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-byui-blue-light">
+      <section className="rounded-2xl bg-gradient-to-r from-brand-dark to-brand p-5 text-white shadow-lift md:p-6">
+        <p className="text-xs font-semibold uppercase tracking-wider text-brand-light">
           {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
         </p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
@@ -204,7 +206,7 @@ export default async function DashboardPage() {
               <>
                 <Link
                   href="/matches"
-                  className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-byui-blue-dark hover:bg-byui-blue-light/30 cursor-pointer"
+                  className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-brand-dark hover:bg-brand-light/30 cursor-pointer"
                 >
                   View mentees →
                 </Link>
@@ -219,7 +221,7 @@ export default async function DashboardPage() {
               <>
                 <Link
                   href="/mentors"
-                  className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-byui-blue-dark hover:bg-byui-blue-light/30 cursor-pointer"
+                  className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-brand-dark hover:bg-brand-light/30 cursor-pointer"
                 >
                   Find a mentor →
                 </Link>
@@ -236,7 +238,7 @@ export default async function DashboardPage() {
           </div>
         </div>
         {actingAsMentor && (
-          <p className="mt-2 max-w-xl text-xs text-byui-blue-light">
+          <p className="mt-2 max-w-xl text-xs text-brand-light">
             You&apos;re an approved mentor. Every conversation, resume review, and
             connection moves a student closer to their career.
           </p>
@@ -272,10 +274,10 @@ export default async function DashboardPage() {
       )}
 
       {impact && (
-        <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-byui-blue-light/40 md:p-6">
+        <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-brand-light/40 md:p-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-byui-blue">Your impact</p>
-            <h2 className="mt-1 font-display text-2xl font-black text-byui-blue-dark">
+            <p className="text-xs font-semibold uppercase tracking-wider text-brand">Your impact</p>
+            <h2 className="mt-1 font-display text-2xl font-black text-brand-dark">
               {impact.menteesHelped === 0
                 ? "Ready for your first mentee?"
                 : (() => {
@@ -299,18 +301,18 @@ export default async function DashboardPage() {
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-slate-100 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Active mentees</p>
-              <p className="mt-1 font-display text-2xl font-bold text-byui-blue-dark">
+              <p className="mt-1 font-display text-2xl font-bold text-brand-dark">
                 {impact.activeMentees}{" "}
                 <span className="text-sm font-medium text-slate-500">of {me.mentorCapacity ?? 5}</span>
               </p>
             </div>
             <div className="rounded-xl border border-slate-100 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Meetings logged</p>
-              <p className="mt-1 font-display text-2xl font-bold text-byui-blue-dark">{impact.meetingsLogged}</p>
+              <p className="mt-1 font-display text-2xl font-bold text-brand-dark">{impact.meetingsLogged}</p>
             </div>
             <div className="rounded-xl border border-slate-100 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Time invested</p>
-              <p className="mt-1 font-display text-2xl font-bold text-byui-blue-dark">
+              <p className="mt-1 font-display text-2xl font-bold text-brand-dark">
                 {Math.round(impact.totalMinutes / 60)}h{" "}
                 <span className="text-sm font-medium text-slate-500">{impact.totalMinutes % 60}m</span>
               </p>
@@ -332,14 +334,14 @@ export default async function DashboardPage() {
                       className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-bold text-byui-blue-dark">
+                        <p className="text-sm font-bold text-brand-dark">
                           {new Date(a.meetingDate).toLocaleDateString(undefined, {
                             month: "short",
                             day: "numeric",
                           })}
                           {a.menteeName ? ` · ${a.menteeName}` : ""}
                         </p>
-                        <span className="inline-flex items-center rounded-full bg-byui-blue-light/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-byui-blue-dark capitalize">
+                        <span className="inline-flex items-center rounded-full bg-brand-light/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-dark capitalize">
                           {a.meetingType.replace("_", " ")}
                         </span>
                       </div>
@@ -361,10 +363,10 @@ export default async function DashboardPage() {
       <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <div className="card">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-bold text-byui-blue-dark">
+            <h2 className="font-display text-lg font-bold text-brand-dark">
               {actingAsMentor ? "Your mentees" : "Your Mentors"}
             </h2>
-            <Link href="/matches" className="text-xs font-semibold text-byui-blue hover:underline">
+            <Link href="/matches" className="text-xs font-semibold text-brand hover:underline">
               View all →
             </Link>
           </div>
@@ -390,7 +392,7 @@ export default async function DashboardPage() {
                     className="h-12 w-12 shrink-0 rounded-full object-cover"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-byui-blue-dark">
+                    <p className="truncate text-sm font-semibold text-brand-dark">
                       {m.menteeName}
                     </p>
                     <p className="truncate text-xs text-slate-600">
@@ -407,7 +409,7 @@ export default async function DashboardPage() {
                   </div>
                   <Link
                     href="/matches"
-                    className="shrink-0 text-xs font-semibold text-byui-blue hover:underline"
+                    className="shrink-0 text-xs font-semibold text-brand hover:underline"
                   >
                     Open
                   </Link>
@@ -423,9 +425,9 @@ export default async function DashboardPage() {
                 return (
                   <article
                     key={m.id}
-                    className="overflow-hidden rounded-xl border border-byui-blue-light/40 bg-white shadow-soft"
+                    className="overflow-hidden rounded-xl border border-brand-light/40 bg-white shadow-soft"
                   >
-                    <div className="h-12 bg-gradient-to-r from-byui-blue-dark via-byui-blue to-byui-blue-mid" />
+                    <div className="h-12 bg-gradient-to-r from-brand-dark via-brand to-brand-mid" />
                     <div className="px-3 pb-3">
                       {/* Avatar peeks into the gradient. Name + matched date
                           sit on the white surface below so the dark-navy
@@ -442,10 +444,10 @@ export default async function DashboardPage() {
                         className="-mt-8 h-14 w-14 shrink-0 rounded-xl border-2 border-white bg-white object-cover shadow-lift"
                       />
                       <div className="mt-2">
-                        <p className="truncate font-display text-base font-black leading-tight text-byui-blue-dark">
+                        <p className="truncate font-display text-base font-black leading-tight text-brand-dark">
                           {m.mentorName}
                         </p>
-                        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-byui-blue">
+                        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand">
                           Matched{" "}
                           {new Date(m.startedAt).toLocaleDateString(undefined, {
                             month: "short",
@@ -456,7 +458,7 @@ export default async function DashboardPage() {
 
                       <div className="mt-2.5 flex flex-wrap gap-1">
                         {m.mentorMajor?.trim() ? (
-                          <span className="inline-flex items-center rounded-full bg-byui-blue-light/40 px-2 py-0.5 text-[10px] font-bold text-byui-blue-dark">
+                          <span className="inline-flex items-center rounded-full bg-brand-light/40 px-2 py-0.5 text-[10px] font-bold text-brand-dark">
                             {m.mentorMajor}
                           </span>
                         ) : (
@@ -489,7 +491,7 @@ export default async function DashboardPage() {
                           {interests.map((i) => (
                             <span
                               key={i}
-                              className="inline-flex items-center rounded-full border border-byui-blue/30 bg-white px-2 py-0.5 text-[10px] font-semibold text-byui-blue-dark"
+                              className="inline-flex items-center rounded-full border border-brand/30 bg-white px-2 py-0.5 text-[10px] font-semibold text-brand-dark"
                             >
                               {i}
                             </span>
@@ -500,7 +502,7 @@ export default async function DashboardPage() {
                       <div className="mt-3">
                         <Link
                           href="/matches"
-                          className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-byui-blue-dark cursor-pointer"
+                          className="inline-flex items-center justify-center rounded-lg bg-brand px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-brand-dark cursor-pointer"
                         >
                           Open mentor →
                         </Link>
@@ -514,7 +516,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="card">
-          <h2 className="font-display text-lg font-bold text-byui-blue-dark">Quick actions</h2>
+          <h2 className="font-display text-lg font-bold text-brand-dark">Quick actions</h2>
           <div className="mt-4 space-y-2">
             {(actingAsMentor
               ? [
@@ -540,9 +542,9 @@ export default async function DashboardPage() {
               <Link
                 key={a.href}
                 href={a.href}
-                className="block rounded-xl border border-slate-100 p-3 transition hover:border-byui-blue-light hover:bg-byui-blue-light/10 cursor-pointer"
+                className="block rounded-xl border border-slate-100 p-3 transition hover:border-brand-light hover:bg-brand-light/10 cursor-pointer"
               >
-                <p className="text-sm font-semibold text-byui-blue-dark">{a.title}</p>
+                <p className="text-sm font-semibold text-brand-dark">{a.title}</p>
                 <p className="mt-0.5 text-xs text-slate-500">{a.body}</p>
               </Link>
             ))}

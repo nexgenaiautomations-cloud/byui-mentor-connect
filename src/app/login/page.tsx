@@ -2,9 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "../../../auth";
 import { Logo } from "@/components/logo";
+import { IndependenceNotice } from "@/components/independence-notice";
 import { LoginForm } from "./login-form";
 
-const CAMPUS_LOGIN = "/byui-campus.jpg";
+const AUTH_PHOTO = "/hero-students.jpg";
 
 export default async function LoginPage({
   searchParams,
@@ -56,20 +57,20 @@ export default async function LoginPage({
 
   return (
     <main className="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
-      {/* Campus photo column — visible on lg+ */}
+      {/* Photo column — visible on lg+ */}
       <aside className="relative hidden lg:block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={CAMPUS_LOGIN}
-          alt="BYU-Idaho campus"
+          src={AUTH_PHOTO}
+          alt="Students studying together around a long table"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-navy-900/85 via-navy-800/70 to-navy-900/90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-ink/95 via-brand/80 to-brand-magenta/80" />
         <div className="relative flex h-full flex-col justify-between p-10 text-white">
           <Link href="/" className="flex items-center gap-3">
             <Logo size={44} />
             <div className="leading-tight">
-              <p className="font-display text-sm font-black tracking-tight">BYUI CAN</p>
+              <p className="font-brand text-base font-semibold tracking-[0.14em]">ICAN</p>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
                 Mentor Connect
               </p>
@@ -79,24 +80,27 @@ export default async function LoginPage({
             <p className="font-display text-3xl font-black leading-tight">
               Find your mentor.
               <br />
-              <span className="text-sky-200">Skip the luck.</span>
+              <span className="text-brand-light">Skip the luck.</span>
             </p>
             <p className="mt-4 max-w-md text-sm text-white/80">
-              Peer mentorship that actually scales — built for BYU-Idaho students by BYU-Idaho students.
+              Peer mentorship that actually scales — built by students, for students.
             </p>
           </div>
-          <p className="text-[11px] text-white/50">© BYU-Idaho Career Advancement Network</p>
+          <div>
+            <IndependenceNotice tone="dark" className="max-w-md" />
+            <p className="mt-3 text-[11px] text-white/60">© ICAN Career Advancement Network</p>
+          </div>
         </div>
       </aside>
 
-      <div className="grid place-items-center bg-[#F7F8FB] px-6 py-12">
+      <div className="grid place-items-center bg-[#F8F6FC] px-6 py-12">
         <div className="w-full max-w-md">
           <Link href="/" className="mb-6 flex items-center justify-center gap-3 lg:hidden">
-            <Logo size={36} />
-            <span className="font-display text-base font-black tracking-tight text-navy-800">BYUI CAN</span>
+            <Logo size={36} tile />
+            <span className="font-brand text-lg font-semibold tracking-[0.14em] text-plum-800">ICAN</span>
           </Link>
           <div className="card">
-            <h1 className="font-display text-2xl font-bold text-navy-800">Sign in</h1>
+            <h1 className="font-display text-2xl font-bold text-plum-800">Sign in</h1>
             <p className="mt-1 text-sm text-slate-600">
               Welcome back. Use your password or get a magic link.
             </p>
@@ -104,7 +108,7 @@ export default async function LoginPage({
             {error && (
               <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {error === "AccessDenied"
-                  ? "Only @byui.edu addresses are allowed."
+                  ? "That email isn't from a school on ICAN yet. Use your school email."
                   : error === "RateLimited"
                     ? "Too many sign-in attempts. Please wait an hour and try again."
                     : error === "CredentialsSignin"
@@ -125,6 +129,7 @@ export default async function LoginPage({
               By signing in you agree to receive a one-time login link by email when you request one.
             </p>
           </div>
+          <IndependenceNotice className="mt-4 text-center lg:hidden" />
         </div>
       </div>
     </main>

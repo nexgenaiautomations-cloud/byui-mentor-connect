@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Logo } from "@/components/logo";
+import { OPERATOR, THIRD_PARTY_NOTICE, VOLUNTARY_NOTICE } from "@/lib/disclaimers";
 
 export const metadata: Metadata = {
-  title: "Privacy Notice — BYUI CAN Mentor Connect",
+  title: "Privacy Notice — ICAN Mentor Connect",
   description:
-    "What BYUI CAN Mentor Connect collects, why, who processes it, how long it is kept, and the choices you have.",
+    "What ICAN Mentor Connect collects, why, who processes it, how long it is kept, and the choices you have.",
 };
 
 // Public end-user privacy notice (linked from HECVAT PRGN-05/DRPV-02 and the
@@ -13,12 +14,32 @@ export const metadata: Metadata = {
 // docs/security/retention-policy.md — keep all three in sync.
 const SECTIONS = [
   {
+    heading: "A third-party service operated by GDW Innovations, LLC",
+    body: (
+      <>
+        <p className="text-[15px] leading-relaxed text-slate-600">{THIRD_PARTY_NOTICE}</p>
+        <p className="mt-3 text-[15px] leading-relaxed text-slate-600">
+          {VOLUNTARY_NOTICE} {OPERATOR} is responsible for the data described in this
+          notice; BYU-Idaho and other universities do not receive, control, or process
+          it. See the{" "}
+          <Link
+            href="/terms"
+            className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer"
+          >
+            Terms of Use
+          </Link>{" "}
+          for the full terms.
+        </p>
+      </>
+    ),
+  },
+  {
     heading: "What we collect, and why",
     body: (
       <>
         <p className="text-[15px] leading-relaxed text-slate-600">
           We collect only what the mentoring program needs to run: your name,
-          your <strong className="text-slate-800">@byui.edu</strong> email, an
+          your school email address, an
           optional phone number and profile photo, your major/minor and career
           interests, your mentor–mentee relationships, and the activity and
           meeting notes recorded in the app. Security telemetry (sign-in
@@ -26,7 +47,7 @@ const SECTIONS = [
           log are one-way hashed and never stored raw.
         </p>
         <p className="mt-3 text-[15px] leading-relaxed text-slate-600">
-          Everything is used for one purpose: operating the CAN mentoring
+          Everything is used for one purpose: operating the ICAN mentoring
           program — matching, activity tracking, program administration, and
           keeping accounts secure. Nothing is used for advertising, sold, or
           shared with data brokers.
@@ -86,7 +107,7 @@ const SECTIONS = [
         </li>
         <li>
           <strong className="text-slate-800">Deletion:</strong> request full
-          account deletion through the CAN head admin or the contact below;
+          account deletion through the ICAN head admin or the contact below;
           verified requests are completed and confirmed within 14 days.
           Anonymized security-audit history is retained as required for
           accountability.
@@ -106,8 +127,9 @@ const SECTIONS = [
       <p className="text-[15px] leading-relaxed text-slate-600">
         We do not share your data with law enforcement or other third parties
         except in response to valid legal process (a warrant, subpoena, or
-        court order), and any such request is escalated to BYU-Idaho&apos;s
-        institutional channels before a response is made.
+        court order). Any such request is reviewed by the program owner before a
+        response is made, and, where the law allows, the affected user is
+        notified first.
       </p>
     ),
   },
@@ -118,12 +140,12 @@ const SECTIONS = [
         Privacy questions, complaints, or disputes go to the program owner at{" "}
         <a
           href="mailto:GabrielD@nexgenaiintegrations.com"
-          className="font-semibold text-byui-blue underline decoration-byui-blue-light underline-offset-2 hover:text-byui-blue-dark cursor-pointer"
+          className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer"
         >
           GabrielD@nexgenaiintegrations.com
         </a>{" "}
         and are acknowledged within 5 business days. Unresolved concerns can be
-        escalated to CAN program leadership or BYU-Idaho IT Security. If this
+        escalated to ICAN program leadership. If this
         notice changes materially, the effective date below is updated and
         active users are informed in the app.
       </p>
@@ -133,15 +155,15 @@ const SECTIONS = [
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-byui-blue-light/30 via-white to-white">
+    <main className="min-h-screen bg-gradient-to-b from-brand-light/30 via-white to-white">
       <div className="mx-auto w-full max-w-3xl px-6 py-12 md:py-16">
         <div className="flex items-center gap-3">
-          <Logo size={40} />
+          <Logo size={40} tile />
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-byui-blue">
-              BYUI CAN Mentor Connect
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand">
+              ICAN Mentor Connect
             </p>
-            <h1 className="font-display text-3xl font-black text-byui-blue-dark md:text-4xl">
+            <h1 className="font-display text-3xl font-black text-brand-dark md:text-4xl">
               Privacy notice
             </h1>
           </div>
@@ -151,9 +173,9 @@ export default function PrivacyPage() {
           {SECTIONS.map((s) => (
             <section
               key={s.heading}
-              className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-byui-blue-light/40 md:p-8"
+              className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-brand-light/40 md:p-8"
             >
-              <h2 className="font-display text-xl font-bold text-byui-blue-dark">
+              <h2 className="font-display text-xl font-bold text-brand-dark">
                 {s.heading}
               </h2>
               <div className="mt-3">{s.body}</div>
@@ -163,17 +185,24 @@ export default function PrivacyPage() {
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
           <p className="text-xs font-medium text-slate-500">
-            Effective July 1, 2026 · also see our{" "}
+            Effective October 16, 2026 · also see our{" "}
+            <Link
+              href="/terms"
+              className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer"
+            >
+              terms of use
+            </Link>{" "}
+            and{" "}
             <Link
               href="/accessibility"
-              className="font-semibold text-byui-blue underline decoration-byui-blue-light underline-offset-2 hover:text-byui-blue-dark cursor-pointer"
+              className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer"
             >
               accessibility statement
             </Link>
           </p>
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white shadow-soft transition-colors duration-200 hover:bg-byui-blue-dark cursor-pointer"
+            className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white shadow-soft transition-colors duration-200 hover:bg-brand-dark cursor-pointer"
           >
             Back to home
           </Link>

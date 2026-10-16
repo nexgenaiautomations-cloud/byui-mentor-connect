@@ -2,11 +2,11 @@
 // The plain-text body is the single source of truth — the admin can edit it
 // in the modal, and the HTML body is rendered from the same text on submit.
 
-export const REJECTION_EMAIL_SUBJECT = "BYUI CAN Mentor Application Update";
+export const REJECTION_EMAIL_SUBJECT = "ICAN Mentor Application Update";
 
 export const REJECTION_EMAIL_BODY = `Thank you for applying. We would love to have you; however, we haven't accepted your application yet.
 
-We require our mentors to consistently uphold the standards before acceptance as a mentor. Once you consistently uphold the CAN career standards for the next few months, please reply.
+We require our mentors to consistently uphold the standards before acceptance as a mentor. Once you consistently uphold the ICAN career standards for the next few months, please reply.
 
 1. Career Task — weekly
 One focused action every week: resume edit, alumni outreach, internship app, mock interview.
@@ -17,14 +17,14 @@ Two real-world experiences, such as internships, shadowing, or projects, before 
 3. Career Chats — monthly
 Three Career Chats a month with mentors, alumni, or peers. Networking that compounds.`;
 
-const BRAND_BLUE = "#006EB6";
-const BRAND_DARK = "#214491";
-const BRAND_LIGHT = "#A0D4ED";
+const BRAND_BLUE = "#6D28D9";
+const BRAND_DARK = "#4C1D95";
+const BRAND_LIGHT = "#C4B5FD";
 const BRAND_TEXT = "#0f172a";
-const BRAND_MUTED = "#5d6b85";
+const BRAND_MUTED = "#6b5f85";
 const BRAND_BORDER = "#e2e8f0";
 
-const LOGO_URL = "https://www.byuican.com/byuican-icon.png";
+const LOGO_URL = "https://www.icareeradvancementnetwork.com/ican-icon.png";
 
 function escapeHtml(s: string) {
   return s
@@ -70,8 +70,8 @@ export function buildRejectionEmail({
     <meta name="viewport" content="width=device-width" />
     <title>${escapeHtml(subject)}</title>
   </head>
-  <body style="margin:0;padding:0;background:#f3f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${BRAND_TEXT};">
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f3f6fb;padding:32px 16px;">
+  <body style="margin:0;padding:0;background:#f6f2fc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${BRAND_TEXT};">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f6f2fc;padding:32px 16px;">
       <tr>
         <td align="center">
           <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid ${BRAND_BORDER};">
@@ -80,11 +80,11 @@ export function buildRejectionEmail({
                 <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
                   <tr>
                     <td style="vertical-align:middle;">
-                      <img src="${LOGO_URL}" width="44" height="44" alt="BYUI CAN"
+                      <img src="${LOGO_URL}" width="44" height="44" alt="ICAN"
                         style="display:block;width:44px;height:44px;border:0;outline:none;text-decoration:none;border-radius:8px;background:#ffffff;" />
                     </td>
                     <td style="vertical-align:middle;padding-left:12px;">
-                      <div style="font-size:14px;font-weight:800;color:#ffffff;letter-spacing:0.2px;line-height:1.1;">BYUI CAN</div>
+                      <div style="font-size:14px;font-weight:800;color:#ffffff;letter-spacing:0.2px;line-height:1.1;">ICAN</div>
                       <div style="font-size:11px;font-weight:600;color:${BRAND_LIGHT};letter-spacing:0.6px;text-transform:uppercase;line-height:1.1;margin-top:2px;">Career Advancement Network</div>
                     </td>
                   </tr>
@@ -100,9 +100,9 @@ export function buildRejectionEmail({
               </td>
             </tr>
             <tr>
-              <td style="background:#f7f9fc;padding:18px 32px;text-align:center;">
+              <td style="background:#f8f6fc;padding:18px 32px;text-align:center;">
                 <div style="font-size:11px;line-height:1.5;color:${BRAND_MUTED};">
-                  BYUI CAN — Career Advancement Network · BYU-Idaho<br />
+                  ICAN — Career Advancement Network<br />An independent, student-run program. Not affiliated with or endorsed by BYU-Idaho.<br />
                   Sent to ${escapeHtml(to)}
                 </div>
               </td>

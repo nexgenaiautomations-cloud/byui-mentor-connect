@@ -9,7 +9,7 @@ import { chromium } from "@playwright/test";
 import { AxeBuilder } from "@axe-core/playwright";
 import { encode } from "next-auth/jwt";
 
-const BASE = process.argv[2] ?? "https://www.byuican.com";
+const BASE = process.argv[2] ?? "https://www.icareeradvancementnetwork.com";
 const COOKIE = "__Secure-authjs.session-token";
 
 const PUBLIC_PAGES = [
@@ -62,7 +62,7 @@ await ctx.addCookies([
   {
     name: COOKIE,
     value: token,
-    domain: "www.byuican.com",
+    domain: "www.icareeradvancementnetwork.com",
     path: "/",
     httpOnly: true,
     secure: true,

@@ -111,15 +111,15 @@ export function MobileMenu({
           {/* Backdrop */}
           <div
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-navy-900/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-plum-900/70 backdrop-blur-sm"
           />
           {/* Drawer — slides in from the right to match the trigger button */}
-          <aside className="absolute right-0 top-0 flex h-full w-72 flex-col bg-navy-900 text-white shadow-2xl">
+          <aside className="absolute right-0 top-0 flex h-full w-72 flex-col bg-plum-900 text-white shadow-2xl">
             <div className="flex items-center justify-between px-6 pt-6 pb-5">
               <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
                 <Logo size={36} />
                 <div className="leading-tight">
-                  <p className="font-display text-sm font-black tracking-tight text-white">BYUI CAN</p>
+                  <p className="font-brand text-base font-semibold tracking-[0.14em] text-white">ICAN</p>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
                     Mentor Connect
                   </p>
@@ -191,7 +191,7 @@ export function MobileMenu({
 
             <div className="border-t border-white/15 px-6 py-5">
               <p className="truncate text-sm font-semibold text-white">{user.name || "Member"}</p>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-byui-blue-light">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-brand-light">
                 {user.isHeadAdmin
                   ? `Head Admin · ${ROLE_LABELS[activeRole]}`
                   : `Viewing as ${ROLE_LABELS[activeRole]}`}
@@ -199,7 +199,7 @@ export function MobileMenu({
               <form action={signOutAction} className="mt-3">
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-byui-blue px-4 py-2 text-sm font-bold text-white hover:bg-byui-blue-dark cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-dark cursor-pointer"
                 >
                   Sign out →
                 </button>
@@ -220,7 +220,7 @@ function DrawerLink({ item, active }: { item: NavItem; active: boolean }) {
         className={
           "block py-2 text-[15px] font-semibold tracking-tight transition cursor-pointer " +
           (active
-            ? "text-byui-blue-light border-y border-byui-blue"
+            ? "text-brand-light border-y border-brand"
             : "text-white/85 hover:text-white")
         }
       >

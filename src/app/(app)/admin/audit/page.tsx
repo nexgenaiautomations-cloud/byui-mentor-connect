@@ -80,7 +80,7 @@ export default async function AdminAuditPage({
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-2xl font-black text-byui-blue-dark sm:text-3xl">
+        <h1 className="font-display text-2xl font-black text-brand-dark sm:text-3xl">
           Audit log
         </h1>
         <p className="mt-1 text-sm text-slate-600">
@@ -121,7 +121,7 @@ export default async function AdminAuditPage({
         </label>
         <button
           type="submit"
-          className="rounded-lg bg-byui-blue px-3 py-1.5 text-sm font-semibold text-white hover:bg-byui-blue-dark cursor-pointer"
+          className="rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-dark cursor-pointer"
         >
           Filter
         </button>
@@ -158,7 +158,7 @@ export default async function AdminAuditPage({
                   <td className="whitespace-nowrap px-3 py-2 text-xs text-slate-600">
                     {r.createdAt.toISOString().replace("T", " ").slice(0, 19)}
                   </td>
-                  <td className="px-3 py-2 font-mono text-xs text-byui-blue-dark">
+                  <td className="px-3 py-2 font-mono text-xs text-brand-dark">
                     {r.eventType}
                   </td>
                   <td className="px-3 py-2 text-xs">

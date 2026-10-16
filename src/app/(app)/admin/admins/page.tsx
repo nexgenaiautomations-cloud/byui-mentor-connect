@@ -33,11 +33,11 @@ export default async function ManageAdminsPage() {
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
           Head admin
         </p>
-        <h1 className="mt-1 font-display text-2xl font-black text-navy-800 sm:text-3xl">
+        <h1 className="mt-1 font-display text-2xl font-black text-plum-800 sm:text-3xl">
           Manage admins
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Promote new admins by BYU-I email, demote anyone who&apos;s stepping
+          Promote new admins by student email, demote anyone who&apos;s stepping
           down, or pass the head-admin role to a successor.
         </p>
       </header>

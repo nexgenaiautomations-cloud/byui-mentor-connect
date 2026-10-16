@@ -1,6 +1,5 @@
 import { NextResponse, after } from "next/server";
 import { headers } from "next/headers";
-import { z } from "zod";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -9,26 +8,9 @@ import { limitSignup } from "@/lib/rate-limit";
 import { sendVerificationEmail } from "@/lib/send-verification";
 import { auditEvent } from "@/lib/audit";
 import { isUniqueViolation } from "@/lib/db-errors";
+import { signupSchema } from "@/lib/signup-schema";
+import { isAllowedSchoolEmail, NOT_ALLOWED_MESSAGE } from "@/lib/school-domains";
 
-const BYUI_DOMAIN = "@byui.edu";
-
-// Signup now only collects what's strictly needed to provision the account:
-// email + password. Names, major, prior experience, and everything else
-// move into the post-verification onboarding flow. Holding profile data
-// hostage behind email verification prevents anyone from squatting another
-// student's address — they can't fill out the profile until the real owner
-// clicks the verification link.
-const signupSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .email()
-    .refine((e) => e.endsWith(BYUI_DOMAIN), {
-      message: "Only @byui.edu emails are allowed.",
-    }),
-  password: z.string().min(8).max(200),
-});
 
 export async function POST(req: Request) {
   const h = await headers();
@@ -65,6 +47,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: first }, { status: 400 });
   }
   const data = parsed.data;
+
+  if (!(await isAllowedSchoolEmail(data.email))) {
+    return NextResponse.json({ error: NOT_ALLOWED_MESSAGE }, { status: 400 });
+  }
 
   const pwIssues = passwordIssues(data.password);
   if (pwIssues.length) {

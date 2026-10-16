@@ -76,7 +76,7 @@ function SortHeader<K extends string>({
         onClick={() => onSort(k)}
         className={
           "flex items-center gap-1 text-left text-[11px] font-bold uppercase tracking-wider transition cursor-pointer " +
-          (active ? "text-byui-blue-dark" : "text-slate-500 hover:text-byui-blue-dark")
+          (active ? "text-brand-dark" : "text-slate-500 hover:text-brand-dark")
         }
       >
         <span>{children}</span>
@@ -106,7 +106,7 @@ function PersonCell({
         className="h-8 w-8 rounded-full object-cover"
       />
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-navy-800">{name ?? "—"}</p>
+        <p className="truncate text-sm font-semibold text-plum-800">{name ?? "—"}</p>
         <p className="truncate text-[11px] text-slate-500">{email}</p>
       </div>
     </div>
@@ -323,7 +323,7 @@ export function ActiveMatchesTable({ rows }: { rows: ActiveMatchRow[] }) {
           <div
             aria-hidden
             onClick={() => !busy && setConfirming(null)}
-            className="absolute inset-0 bg-byui-blue-dark/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
           />
           <div
             role="dialog"
@@ -333,17 +333,17 @@ export function ActiveMatchesTable({ rows }: { rows: ActiveMatchRow[] }) {
           >
             <h2
               id="break-match-title"
-              className="font-display text-xl font-black leading-tight text-byui-blue-dark"
+              className="font-display text-xl font-black leading-tight text-brand-dark"
             >
               Break this match?
             </h2>
             <p className="mt-2 text-sm text-slate-700">
               Are you sure you want to break the match between{" "}
-              <strong className="font-bold text-byui-blue-dark">
+              <strong className="font-bold text-brand-dark">
                 {confirming.mentorName ?? "mentor"}
               </strong>{" "}
               and{" "}
-              <strong className="font-bold text-byui-blue-dark">
+              <strong className="font-bold text-brand-dark">
                 {confirming.menteeName ?? "mentee"}
               </strong>
               ?

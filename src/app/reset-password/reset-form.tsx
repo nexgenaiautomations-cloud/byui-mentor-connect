@@ -53,7 +53,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         <p>It may have expired (1 hour) or been used already.</p>
         <Link
           href="/forgot-password"
-          className="inline-flex items-center justify-center rounded-lg bg-byui-blue px-4 py-2 text-xs font-bold text-white transition hover:bg-byui-blue-dark cursor-pointer"
+          className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white transition hover:bg-brand-dark cursor-pointer"
         >
           Request a new reset link
         </Link>

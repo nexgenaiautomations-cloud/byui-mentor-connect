@@ -56,7 +56,7 @@ export function MentorProfileButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-byui-blue hover:text-byui-blue-dark cursor-pointer"
+        className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-brand hover:text-brand-dark cursor-pointer"
       >
         View profile
       </button>
@@ -120,13 +120,13 @@ function ProfileModal({
       <div
         aria-hidden
         onClick={() => !sending && onClose()}
-        className="absolute inset-0 bg-byui-blue-dark/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={`mentor-${m.id}-title`}
-        className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-4 ring-byui-blue"
+        className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-4 ring-brand"
       >
         <div className="flex items-start gap-4 border-b border-slate-100 bg-slate-50 px-5 py-4 sm:px-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -136,12 +136,12 @@ function ProfileModal({
             className="h-14 w-14 shrink-0 rounded-full border border-slate-200 object-cover"
           />
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-brand">
               Mentor
             </p>
             <h2
               id={`mentor-${m.id}-title`}
-              className="font-display text-xl font-black text-byui-blue-dark sm:text-2xl"
+              className="font-display text-xl font-black text-brand-dark sm:text-2xl"
             >
               {m.name ?? "Mentor"}
             </h2>
@@ -169,7 +169,7 @@ function ProfileModal({
         <div className="max-h-[60vh] space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
           {m.bio && (
             <section>
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-brand">
                 About
               </h3>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
@@ -180,7 +180,7 @@ function ProfileModal({
 
           {m.mentorTopics && m.mentorTopics.length > 0 && (
             <section>
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-brand">
                 Can help with
               </h3>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -195,7 +195,7 @@ function ProfileModal({
 
           {m.careerInterests && m.careerInterests.length > 0 && (
             <section>
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-brand">
                 Career interests
               </h3>
               <p className="mt-2 text-sm text-slate-700">
@@ -205,7 +205,7 @@ function ProfileModal({
           )}
 
           <section>
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-brand">
               Availability
             </h3>
             <p

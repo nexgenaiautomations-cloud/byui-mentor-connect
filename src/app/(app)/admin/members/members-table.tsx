@@ -100,7 +100,7 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
             key={u.id}
             type="button"
             onClick={() => setSelected(u)}
-            className="card !p-4 w-full text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-byui-blue cursor-pointer"
+            className="card !p-4 w-full text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
           >
             <div className="flex items-start gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -110,7 +110,7 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
                 className="h-11 w-11 rounded-full object-cover"
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-navy-800">{u.name || "—"}</p>
+                <p className="truncate font-semibold text-plum-800">{u.name || "—"}</p>
                 <p className="truncate text-xs text-slate-500">{u.email}</p>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {u.isAdmin && (
@@ -175,7 +175,7 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
                   role="button"
                   tabIndex={0}
                   aria-label={`Open profile for ${u.name || u.email}`}
-                  className="cursor-pointer hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-byui-blue"
+                  className="cursor-pointer hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand"
                 >
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
@@ -186,7 +186,7 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
                         className="h-9 w-9 rounded-full object-cover"
                       />
                       <div>
-                        <p className="font-semibold text-navy-800">{u.name || "—"}</p>
+                        <p className="font-semibold text-plum-800">{u.name || "—"}</p>
                         <p className="text-xs text-slate-500">{u.email}</p>
                       </div>
                     </div>
@@ -244,13 +244,13 @@ function MemberProfileModal({
       <div
         aria-hidden
         onClick={onClose}
-        className="absolute inset-0 bg-byui-blue-dark/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="member-profile-title"
-        className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-4 ring-byui-blue"
+        className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-4 ring-brand"
       >
         <div className="flex items-start gap-4 border-b border-slate-100 bg-slate-50 px-5 py-4 sm:px-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -260,12 +260,12 @@ function MemberProfileModal({
             className="h-12 w-12 shrink-0 rounded-full object-cover"
           />
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-brand">
               {roleLabel(member)}
             </p>
             <h2
               id="member-profile-title"
-              className="font-display text-xl font-black text-byui-blue-dark sm:text-2xl"
+              className="font-display text-xl font-black text-brand-dark sm:text-2xl"
             >
               {member.name || display(member.name)}
             </h2>
@@ -393,7 +393,7 @@ function MemberProfileModal({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="text-[11px] font-bold uppercase tracking-wider text-byui-blue">{title}</h3>
+      <h3 className="text-[11px] font-bold uppercase tracking-wider text-brand">{title}</h3>
       <dl className="mt-2 grid gap-3 sm:grid-cols-2">{children}</dl>
     </section>
   );
