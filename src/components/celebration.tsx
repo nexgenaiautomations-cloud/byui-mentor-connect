@@ -148,8 +148,16 @@ export function OfferCelebration({
 
   useEffect(() => {
     if (!kind) return;
+    // confetti loads asynchronously; once this effect is cleaned up (closed
+    // early or unmounted) nothing may fire or schedule another burst.
+    let active = true;
     const later = (fn: () => void, ms: number) => {
-      timers.current.push(window.setTimeout(fn, ms));
+      if (!active) return;
+      timers.current.push(
+        window.setTimeout(() => {
+          if (active) fn();
+        }, ms)
+      );
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
@@ -160,7 +168,7 @@ export function OfferCelebration({
 
     if (!prefersReducedMotion()) {
       void loadConfetti().then((fire) => {
-        if (!fire) return;
+        if (!fire || !active) return;
         if (kind === "internship") {
           const cannons = () => {
             fire({ particleCount: 70, angle: 60, spread: 60, startVelocity: 62, origin: { x: 0, y: 0.85 }, colors: BRAND_COLORS, zIndex: 100 });
@@ -210,10 +218,10 @@ export function OfferCelebration({
       });
     }
 
-    const pending = timers.current;
     return () => {
+      active = false;
       window.removeEventListener("keydown", onKey);
-      pending.forEach((t) => window.clearTimeout(t));
+      timers.current.forEach((t) => window.clearTimeout(t));
       timers.current = [];
     };
   }, [kind, close]);

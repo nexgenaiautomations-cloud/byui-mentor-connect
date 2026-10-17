@@ -33,8 +33,18 @@ test.describe("Login page", () => {
 
   test("password sign-in rejects bad credentials", async ({ page }) => {
     await page.goto("/login");
-    await page.locator("input[type='email']").fill("nobody@byui.edu");
-    await page.locator("input[type='password']").fill("wrongwrong1");
+    await page.waitForLoadState("networkidle");
+    // Fill both and confirm both stuck: WebKit on a busy dev server can reset
+    // the first field while hydrating.
+    const emailBox = page.locator("input[type='email']");
+    const passwordBox = page.locator("input[type='password']");
+    await expect(async () => {
+      await emailBox.fill("nobody@byui.edu");
+      await passwordBox.fill("wrongwrong1");
+      await page.waitForTimeout(200);
+      await expect(emailBox).toHaveValue("nobody@byui.edu", { timeout: 100 });
+      await expect(passwordBox).toHaveValue("wrongwrong1", { timeout: 100 });
+    }).toPass({ timeout: 15_000 });
     await page.getByRole("button", { name: /^Sign in$/ }).click();
     // Inline error appears under the form
     await expect(
@@ -42,12 +52,12 @@ test.describe("Login page", () => {
     ).toBeVisible({ timeout: 5000 });
   });
 
-  test("magic-link path rejects non-@byui.edu address", async ({ page }) => {
+  test("magic-link path rejects a non-school address", async ({ page }) => {
     await page.goto("/login");
     await page.getByRole("button", { name: /Send me a magic link/i }).click();
     await page.locator("input[type='email']").fill("attacker@gmail.com");
     await page.getByRole("button", { name: /Send magic link/i }).click();
-    await expect(page.getByText(/Only @byui\.edu/i)).toBeVisible();
+    await expect(page.getByText(/isn't from a school on ICAN/i)).toBeVisible();
   });
 
   test("captures mobile screenshot", async ({ page }, testInfo) => {
