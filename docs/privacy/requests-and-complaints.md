@@ -42,7 +42,7 @@ handled on the same timeline and the head admin is kept on the thread.
 |---|---|
 | Access / know what is held | The account holder sees their own profile in app settings; on request we describe every field held about them |
 | Correction / rectification | Self-serve in app settings at any time |
-| Deletion / erasure | Verified request, head-admin approval, documented deletion script, confirmed to the requester within 14 days. Audit history is retained in anonymized form for accountability — this is stated in the privacy notice, not a silent exception |
+| Deletion / erasure | Verified request, head-admin approval, documented deletion script, confirmed to the requester within 14 days. Audit history is retained for accountability with the account reference removed (pseudonymous, not anonymous — see [pseudonymization-standard.md](./pseudonymization-standard.md) §3.5) — this is stated in the privacy notice, not a silent exception |
 | Objection / restriction | Handled manually — an account can be deactivated, or a specific field restricted to admins, while the underlying question is resolved |
 | Portability | No self-serve export exists today. A copy of an account's data is produced manually on request, in a machine-readable format |
 | Do not sell / do not share | Nothing to action: the data is never sold, never used for advertising, and never used to train models. Stated in the privacy notice |

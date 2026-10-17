@@ -10,6 +10,7 @@
 > [business-continuity.md](./business-continuity.md) ·
 > [retention-policy.md](./retention-policy.md) ·
 > [rls-plan.md](./rls-plan.md) ·
+> [../privacy/pseudonymization-standard.md](../privacy/pseudonymization-standard.md) ·
 > [../privacy/change-review.md](../privacy/change-review.md) ·
 > [SECURITY-OVERVIEW.md](../SECURITY-OVERVIEW.md) (control inventory)
 
@@ -52,6 +53,14 @@ The system deliberately does not store SSNs, birth dates, government IDs,
 payment data, grades, transcripts, message content, plaintext passwords or
 tokens, or raw IP addresses.
 
+Where an identifier is replaced by a code rather than stored directly — and
+where it deliberately is not, because the matching function depends on it —
+is governed by
+[../privacy/pseudonymization-standard.md](../privacy/pseudonymization-standard.md).
+That standard also names the custodian of the one secret that could reverse a
+coded value, and the rules for de-identifying anything that leaves the
+database.
+
 ## 4. Access control
 
 - Application sign-in is restricted to `@byui.edu` addresses, enforced at three
@@ -61,15 +70,22 @@ tokens, or raw IP addresses.
   SHA-256 hashes, are single-use, and expire.
 - Administrative actions are role-gated in the application and recorded in the
   audit log.
-- **Known limitation — there is no multi-factor authentication anywhere in
-  this system today.** The application does not offer MFA or institutional
-  SSO to its end users, and MFA is not yet enabled on the provider accounts
-  (Vercel, Neon, GitHub, Resend, Upstash) that hold production access.
-  Both are disclosed gaps rather than oversights. Enabling MFA on every
-  provider account is the nearer-term of the two and is tracked as an open
-  action item. Until it is done, the compensating controls are that there is
-  exactly one account holder, credentials exist only in the platform secret
-  store, and the rotation runbook has been exercised end to end.
+- **Multi-factor authentication — partial.** Stated precisely, because the
+  position changed on 2026-09-09:
+  - **Enabled:** Vercel (TOTP authenticator, which protects the production
+    environment variables including the pseudonymization salt) and GitHub
+    (TOTP authenticator, set as the preferred method; SMS deliberately
+    declined as phishing- and SIM-swap-weak).
+  - **Still outstanding:** Neon, Resend, and Upstash. Where one of these
+    signs in via GitHub or Google, the GitHub enrolment already covers it;
+    that has not been verified per-provider and so is not claimed.
+  - **Known limitation — the application itself offers no MFA or
+    institutional SSO to end users.** This is a disclosed gap, not an
+    oversight.
+  - Pre-existing long-lived access tokens are not retroactively protected by
+    enabling MFA; they are reviewed and pruned separately.
+  Compensating controls remain: exactly one account holder, credentials only
+  in the platform secret store, and a rotation runbook exercised end to end.
 - Access is granted on the narrowest scope that accomplishes the task. Direct
   database access is used only when the work genuinely requires it.
 - Departure or role change means access is revoked and affected credentials

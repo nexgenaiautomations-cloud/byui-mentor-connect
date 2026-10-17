@@ -199,6 +199,8 @@ The app deliberately does not collect or store:
 
 User-facing PII actually stored: name, BYU-Idaho email, optional phone number, profile photo (compressed to ~25 KB), major/minor/career interests, meeting notes the mentor records.
 
+These remain identified by design — a coded mentee cannot be introduced to a mentor. Which fields are coded, which are deliberately not, and how anything leaving the database is de-identified is governed by `docs/privacy/pseudonymization-standard.md`.
+
 ---
 
 ## 12. Operational Security
@@ -217,7 +219,7 @@ User-facing PII actually stored: name, BYU-Idaho email, optional phone number, p
 
 An `audit_event` table records admin and security-sensitive events. Writes go through `src/lib/audit.ts`, which:
 
-- Hashes the IP with SHA-256 + `AUDIT_IP_HASH_SECRET` before storing. The raw IP is never persisted. **`AUDIT_IP_HASH_SECRET` must be set in production** (it is, in Vercel) — without it the hash is unsalted and reversible by enumerating the IPv4 space.
+- Hashes the IP with SHA-256 + `AUDIT_IP_HASH_SECRET` before storing. The raw IP is never persisted. **`AUDIT_IP_HASH_SECRET` must be set in production** (it is, in Vercel) — without it the hash is unsalted and reversible by enumerating the IPv4 space. As of 2026-10-06 the salt is read through `src/lib/hash-secret.ts`, which logs a critical error in production if it is unset or shorter than 16 characters, so the condition can no longer degrade silently.
 - Sanitizes metadata: keys whose names look like secrets (`password`, `token`, `secret`, `session`, `jwt`, `cookie`, `magic_link`, `bearer`, `authorization`) are replaced with `[redacted]`.
 - Caps serialized metadata at 8 KB so a misuse can't bloat the table.
 - Is best-effort: a failed audit insert never blocks the user-facing action; failures are logged to Vercel logs.
@@ -328,6 +330,9 @@ If reviewers want to verify any claim above, the relevant code lives at:
 | Audit logging helper | `src/lib/audit.ts` |
 | Audit table schema | `src/db/schema.ts` (`auditEvents`) |
 | Audit admin viewer (page + API) | `src/app/(app)/admin/audit/page.tsx`, `src/app/api/admin/audit-events/route.ts` |
+| Pseudonymization salt + production guard | `src/lib/hash-secret.ts` |
+| De-identified audit archive export | `src/lib/audit-archive.ts`, `scripts/export-audit-archive.ts` |
+| Pseudonymization standard | `docs/privacy/pseudonymization-standard.md` |
 | CSP middleware | `middleware.ts` |
 | CSP report endpoint | `src/app/api/security/csp-report/route.ts` |
 | RLS apply script | `scripts/apply-rls.ts` |

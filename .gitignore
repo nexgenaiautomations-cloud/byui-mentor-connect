@@ -13,3 +13,8 @@ drizzle/meta
 
 .vercel
 .env*.local
+
+# Pseudonymized audit archives — these are restricted exports and belong in
+# the institutional document store, never in git.
+# See docs/privacy/pseudonymization-standard.md
+audit-archive-*.csv
