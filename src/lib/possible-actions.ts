@@ -323,6 +323,24 @@ export function shouldCelebrate(accomplishments: readonly string[]): boolean {
   });
 }
 
+// Which offer celebration to play. Each offer has its own animation; if
+// several are logged at once, the biggest win plays.
+export type CelebrationKind = "internship" | "part_time" | "full_time";
+
+const CELEBRATION_BY_KEY: [string, CelebrationKind][] = [
+  ["full_time_offer", "full_time"],
+  ["part_time_offer", "part_time"],
+  ["internship_offer", "internship"],
+];
+
+export function celebrationKind(accomplishments: readonly string[]): CelebrationKind | null {
+  const keys = new Set(accomplishments.map(keyForLabel));
+  for (const [key, kind] of CELEBRATION_BY_KEY) {
+    if (keys.has(key)) return kind;
+  }
+  return null;
+}
+
 // ---- Back-compat exports ----
 // Older imports still in the tree expect these names. Re-derived from the
 // new ACTIONS catalog so they stay in sync.
