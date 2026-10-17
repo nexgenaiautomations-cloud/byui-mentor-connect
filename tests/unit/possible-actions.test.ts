@@ -16,6 +16,7 @@ import {
   keyForLabel,
   dominantGroup,
   shouldCelebrate,
+  celebrationKind,
 } from "@/lib/possible-actions";
 
 describe("POSSIBLE_ACTIONS (legacy flat list)", () => {
@@ -176,5 +177,30 @@ describe("inactivity thresholds", () => {
 
   it("warn is strictly less than disconnect", () => {
     expect(INACTIVITY_WARN_DAYS).toBeLessThan(INACTIVITY_DISCONNECT_DAYS);
+  });
+});
+
+describe("celebrationKind", () => {
+  it("maps each offer to its own celebration", () => {
+    expect(celebrationKind(["I got an internship offer"])).toBe("internship");
+    expect(celebrationKind(["I got a career-related, part-time job offer"])).toBe("part_time");
+    expect(celebrationKind(["I got a career-related, full-time job offer"])).toBe("full_time");
+  });
+
+  it("works with the mentor's wording too", () => {
+    expect(celebrationKind(["My mentee got an internship offer"])).toBe("internship");
+  });
+
+  it("plays the biggest win when several offers are logged together", () => {
+    expect(
+      celebrationKind(["I got an internship offer", "I got a career-related, full-time job offer"])
+    ).toBe("full_time");
+    expect(
+      celebrationKind(["I got an internship offer", "I got a career-related, part-time job offer"])
+    ).toBe("part_time");
+  });
+
+  it("is null when no offer was logged", () => {
+    expect(celebrationKind(["Worked on my resume"])).toBeNull();
   });
 });

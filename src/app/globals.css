@@ -61,3 +61,69 @@
     @apply inline-flex items-center rounded-full bg-gold-50 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-gold-800 border border-gold-200;
   }
 }
+
+/* ───── Offer celebrations (src/components/celebration.tsx) ───── */
+@property --ican-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.ican-ring {
+  padding: 3px;
+  border-radius: 24px;
+  background: conic-gradient(from var(--ican-angle), #e9c46a, #a21caf, #6d28d9, #f4d97b, #e9c46a);
+  animation: ican-spin 3s linear infinite;
+}
+@keyframes ican-spin { to { --ican-angle: 360deg; } }
+.ican-pop { animation: ican-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+@keyframes ican-pop {
+  from { transform: scale(0.55) translateY(30px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.ican-trophy {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 35% 30%, #fff6d6, #e9c46a 45%, #b8901f);
+  box-shadow: 0 8px 24px rgba(201, 162, 39, 0.5);
+}
+.ican-trophy::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.85) 50%, transparent 60%);
+  transform: translateX(-120%);
+  animation: ican-shine 1.6s 0.5s ease-in-out 2;
+}
+@keyframes ican-shine { to { transform: translateX(120%); } }
+.ican-fade { animation: ican-fade 0.35s ease-out both; }
+@keyframes ican-fade { from { opacity: 0; } to { opacity: 1; } }
+.ican-letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(18px);
+  animation: ican-rise 0.5s ease-out forwards;
+  background: linear-gradient(180deg, #fff6d6, #e9c46a 55%, #b8901f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ican-late { opacity: 0; animation: ican-rise 0.6s ease-out forwards; }
+@keyframes ican-rise { to { opacity: 1; transform: none; } }
+.ican-stamp { animation: ican-stamp 0.45s cubic-bezier(0.5, 0, 0.7, 1.4) both; }
+@keyframes ican-stamp {
+  from { transform: scale(3) rotate(-25deg); opacity: 0; }
+  70% { opacity: 1; }
+  to { transform: rotate(-12deg); }
+}
+.ican-slide-up { animation: ican-slide-up 0.5s 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+@keyframes ican-slide-up {
+  from { transform: translateY(120%); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ican-ring, .ican-pop, .ican-trophy::after, .ican-fade, .ican-letter, .ican-late, .ican-stamp, .ican-slide-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

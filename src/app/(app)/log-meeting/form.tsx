@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   groupsForRole,
-  shouldCelebrate as shouldCelebrateLabels,
+  celebrationKind,
+  type CelebrationKind,
 } from "@/lib/possible-actions";
 import {
   AchievementToast,
   fireConfetti,
-  GoldCongratulations,
+  OfferCelebration,
   type TrophyToast,
 } from "@/components/celebration";
 
@@ -83,10 +84,9 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
   // Achievement toast surfaces *all* newly-earned trophies in a single
   // Xbox-style banner. Cleared when the toast auto-dismisses.
   const [toastTrophies, setToastTrophies] = useState<TrophyToast[]>([]);
-  // Gold full-screen "Congratulations!" overlay for the three offer
-  // celebrations. Independent from confetti so we can keep the regular
-  // navy-themed app untouched the rest of the time.
-  const [goldOpen, setGoldOpen] = useState(false);
+  // Offer celebration: trophy pop (internship), fireworks (part-time) or
+  // the "HIRED!" seal (full-time). Null when nothing is playing.
+  const [celebration, setCelebration] = useState<CelebrationKind | null>(null);
 
   const selectedMatch = useMemo(
     () => matches.find((m) => m.id === matchId),
@@ -147,7 +147,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
     setSubmitting(true);
     setError(null);
     const checked = [...accomplishments];
-    const shouldCelebrate = shouldCelebrateLabels(checked);
+    const offerKind = celebrationKind(checked);
     const durationNum = duration ? Number(duration) : null;
     const payload: Record<string, unknown> = {
       activityDate: date,
@@ -180,10 +180,10 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
     setNext("");
     setMeetingType("");
     setDuration("");
-    // Confetti on every successful submission — small, fun, hard to miss.
-    void fireConfetti();
-    // Gold full-screen takeover only for offer accomplishments.
-    if (shouldCelebrate) setGoldOpen(true);
+    // Offers get their own celebration (with its own confetti); every other
+    // submission gets the small default burst.
+    if (offerKind) setCelebration(offerKind);
+    else void fireConfetti();
     // Xbox-style trophy toast when a new achievement was earned.
     if (earned.length > 0) {
       setToastTrophies(
@@ -204,10 +204,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
         trophies={toastTrophies}
         onDismiss={() => setToastTrophies([])}
       />
-      <GoldCongratulations
-        show={goldOpen}
-        onDone={() => setGoldOpen(false)}
-      />
+      <OfferCelebration kind={celebration} onDone={() => setCelebration(null)} />
       <form onSubmit={onReview} className="space-y-5">
         {isMentor && matches.length > 0 && (
           <div>
