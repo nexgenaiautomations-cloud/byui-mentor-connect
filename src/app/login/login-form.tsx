@@ -95,15 +95,34 @@ export function LoginForm({
     startTransition(async () => {
       // Reuse the existing Auth.js Resend flow via its built-in form post
       // endpoint — keeps the magic-link template + rate-limit untouched.
-      const form = new FormData();
-      form.append("email", value);
-      form.append("callbackUrl", safeNext());
+      // Auth.js only reads url-encoded form bodies (multipart FormData is
+      // ignored) and rejects the post without its CSRF token, so fetch the
+      // token first and send both url-encoded.
+      const csrf = await fetch("/api/auth/csrf")
+        .then((r) => r.json() as Promise<{ csrfToken?: string }>)
+        .catch(() => null);
+      const form = new URLSearchParams({
+        csrfToken: csrf?.csrfToken ?? "",
+        email: value,
+        callbackUrl: safeNext(),
+      });
       const res = await fetch("/api/auth/signin/resend", {
         method: "POST",
         body: form,
-      });
-      if (!res.ok && res.status !== 302) {
+      }).catch(() => null);
+      if (!res) {
         setError("Could not send magic link. Try again in a few minutes.");
+        return;
+      }
+      // Auth.js answers with a redirect that fetch follows: the check-email
+      // page on success, or a URL carrying ?error= when it refused or failed.
+      const errorCode = res.url ? new URL(res.url, window.location.href).searchParams.get("error") : null;
+      if (!res.ok || errorCode) {
+        setError(
+          errorCode === "AccessDenied"
+            ? "That email isn't from a school on ICAN yet. Use your school email."
+            : "Could not send magic link. Try again in a few minutes."
+        );
         return;
       }
       setInfo(
