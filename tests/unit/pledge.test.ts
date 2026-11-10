@@ -38,8 +38,12 @@ describe("pledgeNameMatches", () => {
 
 describe("needsPledge", () => {
   it("is required once onboarded and until signed", () => {
-    expect(needsPledge({ onboardedAt: null, pledgeSignedAt: null })).toBe(false);
-    expect(needsPledge({ onboardedAt: new Date(), pledgeSignedAt: null })).toBe(true);
-    expect(needsPledge({ onboardedAt: new Date(), pledgeSignedAt: new Date() })).toBe(false);
+    expect(needsPledge({ onboardedAt: null, pledgeSignedAt: null, isAdmin: false })).toBe(false);
+    expect(needsPledge({ onboardedAt: new Date(), pledgeSignedAt: null, isAdmin: false })).toBe(true);
+    expect(needsPledge({ onboardedAt: new Date(), pledgeSignedAt: new Date(), isAdmin: false })).toBe(false);
+  });
+
+  it("does not gate admins", () => {
+    expect(needsPledge({ onboardedAt: new Date(), pledgeSignedAt: null, isAdmin: true })).toBe(false);
   });
 });

@@ -42,6 +42,12 @@ export function pledgeNameMatches(
   return t[0] === first && t[t.length - 1] === last;
 }
 
-export function needsPledge(u: { onboardedAt: Date | null; pledgeSignedAt: Date | null }): boolean {
-  return !!u.onboardedAt && !u.pledgeSignedAt;
+// Students and mentors sign once their profile exists. Admins run the
+// program rather than take part in it, so they aren't gated.
+export function needsPledge(u: {
+  onboardedAt: Date | null;
+  pledgeSignedAt: Date | null;
+  isAdmin: boolean;
+}): boolean {
+  return !u.isAdmin && !!u.onboardedAt && !u.pledgeSignedAt;
 }
