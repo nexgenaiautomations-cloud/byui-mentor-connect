@@ -166,7 +166,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .from(users)
           .where(eq(users.email, email))
           .limit(1);
-        if (!user || !user.passwordHash) return null;
+        if (!user || !user.passwordHash || user.deactivatedAt) return null;
 
         const ok = await verifyPassword(password, user.passwordHash);
         if (!ok) return null;
@@ -185,6 +185,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!user.email) return false;
       const email = user.email.toLowerCase();
       if (!(await isAllowedSchoolEmail(email))) return false;
+
+      // Accounts removed by an admin can't sign in by any method.
+      const [existing] = await db
+        .select({ deactivatedAt: users.deactivatedAt })
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      if (existing?.deactivatedAt) return false;
 
       // Magic-link sign-ins go through the Resend provider and bypass our
       // /api/auth/signin route entirely, so we audit them here. Password
