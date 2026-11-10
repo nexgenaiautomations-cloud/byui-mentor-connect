@@ -22,7 +22,10 @@ export default async function AdminMembersPage() {
       expectedGraduation: users.expectedGraduation,
       careerInterests: users.careerInterests,
       isMentor: users.isMentor,
+      isExecutiveMentor: users.isExecutiveMentor,
       isAdmin: users.isAdmin,
+      isHeadAdmin: users.isHeadAdmin,
+      deactivatedAt: users.deactivatedAt,
       mentorAvailable: users.mentorAvailable,
       mentorCapacity: users.mentorCapacity,
       priorCareerChats: users.priorCareerChats,
@@ -70,7 +73,10 @@ export default async function AdminMembersPage() {
       expectedGraduation: u.expectedGraduation,
       careerInterests: u.careerInterests,
       isMentor: u.isMentor,
+      isExecutiveMentor: u.isExecutiveMentor,
       isAdmin: u.isAdmin,
+      isHeadAdmin: u.isHeadAdmin,
+      removedAt: u.deactivatedAt ? u.deactivatedAt.toISOString() : null,
       mentorAvailable: u.mentorAvailable,
       mentorCapacity: u.mentorCapacity,
       priorCareerChats: u.priorCareerChats,
@@ -111,7 +117,7 @@ export default async function AdminMembersPage() {
         </p>
       </header>
 
-      <MembersTable rows={memberRows} />
+      <MembersTable rows={memberRows} viewer={{ id: me.id, isHeadAdmin: me.isHeadAdmin }} />
     </div>
   );
 }

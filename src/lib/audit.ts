@@ -47,7 +47,13 @@ export type AuditEventType =
   | "SCHOOL_DOMAIN_CHANGED"
   | "ISSUE_REPORTED"
   | "ADMIN_ACKNOWLEDGED_ISSUE"
-  | "ADMIN_ADDRESSED_ISSUE";
+  | "ADMIN_ADDRESSED_ISSUE"
+  | "ADMIN_CHANGED_ROLE"
+  | "ADMIN_REMOVED_USER"
+  | "ADMIN_RESTORED_USER"
+  | "USER_SIGNED_PLEDGE"
+  | "ADMIN_SET_STEWARDSHIP"
+  | "ADMIN_CHANGED_POD";
 
 export type AuditSeverity = "info" | "warning" | "critical";
 

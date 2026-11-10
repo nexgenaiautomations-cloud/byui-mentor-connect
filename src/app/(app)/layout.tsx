@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { auth } from "../../../auth";
 import { Sidebar, MobileBar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
 import { PendingRequestBanner } from "@/components/pending-request-banner";
@@ -14,7 +15,12 @@ import { categoryLabel } from "@/lib/issues";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    // Signed in but no active account (removed by an admin): explain instead
+    // of bouncing between /login and /dashboard.
+    const session = await auth();
+    redirect(session?.user?.id ? "/account-removed" : "/login");
+  }
   // Disclaimers are acknowledged before any profile setup or app use.
   if (needsAgreement(user)) redirect("/agreements");
   const activeRole = await readActiveRole(user);
