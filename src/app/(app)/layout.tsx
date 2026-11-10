@@ -12,6 +12,8 @@ import { isPlatformAdmin } from "@/lib/platform-admin";
 import { AdminIssuePopup, type PendingIssue } from "@/components/admin-issue-popup";
 import { pendingIssuesForAdmin } from "@/lib/issues-server";
 import { categoryLabel } from "@/lib/issues";
+import { ProfileCompletionPrompt } from "@/components/profile-completion-prompt";
+import { missingProfileFields } from "@/lib/profile-completeness";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -28,6 +30,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // Admins must acknowledge every reported issue; unacknowledged ones pop up
   // on every page regardless of the role they are currently viewing as.
+  const missingFields = missingProfileFields(user);
   let pendingIssues: PendingIssue[] = [];
   if (user.isAdmin) {
     try {
@@ -85,7 +88,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <MobileBar activeRole={activeRole} />
 
-      {pendingIssues.length > 0 && <AdminIssuePopup issues={pendingIssues} />}
+      {pendingIssues.length > 0 ? (
+        <AdminIssuePopup issues={pendingIssues} />
+      ) : (
+        missingFields.length > 0 && <ProfileCompletionPrompt missing={missingFields} />
+      )}
     </div>
   );
 }
