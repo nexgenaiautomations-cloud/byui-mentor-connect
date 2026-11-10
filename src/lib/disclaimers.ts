@@ -5,7 +5,9 @@
 
 // Date of the Terms of Use / disclaimer text a user acknowledges at profile
 // setup. Stored on user.terms_accepted_version and the audit event.
-export const TERMS_VERSION = "2026-10-16";
+// 2026-11-10: pledge, pods leaderboard, issue reporting to all admins,
+// executive mentors, admin role changes / account removal, reports.
+export const TERMS_VERSION = "2026-11-10";
 
 export const SITE_URL = "https://www.icareeradvancementnetwork.com";
 
