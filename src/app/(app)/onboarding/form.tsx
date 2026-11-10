@@ -232,7 +232,8 @@ export function OnboardingForm({
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error?.formErrors?.[0] || "Could not save profile");
       }
-      router.push("/dashboard");
+      // New sign-ups continue to the 3-2-1 pledge, then choose a mentor.
+      router.push(showExperienceStep ? "/pledge?then=mentor" : "/dashboard");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");

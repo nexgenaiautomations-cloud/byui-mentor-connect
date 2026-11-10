@@ -8,6 +8,7 @@ import { availableRoles } from "@/lib/roles";
 import { readActiveRole } from "@/lib/roles-server";
 import { IndependenceNotice } from "@/components/independence-notice";
 import { needsAgreement } from "@/lib/agreements";
+import { needsPledge } from "@/lib/pledge";
 import { isPlatformAdmin } from "@/lib/platform-admin";
 import { AdminIssuePopup, type PendingIssue } from "@/components/admin-issue-popup";
 import { pendingIssuesForAdmin } from "@/lib/issues-server";
@@ -25,6 +26,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
   // Disclaimers are acknowledged before any profile setup or app use.
   if (needsAgreement(user)) redirect("/agreements");
+  // Everyone signs the 3-2-1 pledge once their profile exists.
+  if (needsPledge(user)) redirect("/pledge");
   const activeRole = await readActiveRole(user);
   const roles = availableRoles(user);
 
