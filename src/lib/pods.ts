@@ -41,12 +41,24 @@ function zoneOffsetMs(d: Date, zone: string): number {
   return asUtc - Math.floor(d.getTime() / 1000) * 1000;
 }
 
+// Midnight at the start of local calendar day y-m-d (month 0-based, day may
+// overflow, e.g. d = 32) in `zone`, as a UTC Date. DST-safe.
+export function zonedMidnight(y: number, m: number, d: number, zone = LEADERBOARD_TIME_ZONE): Date {
+  const naive = Date.UTC(y, m, d);
+  const first = naive - zoneOffsetMs(new Date(naive), zone);
+  return new Date(naive - zoneOffsetMs(new Date(first), zone));
+}
+
+// Local calendar date of `d` in `zone` (month 0-based).
+export function zonedParts(d: Date, zone = LEADERBOARD_TIME_ZONE) {
+  const local = new Date(d.getTime() + zoneOffsetMs(d, zone));
+  return { y: local.getUTCFullYear(), m: local.getUTCMonth(), d: local.getUTCDate() };
+}
+
 // Midnight on the 1st of the current month in Mountain time, as a UTC Date.
 export function currentMonthStart(now: Date = new Date(), zone = LEADERBOARD_TIME_ZONE): Date {
-  const local = new Date(now.getTime() + zoneOffsetMs(now, zone));
-  const firstLocal = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), 1);
-  const guess = new Date(firstLocal);
-  return new Date(firstLocal - zoneOffsetMs(guess, zone));
+  const { y, m } = zonedParts(now, zone);
+  return zonedMidnight(y, m, 1, zone);
 }
 
 export type PodScore = { id: string; name: string; points: number; members: number };
