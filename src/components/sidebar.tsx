@@ -52,6 +52,7 @@ function buildNav(
   if (activeRole === "admin") {
     admin.push(
       { href: "/admin", label: "Overview" },
+      { href: "/admin/issues", label: "Issues" },
       { href: "/admin/analytics", label: "Analytics" },
       { href: "/admin/members", label: "Members" },
       { href: "/admin/mentors", label: "Mentors" },

@@ -8,6 +8,9 @@ import { readActiveRole } from "@/lib/roles-server";
 import { IndependenceNotice } from "@/components/independence-notice";
 import { needsAgreement } from "@/lib/agreements";
 import { isPlatformAdmin } from "@/lib/platform-admin";
+import { AdminIssuePopup, type PendingIssue } from "@/components/admin-issue-popup";
+import { pendingIssuesForAdmin } from "@/lib/issues-server";
+import { categoryLabel } from "@/lib/issues";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -16,6 +19,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (needsAgreement(user)) redirect("/agreements");
   const activeRole = await readActiveRole(user);
   const roles = availableRoles(user);
+
+  // Admins must acknowledge every reported issue; unacknowledged ones pop up
+  // on every page regardless of the role they are currently viewing as.
+  let pendingIssues: PendingIssue[] = [];
+  if (user.isAdmin) {
+    try {
+      pendingIssues = (await pendingIssuesForAdmin(user.id)).map((i) => ({
+        id: i.id,
+        categoryLabel: categoryLabel(i.category),
+        message: i.message,
+        status: i.status,
+        createdAt: i.createdAt.toISOString(),
+        reporterName: i.reporterName,
+        reporterEmail: i.reporterEmail,
+      }));
+    } catch (e) {
+      console.error("could not load pending issues for admin", e);
+    }
+  }
   return (
     <div className="relative min-h-screen">
       {/* Full-viewport mountain backdrop with the brand-purple tint baked in.
@@ -56,6 +78,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </div>
 
       <MobileBar activeRole={activeRole} />
+
+      {pendingIssues.length > 0 && <AdminIssuePopup issues={pendingIssues} />}
     </div>
   );
 }

@@ -87,6 +87,9 @@ export const auditEventType = pgEnum("audit_event_type", [
   "CSP_VIOLATION_REPORTED",
   "USER_ACCEPTED_TERMS",
   "SCHOOL_DOMAIN_CHANGED",
+  "ISSUE_REPORTED",
+  "ADMIN_ACKNOWLEDGED_ISSUE",
+  "ADMIN_ADDRESSED_ISSUE",
 ]);
 
 // Auth.js users table — also our "members". Everyone who registers is a member.
@@ -367,12 +370,39 @@ export const issueReports = pgTable(
     category: text("category").notNull(), // "it" | "mentor" | "mentee" | "other"
     message: text("message").notNull(),
     contactEmail: text("contact_email"),
+    // "open" | "addressed" — see src/lib/issues.ts. Every admin still has to
+    // acknowledge an addressed issue (issue_report_receipt).
+    status: text("status").notNull().default("open"),
+    addressedAt: timestamp("addressed_at", { mode: "date" }),
+    addressedById: text("addressed_by_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    resolutionNote: text("resolution_note"),
     createdAt: timestamp("created_at", { mode: "date" })
       .notNull()
       .defaultNow(),
   },
   (t) => ({
     createdIdx: index("issue_report_created_idx").on(t.createdAt),
+  })
+);
+
+// One row per (issue, admin) once that admin has acknowledged the issue —
+// the durable record that each admin saw each report.
+export const issueReportReceipts = pgTable(
+  "issue_report_receipt",
+  {
+    issueId: uuid("issue_id")
+      .notNull()
+      .references(() => issueReports.id, { onDelete: "cascade" }),
+    adminId: text("admin_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    seenAt: timestamp("seen_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.issueId, t.adminId] }),
+    adminIdx: index("issue_report_receipt_admin_idx").on(t.adminId),
   })
 );
 
@@ -489,6 +519,7 @@ export type Achievement = typeof achievements.$inferSelect;
 export type NewAchievement = typeof achievements.$inferInsert;
 export type IssueReport = typeof issueReports.$inferSelect;
 export type NewIssueReport = typeof issueReports.$inferInsert;
+export type IssueReportReceipt = typeof issueReportReceipts.$inferSelect;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;
 export type SchoolDomain = typeof schoolDomains.$inferSelect;

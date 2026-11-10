@@ -132,8 +132,8 @@ function IssueModal({ onClose }: { onClose: () => void }) {
         {done ? (
           <>
             <p className="mt-3 text-sm text-slate-700">
-              Thanks — your report is in. The team will follow up by email at
-              the address on your account.
+              Thanks — your report is in. Every ICAN admin has been notified
+              and will follow up by email at the address on your account.
             </p>
             <div className="mt-5 flex justify-end">
               <button
