@@ -61,6 +61,7 @@ function buildNav(
       { href: "/admin/applications", label: "Applications" },
       { href: "/admin/matches", label: "Matches" },
       { href: "/admin/matchmaker", label: "Matchmaker" },
+      { href: "/admin/stewardship", label: "Stewardship" },
       { href: "/admin/meetings", label: "Meetings" },
       { href: "/leaderboard", label: "Leaderboard" }
     );
