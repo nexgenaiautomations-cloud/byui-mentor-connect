@@ -12,7 +12,10 @@ export async function getCurrentUser() {
     .from(users)
     .where(eq(users.id, session.user.id))
     .limit(1);
-  return user ?? null;
+  // A removed (deactivated) account is treated as signed out everywhere, so
+  // a still-valid session token can't reach any page or API.
+  if (!user || user.deactivatedAt) return null;
+  return user;
 }
 
 // requireUser / requireAdmin return the user when authorized, or a `Response`

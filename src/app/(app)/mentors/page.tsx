@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/empty-state";
 import { MajorFilter } from "./major-filter";
 import { MentorProfileButton } from "./profile-modal";
 import { sameSchoolAs } from "@/lib/school-scope";
+import { rankMentors, RECOMMENDED_MIN_SCORE } from "@/lib/mentor-ranking";
 
 export default async function MentorsPage({
   searchParams,
@@ -87,23 +88,12 @@ export default async function MentorsPage({
     .where(and(eq(matches.menteeId, me.id), eq(matches.status, "active")));
   const matchedSet = new Set(myMatches.map((r) => r.mentorId));
 
-  const myInterests = new Set(me.careerInterests ?? []);
-  const myMajor = me.major?.toLowerCase().trim() ?? "";
-
-  const scored = mentors
-    .map((m) => {
-      const overlap = (m.careerInterests ?? []).filter((c) => myInterests.has(c)).length;
-      const sameMajor = m.major && m.major.toLowerCase().trim() === myMajor ? 1 : 0;
-      const slotsLeft = Math.max(0, (m.mentorCapacity ?? 0) - (m.activeCount ?? 0));
-      const score = overlap * 3 + sameMajor * 2 + (slotsLeft > 0 ? 1 : 0);
-      return { ...m, overlap, sameMajor, slotsLeft, score };
-    })
-    .sort((a, b) => b.score - a.score || (b.slotsLeft - a.slotsLeft));
+  const scored = rankMentors(me, mentors);
 
   // Don't show "Recommended" if any filter is active (user is being intentional)
   const isFiltering = filterMyMajor || !!filterMajor;
-  const recommended = isFiltering ? [] : scored.filter((m) => m.score >= 3);
-  const others = isFiltering ? scored : scored.filter((m) => m.score < 3);
+  const recommended = isFiltering ? [] : scored.filter((m) => m.score >= RECOMMENDED_MIN_SCORE);
+  const others = isFiltering ? scored : scored.filter((m) => m.score < RECOMMENDED_MIN_SCORE);
 
   return (
     <div className="space-y-8">

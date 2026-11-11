@@ -90,6 +90,12 @@ export const auditEventType = pgEnum("audit_event_type", [
   "ISSUE_REPORTED",
   "ADMIN_ACKNOWLEDGED_ISSUE",
   "ADMIN_ADDRESSED_ISSUE",
+  "ADMIN_CHANGED_ROLE",
+  "ADMIN_REMOVED_USER",
+  "ADMIN_RESTORED_USER",
+  "USER_SIGNED_PLEDGE",
+  "ADMIN_SET_STEWARDSHIP",
+  "ADMIN_CHANGED_POD",
 ]);
 
 // Auth.js users table — also our "members". Everyone who registers is a member.
@@ -120,6 +126,10 @@ export const users = pgTable("user", {
   mentorTopics: text("mentor_topics").array(),
   mentorAvailable: boolean("mentor_available").notNull().default(true),
 
+  // Executive mentors steward a group of other mentors (see
+  // mentor_stewardship). Always also a mentor.
+  isExecutiveMentor: boolean("is_executive_mentor").notNull().default(false),
+
   isAdmin: boolean("is_admin").notNull().default(false),
   // Single user at a time — enforced in code, not the DB, so transferring is
   // a single UPDATE. The head admin can promote/demote other admins and
@@ -143,6 +153,28 @@ export const users = pgTable("user", {
   // the user completes the /agreements step.
   termsAcceptedVersion: text("terms_accepted_version"),
   termsAcceptedAt: timestamp("terms_accepted_at", { mode: "date" }),
+
+  // 321 pledge: the name the user typed to sign it, and when. Null until
+  // signed during profile setup (src/lib/pledge.ts).
+  pledgeSignedName: text("pledge_signed_name"),
+  pledgeSignedAt: timestamp("pledge_signed_at", { mode: "date" }),
+
+  // Team ("pod") for the monthly leaderboard. Defaults to the pod for the
+  // user's major; users can switch. FK added in the migration script.
+  podId: uuid("pod_id"),
+
+  // Set when an admin removes the account from ICAN. Removed accounts can't
+  // sign in and are hidden from lists; rows are kept for the record and an
+  // admin can restore them.
+  deactivatedAt: timestamp("deactivated_at", { mode: "date" }),
+  deactivatedById: text("deactivated_by_id"),
+  deactivationReason: text("deactivation_reason"),
+
+  // Mentor waitlist: set when a member found no mentor with an open spot;
+  // notified-at throttles "a mentor in your major is available" emails.
+  // See docs/specs/mentor-waitlist.md.
+  mentorWaitlistedAt: timestamp("mentor_waitlisted_at", { mode: "date" }),
+  mentorWaitNotifiedAt: timestamp("mentor_wait_notified_at", { mode: "date" }),
 
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
@@ -403,6 +435,40 @@ export const issueReportReceipts = pgTable(
   (t) => ({
     pk: primaryKey({ columns: [t.issueId, t.adminId] }),
     adminIdx: index("issue_report_receipt_admin_idx").on(t.adminId),
+  })
+);
+
+// Teams for the monthly points leaderboard (src/lib/pods.ts). Pods named
+// after a major are created automatically; admins can add others.
+export const pods = pgTable(
+  "pod",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    major: text("major"),
+    createdById: text("created_by_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  }
+);
+
+// Executive-mentor stewardship: each mentor is overseen by at most one
+// executive mentor. Admins assign and rebalance it on /admin/stewardship.
+export const mentorStewardship = pgTable(
+  "mentor_stewardship",
+  {
+    mentorId: text("mentor_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    executiveId: text("executive_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    assignedById: text("assigned_by_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    assignedAt: timestamp("assigned_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    executiveIdx: index("mentor_stewardship_executive_idx").on(t.executiveId),
   })
 );
 

@@ -42,7 +42,9 @@ const SECTIONS = [
           your school email address, an
           optional phone number and profile photo, your major/minor and career
           interests, your mentor–mentee relationships, and the activity and
-          meeting notes recorded in the app. Security telemetry (sign-in
+          meeting notes recorded in the app, the name you type to sign the 3-2-1
+          pledge (and when), your pod and monthly leaderboard points, and any issue
+          reports you submit. Security telemetry (sign-in
           events, admin actions) is kept in an audit log; IP addresses in that
           log are one-way hashed and never stored raw.
         </p>
@@ -53,6 +55,33 @@ const SECTIONS = [
           shared with data brokers.
         </p>
       </>
+    ),
+  },
+  {
+    heading: "Who can see what inside ICAN",
+    body: (
+      <ul className="list-disc space-y-1.5 pl-5 text-[15px] leading-relaxed text-slate-600">
+        <li>
+          <strong className="text-slate-800">Other members:</strong> mentors&apos; profiles
+          in Find a Mentor, and on the pod leaderboard each pod&apos;s monthly points plus,
+          within your own pod, members&apos; names and points.
+        </li>
+        <li>
+          <strong className="text-slate-800">Your mentor or mentees:</strong> your profile
+          and the activity you log together.
+        </li>
+        <li>
+          <strong className="text-slate-800">Executive mentors:</strong> which mentors they
+          oversee.
+        </li>
+        <li>
+          <strong className="text-slate-800">ICAN admins:</strong> profiles, roles,
+          mentoring activity, pledge signatures, and filtered program reports (which
+          they can export as a spreadsheet for running the program). Every issue report
+          is shown to all admins, with a record of which admins have seen it and when.
+          Admins can change roles and remove accounts; those actions are logged.
+        </li>
+      </ul>
     ),
   },
   {
@@ -92,7 +121,10 @@ const SECTIONS = [
         on use. Security audit records are kept 365 days, then archived under
         program control. Profile and mentoring records are kept for the life
         of your program participation and removed per the program&apos;s
-        retention policy after extended inactivity.
+        retention policy after extended inactivity. Issue reports, the record of
+        which admins saw them, and the records of accounts an admin removed are
+        kept for accountability until the program&apos;s retention policy or a
+        verified deletion request says otherwise.
       </p>
     ),
   },
@@ -185,7 +217,7 @@ export default function PrivacyPage() {
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
           <p className="text-xs font-medium text-slate-500">
-            Effective October 16, 2026 · also see our{" "}
+            Effective November 10, 2026 · also see our{" "}
             <Link
               href="/terms"
               className="font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-dark cursor-pointer"

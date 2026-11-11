@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ManageUserButton } from "@/components/manage-user-button";
+import { currentRole } from "@/lib/user-admin";
 
 export type MemberRow = {
   id: string;
@@ -13,7 +15,10 @@ export type MemberRow = {
   expectedGraduation: string | null;
   careerInterests: string[] | null;
   isMentor: boolean;
+  isExecutiveMentor: boolean;
   isAdmin: boolean;
+  isHeadAdmin: boolean;
+  removedAt: string | null;
   mentorAvailable: boolean;
   mentorCapacity: number | null;
   priorCareerChats: string | null;
@@ -37,6 +42,48 @@ export type MemberRow = {
 function avatarUrl(name: string | null, email: string) {
   const seed = encodeURIComponent(name || email);
   return `https://api.dicebear.com/9.x/initials/svg?seed=${seed}&backgroundColor=1B3A6B&textColor=ffffff`;
+}
+
+export type Viewer = { id: string; isHeadAdmin: boolean };
+
+function manageButton(u: MemberRow, viewer: Viewer) {
+  const disabledReason =
+    u.id === viewer.id
+      ? "You can't manage your own account here"
+      : u.isAdmin && !viewer.isHeadAdmin
+        ? "Only the head admin can manage another admin"
+        : undefined;
+  return (
+    <ManageUserButton
+      disabledReason={disabledReason}
+      target={{
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: currentRole(u),
+        isAdmin: u.isAdmin,
+        removed: !!u.removedAt,
+        activeMentees: u.activeMatches,
+      }}
+    />
+  );
+}
+
+function RoleBadges({ u }: { u: MemberRow }) {
+  if (u.removedAt) {
+    return <span className="pill bg-slate-100 text-slate-700 border-slate-200">Removed</span>;
+  }
+  return (
+    <>
+      {u.isAdmin && <span className="pill bg-rose-50 text-rose-700 border-rose-100">Admin</span>}
+      {u.isExecutiveMentor ? (
+        <span className="pill bg-indigo-50 text-indigo-800 border-indigo-100">Executive mentor</span>
+      ) : (
+        u.isMentor && <span className="pill bg-emerald-50 text-emerald-700 border-emerald-100">Mentor</span>
+      )}
+      {!u.isMentor && !u.isAdmin && <span className="pill">Member</span>}
+    </>
+  );
 }
 
 function roleLabel(u: MemberRow) {
@@ -73,7 +120,7 @@ function displayList(values: string[] | null | undefined) {
   return values.join(", ");
 }
 
-export function MembersTable({ rows }: { rows: MemberRow[] }) {
+export function MembersTable({ rows, viewer }: { rows: MemberRow[]; viewer: Viewer }) {
   const [selected, setSelected] = useState<MemberRow | null>(null);
 
   // Lock body scroll + Escape closes the modal.
@@ -96,11 +143,12 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
       {/* Mobile cards */}
       <div className="space-y-3 md:hidden">
         {rows.map((u) => (
+          <div key={u.id} className={`card relative !p-0 ${u.removedAt ? "opacity-70" : ""}`}>
+          <div className="absolute right-3 top-3 z-10">{manageButton(u, viewer)}</div>
           <button
-            key={u.id}
             type="button"
             onClick={() => setSelected(u)}
-            className="card !p-4 w-full text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+            className="w-full rounded-[inherit] !p-4 pr-16 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
           >
             <div className="flex items-start gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -113,18 +161,10 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
                 <p className="truncate font-semibold text-plum-800">{u.name || "—"}</p>
                 <p className="truncate text-xs text-slate-500">{u.email}</p>
                 <div className="mt-1 flex flex-wrap gap-1">
-                  {u.isAdmin && (
-                    <span className="pill bg-rose-50 text-rose-700 border-rose-100">Admin</span>
-                  )}
-                  {u.isMentor && (
-                    <span className="pill bg-emerald-50 text-emerald-700 border-emerald-100">
-                      Mentor
-                    </span>
-                  )}
-                  {!u.isMentor && !u.isAdmin && <span className="pill">Member</span>}
+                  <RoleBadges u={u} />
                 </div>
+                <p className="mt-1 text-xs font-semibold text-slate-500">{u.activeMatches} active</p>
               </div>
-              <span className="text-xs font-semibold text-slate-500">{u.activeMatches} active</span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 text-xs">
               <div>
@@ -142,6 +182,7 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
               </div>
             </div>
           </button>
+          </div>
         ))}
       </div>
 
@@ -158,7 +199,8 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
                 <th className="px-3 py-3">Role</th>
                 <th className="px-3 py-3">Active</th>
                 <th className="px-3 py-3">Trophies</th>
-                <th className="px-5 py-3">Joined</th>
+                <th className="px-3 py-3">Joined</th>
+                <th className="px-5 py-3"><span className="sr-only">Manage</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
@@ -175,7 +217,7 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
                   role="button"
                   tabIndex={0}
                   aria-label={`Open profile for ${u.name || u.email}`}
-                  className="cursor-pointer hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand"
+                  className={`${u.removedAt ? "opacity-60 " : ""}cursor-pointer hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand`}
                 >
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
@@ -196,15 +238,7 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
                   <td className="px-3 py-3 text-slate-700">{u.expectedGraduation || "—"}</td>
                   <td className="px-3 py-3">
                     <div className="flex flex-wrap gap-1">
-                      {u.isAdmin && (
-                        <span className="pill bg-rose-50 text-rose-700 border-rose-100">Admin</span>
-                      )}
-                      {u.isMentor && (
-                        <span className="pill bg-emerald-50 text-emerald-700 border-emerald-100">
-                          Mentor
-                        </span>
-                      )}
-                      {!u.isMentor && !u.isAdmin && <span className="pill">Member</span>}
+                      <RoleBadges u={u} />
                     </div>
                   </td>
                   <td className="px-3 py-3 text-slate-700">{u.activeMatches}</td>
@@ -217,9 +251,10 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
                       <span className="text-slate-300">—</span>
                     )}
                   </td>
-                  <td className="px-5 py-3 text-xs text-slate-500">
+                  <td className="px-3 py-3 text-xs text-slate-500">
                     {new Date(u.createdAt).toLocaleDateString()}
                   </td>
+                  <td className="px-5 py-2 text-right">{manageButton(u, viewer)}</td>
                 </tr>
               ))}
             </tbody>

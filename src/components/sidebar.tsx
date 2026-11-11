@@ -31,6 +31,7 @@ function buildNav(
       { href: "/dashboard", label: "Dashboard" },
       { href: "/matches", label: "My Mentees" },
       { href: "/log-meeting", label: "Log a Meeting" },
+      { href: "/leaderboard", label: "Leaderboard" },
       { href: "/settings", label: "Settings" }
     );
   } else if (activeRole === "member") {
@@ -40,6 +41,7 @@ function buildNav(
       { href: "/matches", label: "My Mentors" },
       { href: "/log-meeting", label: "Log an Activity" },
       { href: "/trophy-case", label: "Trophy Case" },
+      { href: "/leaderboard", label: "Leaderboard" },
       { href: "/settings", label: "Settings" }
     );
   }
@@ -54,12 +56,15 @@ function buildNav(
       { href: "/admin", label: "Overview" },
       { href: "/admin/issues", label: "Issues" },
       { href: "/admin/analytics", label: "Analytics" },
+      { href: "/admin/reports", label: "Reports" },
       { href: "/admin/members", label: "Members" },
       { href: "/admin/mentors", label: "Mentors" },
       { href: "/admin/applications", label: "Applications" },
       { href: "/admin/matches", label: "Matches" },
       { href: "/admin/matchmaker", label: "Matchmaker" },
-      { href: "/admin/meetings", label: "Meetings" }
+      { href: "/admin/stewardship", label: "Stewardship" },
+      { href: "/admin/meetings", label: "Meetings" },
+      { href: "/leaderboard", label: "Leaderboard" }
     );
     if (isHeadAdmin) {
       admin.push({ href: "/admin/admins", label: "Manage admins" });

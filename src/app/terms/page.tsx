@@ -94,6 +94,16 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
         <li>You must be a current student with an email address from a participating school to create an account.</li>
         <li>Keep your password private. You are responsible for activity on your account.</li>
         <li>Give accurate information about yourself. Don&apos;t impersonate anyone.</li>
+        <li>
+          Keep your profile complete (name, major, year in school, expected graduation,
+          career interests, and contact preference). ICAN will keep reminding you until it is.
+        </li>
+        <li>
+          When you set up your profile you sign the ICAN 3-2-1 pledge by typing your name.
+          The pledge is a personal commitment to the program&apos;s standard. It is not a
+          contract, no class can require it, and it has no effect on grades. We keep the
+          name you typed and the time you signed.
+        </li>
       </ul>
     ),
   },
@@ -109,9 +119,22 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
           ICAN does not guarantee any internship, job, or other outcome.
         </p>
         <p className={`mt-3 ${P}`}>
+          When you sign up you choose a mentor from those with open spots. If none are
+          available you can keep using ICAN; we email you when a mentor in your major has
+          an open spot, and an ICAN admin may also assign one. Some mentors
+          are executive mentors who oversee a group of other mentors; they are also
+          students, not staff, and the same limits apply to them.
+        </p>
+        <p className={`mt-3 ${P}`}>
           You decide whether, when, and where to meet a mentor or mentee. Meet in
           public places or online, use good judgment, and report anything that makes
           you uncomfortable through the in-app “Report an issue” button.
+        </p>
+        <p className={`mt-3 ${P}`}>
+          Every report (IT, mentor, mentee, or other) goes to all ICAN admins, who
+          each confirm in the app that they have seen it, and is kept as a record.
+          ICAN is not monitored around the clock and is not an emergency service: if
+          you or someone else is in danger, call 911 or campus security first.
         </p>
       </>
     ),
@@ -130,14 +153,30 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
           <li>try to break, overload, or get around the security of the site.</li>
         </ul>
         <p className={`mt-3 ${P}`}>
-          We may remove content or suspend accounts that break these rules.
+          ICAN admins may change your role (for example, from mentor back to member)
+          or remove your account from ICAN, including for breaking these rules. A
+          removed account can&apos;t sign in and its matches end; its records are kept
+          for accountability and an admin can restore it.
         </p>
       </>
     ),
   },
   {
+    id: "pods",
+    heading: "7. Pods and the leaderboard",
+    body: (
+      <p className={P}>
+        You are placed in a pod (team) for your major and can switch pods at any time.
+        Each month the leaderboard shows every pod&apos;s points and, to members of a pod,
+        each member&apos;s name and points. Logged activities earn 1 point and internship or
+        job offers earn 5. The leaderboard is for encouragement only: it has no effect on
+        grades, credit, or standing, and points reset on the 1st of every month.
+      </p>
+    ),
+  },
+  {
     id: "risk",
-    heading: "7. Assumption of risk and disclaimers",
+    heading: "8. Assumption of risk and disclaimers",
     body: (
       <>
         <p className={P}>{SAFETY_NOTICE}</p>
@@ -158,7 +197,7 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
   },
   {
     id: "privacy",
-    heading: "8. Privacy",
+    heading: "9. Privacy",
     body: (
       <p className={P}>
         How we collect, use, and protect your information is explained in our{" "}
@@ -171,7 +210,7 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
   },
   {
     id: "changes",
-    heading: "9. Changes and contact",
+    heading: "10. Changes and contact",
     body: (
       <p className={P}>
         These terms are an agreement between you and {OPERATOR}, which operates
@@ -230,7 +269,7 @@ export default function TermsPage() {
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
           <p className="text-xs font-medium text-slate-500">
-            Effective October 16, 2026 · also see our{" "}
+            Effective November 10, 2026 · also see our{" "}
             <Link href="/privacy" className={LINK}>
               privacy notice
             </Link>

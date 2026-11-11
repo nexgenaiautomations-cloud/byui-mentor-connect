@@ -3,6 +3,8 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { ManageUserButton } from "@/components/manage-user-button";
+import { currentRole } from "@/lib/user-admin";
 
 export default async function AdminMentorsPage() {
   const me = await getCurrentUser();
@@ -22,6 +24,8 @@ export default async function AdminMentorsPage() {
       mentorTopics: users.mentorTopics,
       mentorCapacity: users.mentorCapacity,
       mentorAvailable: users.mentorAvailable,
+      isExecutiveMentor: users.isExecutiveMentor,
+      isAdmin: users.isAdmin,
       activeCount: sql<number>`(select count(*)::int from "match" where mentor_id = "user".id and status = 'active')`,
       totalMeetings: sql<number>`(select count(*)::int from "meeting_log" where mentor_id = "user".id)`,
     })
@@ -58,12 +62,33 @@ export default async function AdminMentorsPage() {
                     {m.name || "Mentor"}
                   </p>
                   <p className="truncate text-xs text-slate-500">{m.email}</p>
+                  {m.isExecutiveMentor && (
+                    <span className="pill mt-1 bg-indigo-50 text-indigo-800 border-indigo-100">Executive mentor</span>
+                  )}
                   <p className="mt-0.5 text-[11px] text-slate-500">
                     {m.major}
                     {m.semesterLevel ? ` · ${m.semesterLevel}` : ""}
                     {m.expectedGraduation ? ` · grad ${m.expectedGraduation}` : ""}
                   </p>
                 </div>
+                <ManageUserButton
+                  disabledReason={
+                    m.id === me.id
+                      ? "You can't manage your own account here"
+                      : m.isAdmin && !me.isHeadAdmin
+                        ? "Only the head admin can manage another admin"
+                        : undefined
+                  }
+                  target={{
+                    id: m.id,
+                    name: m.name,
+                    email: m.email,
+                    role: currentRole({ isMentor: true, isExecutiveMentor: m.isExecutiveMentor }),
+                    isAdmin: m.isAdmin,
+                    removed: false,
+                    activeMentees: m.activeCount ?? 0,
+                  }}
+                />
               </div>
 
               {m.bio && <p className="line-clamp-2 text-sm text-slate-600">{m.bio}</p>}

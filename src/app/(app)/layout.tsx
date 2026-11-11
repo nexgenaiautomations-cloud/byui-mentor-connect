@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { auth } from "../../../auth";
 import { Sidebar, MobileBar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
 import { PendingRequestBanner } from "@/components/pending-request-banner";
@@ -7,21 +8,32 @@ import { availableRoles } from "@/lib/roles";
 import { readActiveRole } from "@/lib/roles-server";
 import { IndependenceNotice } from "@/components/independence-notice";
 import { needsAgreement } from "@/lib/agreements";
+import { needsPledge } from "@/lib/pledge";
 import { isPlatformAdmin } from "@/lib/platform-admin";
 import { AdminIssuePopup, type PendingIssue } from "@/components/admin-issue-popup";
 import { pendingIssuesForAdmin } from "@/lib/issues-server";
 import { categoryLabel } from "@/lib/issues";
+import { ProfileCompletionPrompt } from "@/components/profile-completion-prompt";
+import { missingProfileFields } from "@/lib/profile-completeness";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    // Signed in but no active account (removed by an admin): explain instead
+    // of bouncing between /login and /dashboard.
+    const session = await auth();
+    redirect(session?.user?.id ? "/account-removed" : "/login");
+  }
   // Disclaimers are acknowledged before any profile setup or app use.
   if (needsAgreement(user)) redirect("/agreements");
+  // Everyone signs the 3-2-1 pledge once their profile exists.
+  if (needsPledge(user)) redirect("/pledge");
   const activeRole = await readActiveRole(user);
   const roles = availableRoles(user);
 
   // Admins must acknowledge every reported issue; unacknowledged ones pop up
   // on every page regardless of the role they are currently viewing as.
+  const missingFields = missingProfileFields(user);
   let pendingIssues: PendingIssue[] = [];
   if (user.isAdmin) {
     try {
@@ -79,7 +91,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <MobileBar activeRole={activeRole} />
 
-      {pendingIssues.length > 0 && <AdminIssuePopup issues={pendingIssues} />}
+      {pendingIssues.length > 0 ? (
+        <AdminIssuePopup issues={pendingIssues} />
+      ) : (
+        missingFields.length > 0 && <ProfileCompletionPrompt missing={missingFields} />
+      )}
     </div>
   );
 }

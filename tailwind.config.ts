@@ -49,6 +49,8 @@ export default {
         display: ["Outfit", "Inter", "ui-sans-serif", "sans-serif"],
         // ICAN wordmark only — classical Roman capitals.
         brand: ["Cinzel", "Trajan Pro", "Georgia", "serif"],
+        // Typed pledge signature — makes signing feel official.
+        signature: ["Dancing Script", "Brush Script MT", "cursive"],
       },
       boxShadow: {
         soft: "0 4px 24px rgba(74, 37, 133, 0.08)",

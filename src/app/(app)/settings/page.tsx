@@ -12,6 +12,7 @@ import { signOutAction } from "@/lib/actions";
 import { InstallButton } from "@/components/install-button";
 import { listAchievementsForStudent } from "@/lib/achievements";
 import { TrophyBadge } from "@/components/trophy-badge";
+import { missingProfileFields } from "@/lib/profile-completeness";
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
@@ -25,6 +26,7 @@ export default async function SettingsPage() {
     ? await listAchievementsForStudent(user.id)
     : [];
   const earned = achievements.filter((a) => a.isEarned);
+  const missing = missingProfileFields(user);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -43,8 +45,15 @@ export default async function SettingsPage() {
         </div>
       </header>
 
+      {missing.length > 0 && (
+        <div role="status" className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+          <p className="font-bold">Your profile isn&apos;t complete yet.</p>
+          <p className="mt-1">Please fill in: {missing.join(", ")}.</p>
+        </div>
+      )}
+
       {/* Profile editor */}
-      <section className="card">
+      <section className="card" id="profile">
         <h2 className="font-display text-lg font-bold text-brand-dark">
           Profile
         </h2>

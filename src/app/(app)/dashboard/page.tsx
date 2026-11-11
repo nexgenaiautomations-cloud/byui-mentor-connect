@@ -10,6 +10,7 @@ import { StatTile } from "@/components/stat-card";
 import { KpiStrip } from "@/components/kpi-strip";
 import { getStudentKpis } from "@/lib/kpis";
 import { isPlatformAdmin } from "@/lib/platform-admin";
+import { mentorOpenInMajor } from "@/lib/mentor-waitlist-server";
 
 export default async function DashboardPage() {
   const me = await getCurrentUser();
@@ -160,6 +161,10 @@ export default async function DashboardPage() {
     !actingAsMentor &&
     activeMatches.length === 0 &&
     sentByMe.length === 0;
+  // Waitlisted members (no mentor had room when they looked) see whether a
+  // mentor in their major has opened up. docs/specs/mentor-waitlist.md
+  const waitlisted = showWelcome && !me.isMentor && !!me.mentorWaitlistedAt;
+  const mentorOpen = waitlisted ? await mentorOpenInMajor(me) : false;
 
   return (
     <div className="space-y-5 md:space-y-6">
@@ -169,19 +174,25 @@ export default async function DashboardPage() {
             Welcome to ICAN
           </p>
           <h2 className="mt-1 font-display text-2xl font-black tracking-tight text-brand-dark md:text-3xl">
-            Let&apos;s find your mentor.
+            {mentorOpen
+              ? "A mentor in your major is available."
+              : waitlisted
+                ? "You're on the mentor waitlist."
+                : "Let's find your mentor."}
           </h2>
           <p className="mt-2 max-w-xl text-sm text-slate-700">
-            Search for mentors who align with your major, career interests, and
-            goals. You can also start logging activities right away — your progress
-            doesn&apos;t need to wait for a match.
+            {mentorOpen
+              ? `A ${me.major} mentor has an open spot. Choose your mentor before it fills up.`
+              : waitlisted
+                ? `Every mentor${me.major ? ` in ${me.major}` : ""} is full right now. We'll email you when one has an open spot. Keep logging activities in the meantime.`
+                : "Search for mentors who align with your major, career interests, and goals. You can also start logging activities right away — your progress doesn't need to wait for a match."}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link
-              href="/mentors"
+              href={mentorOpen ? "/choose-mentor" : "/mentors"}
               className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-dark cursor-pointer"
             >
-              Find a Mentor
+              {mentorOpen ? "Choose your mentor" : waitlisted ? "Browse mentors" : "Find a Mentor"}
             </Link>
             <Link
               href="/log-meeting"

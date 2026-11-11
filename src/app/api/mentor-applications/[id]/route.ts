@@ -1,3 +1,4 @@
+import { notifyWaitingMentees } from "@/lib/mentor-waitlist-server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db/client";
@@ -69,6 +70,8 @@ export async function PATCH(
         mentorTopics: app.topics,
       })
       .where(eq(users.id, app.userId));
+    // A new mentor may open a spot for members waiting in their major.
+    await notifyWaitingMentees();
   }
 
   await auditEvent({
