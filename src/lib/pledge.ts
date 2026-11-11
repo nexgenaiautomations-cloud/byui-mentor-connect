@@ -42,12 +42,13 @@ export function pledgeNameMatches(
   return t[0] === first && t[t.length - 1] === last;
 }
 
-// Students and mentors sign once their profile exists. Admins run the
-// program rather than take part in it, so they aren't gated.
+// Everyone signs once: students and mentors after their profile exists,
+// admins on their next visit (they may never have onboarded). Admins are not
+// exempt (client decision, 2026-11-11).
 export function needsPledge(u: {
   onboardedAt: Date | null;
   pledgeSignedAt: Date | null;
   isAdmin: boolean;
 }): boolean {
-  return !u.isAdmin && !!u.onboardedAt && !u.pledgeSignedAt;
+  return !u.pledgeSignedAt && (u.isAdmin || !!u.onboardedAt);
 }

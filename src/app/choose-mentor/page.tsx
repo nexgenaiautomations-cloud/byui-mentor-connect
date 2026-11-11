@@ -10,6 +10,7 @@ import { needsAgreement } from "@/lib/agreements";
 import { needsPledge } from "@/lib/pledge";
 import { sameSchoolAs } from "@/lib/school-scope";
 import { rankMentors, RECOMMENDED_MIN_SCORE } from "@/lib/mentor-ranking";
+import { joinMentorWaitlist } from "@/lib/mentor-waitlist-server";
 import { ChooseMentorButton } from "./choose-button";
 
 export const metadata: Metadata = {
@@ -17,9 +18,10 @@ export const metadata: Metadata = {
 };
 
 // Last step of sign-up (Shaun Franklin, 2026-11-09): profile, then the
-// pledge, then choose a mentor. If mentors have open slots the student must
-// pick one (recommended first). If none do, admins match them by hand and
-// they're told they'll get an email.
+// pledge, then choose a mentor (recommended first). Existing members without a
+// mentor land here after signing the pledge too. If no mentor has room the
+// member joins the waitlist (docs/specs/mentor-waitlist.md) and keeps using
+// the app; they're emailed when a mentor in their major opens up.
 export default async function ChooseMentorPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
@@ -66,6 +68,9 @@ export default async function ChooseMentorPage() {
   const open = rankMentors(me, rows).filter((m) => m.slotsLeft > 0);
   const recommended = open.filter((m) => m.score >= RECOMMENDED_MIN_SCORE);
   const others = open.filter((m) => m.score < RECOMMENDED_MIN_SCORE);
+  // Nobody has room: put them on the waitlist so they hear when a mentor in
+  // their major opens up. They keep using the app meanwhile.
+  if (open.length === 0) await joinMentorWaitlist(me.id);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-brand-light/30 via-white to-white px-4 py-10">
@@ -85,8 +90,9 @@ export default async function ChooseMentorPage() {
               You will be assigned a mentor as soon as one is available.
             </p>
             <p className="mt-2 text-sm text-slate-700">
-              Every mentor is full right now. An ICAN admin will match you with a mentor and
-              we&apos;ll let you know by email at {me.email}.
+              Every mentor is full right now. You can keep using ICAN in the meantime. When a
+              mentor{me.major ? <> in {me.major}</> : null} has an open spot we&apos;ll email you at{" "}
+              {me.email}, and an ICAN admin may also match you by hand.
             </p>
             <Link
               href="/dashboard"

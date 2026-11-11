@@ -22,9 +22,12 @@ export default async function PledgePage({
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (needsAgreement(user)) redirect("/agreements");
-  if (!user.onboardedAt) redirect("/onboarding");
+  if (!user.onboardedAt && !user.isAdmin) redirect("/onboarding");
   const { then } = await searchParams;
-  const next = then === "mentor" ? "/choose-mentor" : "/dashboard";
+  // Members without a mentor go on to choose one (new sign-ups and existing
+  // members alike); /choose-mentor sends anyone already matched onward.
+  const isPlainMember = !user.isMentor && !user.isAdmin;
+  const next = then === "mentor" || isPlainMember ? "/choose-mentor" : "/dashboard";
   if (!needsPledge(user)) redirect(next);
 
   const displayName =

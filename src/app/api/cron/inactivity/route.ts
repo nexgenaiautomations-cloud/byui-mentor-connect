@@ -1,3 +1,4 @@
+import { notifyWaitingMentees } from "@/lib/mentor-waitlist-server";
 import { NextResponse } from "next/server";
 import { Buffer } from "node:buffer";
 import { timingSafeEqual } from "node:crypto";
@@ -62,8 +63,13 @@ export async function GET(req: Request) {
     reopenedCount = reopened.length;
   }
 
+  // 3) Daily catch-all for the mentor waitlist: email members when a mentor
+  //    in their major has an open spot (throttled to once a week each).
+  const waitlistNotified = await notifyWaitingMentees();
+
   return NextResponse.json({
     ok: true,
+    waitlistNotified,
     cutoff: cutoff.toISOString(),
     disconnectedCount: disconnected.length,
     disconnected: disconnected.map((d) => d.id),

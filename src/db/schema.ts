@@ -170,6 +170,12 @@ export const users = pgTable("user", {
   deactivatedById: text("deactivated_by_id"),
   deactivationReason: text("deactivation_reason"),
 
+  // Mentor waitlist: set when a member found no mentor with an open spot;
+  // notified-at throttles "a mentor in your major is available" emails.
+  // See docs/specs/mentor-waitlist.md.
+  mentorWaitlistedAt: timestamp("mentor_waitlisted_at", { mode: "date" }),
+  mentorWaitNotifiedAt: timestamp("mentor_wait_notified_at", { mode: "date" }),
+
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 

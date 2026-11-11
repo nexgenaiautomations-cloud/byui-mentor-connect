@@ -120,7 +120,8 @@ const SECTIONS: { id: string; heading: string; body: React.ReactNode }[] = [
         </p>
         <p className={`mt-3 ${P}`}>
           When you sign up you choose a mentor from those with open spots. If none are
-          available, an ICAN admin assigns one and lets you know by email. Some mentors
+          available you can keep using ICAN; we email you when a mentor in your major has
+          an open spot, and an ICAN admin may also assign one. Some mentors
           are executive mentors who oversee a group of other mentors; they are also
           students, not staff, and the same limits apply to them.
         </p>

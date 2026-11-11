@@ -3,6 +3,7 @@ import { and, eq, or } from "drizzle-orm";
 import { db } from "@/db/client";
 import { matches, requests, users, type User } from "@/db/schema";
 import { auditEvent } from "@/lib/audit";
+import { notifyWaitingMentees } from "@/lib/mentor-waitlist-server";
 import {
   checkRemoval,
   checkRestore,
@@ -75,6 +76,7 @@ export async function changeRole(
     request,
     metadata: { from, to: role },
   });
+  if (from === "member" && role !== "member") await notifyWaitingMentees();
   return { ok: true };
 }
 

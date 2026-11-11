@@ -43,7 +43,9 @@ describe("needsPledge", () => {
     expect(needsPledge({ onboardedAt: new Date(), pledgeSignedAt: new Date(), isAdmin: false })).toBe(false);
   });
 
-  it("does not gate admins", () => {
-    expect(needsPledge({ onboardedAt: new Date(), pledgeSignedAt: null, isAdmin: true })).toBe(false);
+  it("gates admins too, even before onboarding", () => {
+    expect(needsPledge({ onboardedAt: new Date(), pledgeSignedAt: null, isAdmin: true })).toBe(true);
+    expect(needsPledge({ onboardedAt: null, pledgeSignedAt: null, isAdmin: true })).toBe(true);
+    expect(needsPledge({ onboardedAt: null, pledgeSignedAt: new Date(), isAdmin: true })).toBe(false);
   });
 });

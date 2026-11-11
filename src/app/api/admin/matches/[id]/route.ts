@@ -1,3 +1,4 @@
+import { notifyWaitingMentees } from "@/lib/mentor-waitlist-server";
 import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
@@ -40,6 +41,9 @@ export async function DELETE(
     request: req,
     metadata: { matchId: updated[0].id, mentorId: updated[0].mentorId },
   });
+
+  // The mentor now has a free spot for someone on the waitlist.
+  await notifyWaitingMentees();
 
   return NextResponse.json({ match: updated[0] });
 }
