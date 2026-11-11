@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { issueReports } from "@/db/schema";
 import { getCurrentUser } from "@/lib/session";
-
-const ISSUE_CATEGORIES = ["it", "mentor", "mentee", "other"] as const;
+import { auditEvent } from "@/lib/audit";
+import { ISSUE_CATEGORIES } from "@/lib/issues";
+import { notifyAdminsOfIssue } from "@/lib/issues-server";
 
 const schema = z.object({
   category: z.enum(ISSUE_CATEGORIES),
   message: z.string().trim().min(5).max(4000),
 });
 
+// Any signed-in user can report an issue. The report is saved, audited,
+// emailed to every admin, and pops up for every admin until each one
+// acknowledges it (see docs/specs/admin-issue-reports.md).
 export async function POST(req: Request) {
   const me = await getCurrentUser();
   if (!me) {
@@ -42,51 +45,18 @@ export async function POST(req: Request) {
     })
     .returning();
 
-  // Notify the admin inbox if ISSUE_REPORT_TO + AUTH_RESEND_KEY are set.
-  // Failure here is non-fatal — the report is already saved.
-  const apiKey = process.env.AUTH_RESEND_KEY;
-  const to = process.env.ISSUE_REPORT_TO;
-  if (apiKey && to) {
-    try {
-      const h = await headers();
-      const host = h.get("host") ?? "byui-can";
-      const from =
-        process.env.EMAIL_FROM ?? "ICAN <noreply@icareeradvancementnetwork.com>";
-      const labelMap: Record<string, string> = {
-        it: "IT issue",
-        mentor: "Issue with my mentor",
-        mentee: "Issue with a mentee",
-        other: "Other",
-      };
-      const subject = `ICAN issue report — ${labelMap[category] ?? category}`;
-      const text = [
-        `Category: ${labelMap[category] ?? category}`,
-        `From: ${me.name ?? me.email} <${me.email}>`,
-        `Role: ${me.isAdmin ? "Admin" : me.isMentor ? "Mentor" : "Member"}`,
-        `Reported at: ${row.createdAt.toISOString()}`,
-        `Host: ${host}`,
-        "",
-        "Message:",
-        message,
-      ].join("\n");
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from,
-          to,
-          reply_to: me.email,
-          subject,
-          text,
-          headers: { "X-Entity-Ref-ID": "ican-issue-report" },
-        }),
-      });
-    } catch (e) {
-      console.error("issue-report email failed:", e);
-    }
+  await auditEvent({
+    actorUserId: me.id,
+    eventType: "ISSUE_REPORTED",
+    request: req,
+    metadata: { issueId: row.id, category },
+  });
+
+  try {
+    await notifyAdminsOfIssue(row, me, new URL(req.url).origin);
+  } catch (e) {
+    // Non-fatal: the report is saved and will pop up for every admin.
+    console.error("issue-report admin email failed:", e);
   }
 
   return NextResponse.json({ ok: true, id: row.id });

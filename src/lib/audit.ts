@@ -44,7 +44,10 @@ export type AuditEventType =
   | "UNAUTHORIZED_ADMIN_ATTEMPT"
   | "CSP_VIOLATION_REPORTED"
   | "USER_ACCEPTED_TERMS"
-  | "SCHOOL_DOMAIN_CHANGED";
+  | "SCHOOL_DOMAIN_CHANGED"
+  | "ISSUE_REPORTED"
+  | "ADMIN_ACKNOWLEDGED_ISSUE"
+  | "ADMIN_ADDRESSED_ISSUE";
 
 export type AuditSeverity = "info" | "warning" | "critical";
 
