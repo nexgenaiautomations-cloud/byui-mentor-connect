@@ -43,6 +43,8 @@ export type JobResult = {
   markedMissed: number;
   markedCompleted: number;
   candidates: number;
+  // Dry-run diagnostics: how many of each reminder were due this run.
+  candidatesByKind?: Record<string, number>;
   outcomes: RunState["outcomes"] | null;
 };
 
@@ -101,6 +103,8 @@ export async function runReminderJob(now: Date = new Date()): Promise<JobResult>
   for (const row of meetings) {
     const m = row.sm;
     note(row.mentor, row.mentee);
+    // A pair with a removed account is over: nobody gets reminded about it.
+    if (row.mentor.deactivatedAt || row.mentee.deactivatedAt) continue;
     // Interaction logged around the meeting (e.g. logged before the
     // scheduled row existed) → it happened.
     if (
@@ -129,7 +133,7 @@ export async function runReminderJob(now: Date = new Date()): Promise<JobResult>
       if (!isDue(m, kind, now)) continue;
       for (const [to, other, role] of pair) {
         candidates.push({
-          dedupeKey: dedupe.meeting(kind, m.id, to.id),
+          dedupeKey: dedupe.meeting(kind, m.id, m.startsAt, to.id),
           userId: to.id,
           email: to.email,
           kind,
@@ -142,7 +146,7 @@ export async function runReminderJob(now: Date = new Date()): Promise<JobResult>
     }
     if (isDue(m, "log_followup", now)) {
       candidates.push({
-        dedupeKey: dedupe.meeting("log_followup", m.id, row.mentor.id),
+        dedupeKey: dedupe.meeting("log_followup", m.id, m.startsAt, row.mentor.id),
         userId: row.mentor.id,
         email: row.mentor.email,
         kind: "log_followup",
@@ -191,6 +195,7 @@ export async function runReminderJob(now: Date = new Date()): Promise<JobResult>
     );
   for (const l of logs) {
     note(l.mentor, l.mentee);
+    if (l.mentor.deactivatedAt || l.mentee.deactivatedAt) continue;
     // Ask the side that didn't log it to confirm.
     const toMentee = l.createdBy === "mentor" && !l.menteeConfirmed;
     const toMentor = l.createdBy === "mentee" && !l.mentorConfirmed;
@@ -237,6 +242,7 @@ export async function runReminderJob(now: Date = new Date()): Promise<JobResult>
   const thresholds = await getThresholdsBySchool(schools);
   for (const a of active) {
     note(a.mentor, a.mentee);
+    if (a.mentor.deactivatedAt || a.mentee.deactivatedAt) continue;
     const t = thresholds.get(schoolOf(a.mentee.email) ?? "*")!;
     const nudge = pickInactivityNudge(a, t, now, since);
     if (!nudge) continue;
@@ -260,8 +266,17 @@ export async function runReminderJob(now: Date = new Date()): Promise<JobResult>
   const sendable = candidates.filter((c) => !inactiveUsers.has(c.userId));
   const state = newRunState(mode, parseMaxPerRun(process.env.NOTIFICATIONS_MAX_PER_RUN));
   await primeRunState(state, sendable.map((c) => c.userId), now);
+  const byKind: Record<string, number> = {};
   for (const c of sendable) {
-    await deliver(c, state, now);
+    byKind[c.kind] = (byKind[c.kind] ?? 0) + 1;
+    try {
+      await deliver(c, state, now);
+    } catch (e) {
+      // A DB hiccup on one row must not stop every later reminder. The claim
+      // row (if any) is left pending and retried after it goes stale.
+      console.error(`reminders: delivery ${c.kind} failed:`, e instanceof Error ? e.message : e);
+      state.outcomes.failed += 1;
+    }
   }
   return {
     mode,
@@ -269,6 +284,7 @@ export async function runReminderJob(now: Date = new Date()): Promise<JobResult>
     markedMissed,
     markedCompleted,
     candidates: sendable.length,
+    candidatesByKind: byKind,
     outcomes: state.outcomes,
   };
 }

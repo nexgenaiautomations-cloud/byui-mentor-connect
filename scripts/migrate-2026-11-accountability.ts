@@ -176,8 +176,11 @@ const DDL = [
          "notification_preference", "scheduled_meeting", "notification_delivery",
          "program_setting", "career_milestone", "intervention", "intervention_event"
        TO app_user;
-       -- The app may read holds; only operators (owner role) create/release them.
+       -- The app may read holds; only operators (owner role) create/release
+       -- them. Revoke explicitly: default privileges would otherwise grant
+       -- app_user full write access to a new table.
        GRANT SELECT ON "retention_hold" TO app_user;
+       REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON "retention_hold" FROM app_user;
      END IF;
    END $$`,
 ];

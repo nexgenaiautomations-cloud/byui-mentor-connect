@@ -64,8 +64,10 @@ export const MAX_ATTEMPTS = 3;
 // ---- Dedupe keys (one notification per key, ever) ----
 
 export const dedupe = {
-  meeting: (kind: "meeting_24h" | "meeting_1h" | "log_followup", meetingId: string, userId: string) =>
-    `${kind}:${meetingId}:${userId}`,
+  // Includes the meeting's start time: a rescheduled meeting is a new event
+  // and gets fresh reminders; the old time's keys can never fire again.
+  meeting: (kind: "meeting_24h" | "meeting_1h" | "log_followup", meetingId: string, startsAt: Date, userId: string) =>
+    `${kind}:${meetingId}:${startsAt.toISOString()}:${userId}`,
   log: (kind: "confirm_meeting" | "action_items", logId: string, userId: string) => `${kind}:${logId}:${userId}`,
   // Keyed by the gap's reference instant: a new interaction starts a new gap,
   // so the same pair can be nudged again later — but once per threshold per gap.

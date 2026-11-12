@@ -156,7 +156,14 @@ export async function deliver(c: Candidate, state: RunState, now: Date): Promise
   const email = buildNotificationEmail(c.kind, c.ctx, c.email);
   let result: Awaited<ReturnType<typeof sendEmail>>;
   try {
-    result = await sendEmail({ to: c.email, subject: email.subject, html: email.html, text: email.text, refId: id });
+    result = await sendEmail({
+      to: c.email,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+      refId: id,
+      idempotencyKey: c.dedupeKey,
+    });
   } catch (e) {
     result = { ok: false, error: e instanceof Error ? e.message : "send threw" };
   }

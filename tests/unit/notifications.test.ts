@@ -80,8 +80,12 @@ describe("preferences, dedupe and caps", () => {
     expect(allowedByPreferences("inactivity_concern", null)).toBe(true);
   });
   it("dedupe keys are deterministic and per-recipient", () => {
-    expect(dedupe.meeting("meeting_24h", "m1", "u1")).toBe(dedupe.meeting("meeting_24h", "m1", "u1"));
-    expect(dedupe.meeting("meeting_24h", "m1", "u1")).not.toBe(dedupe.meeting("meeting_24h", "m1", "u2"));
+    const t1 = new Date("2026-02-10T22:00:00Z");
+    const t2 = new Date("2026-02-12T22:00:00Z");
+    expect(dedupe.meeting("meeting_24h", "m1", t1, "u1")).toBe(dedupe.meeting("meeting_24h", "m1", t1, "u1"));
+    expect(dedupe.meeting("meeting_24h", "m1", t1, "u1")).not.toBe(dedupe.meeting("meeting_24h", "m1", t1, "u2"));
+    // Rescheduling makes a new event with fresh reminders.
+    expect(dedupe.meeting("meeting_24h", "m1", t1, "u1")).not.toBe(dedupe.meeting("meeting_24h", "m1", t2, "u1"));
     const ref = new Date("2026-01-01T00:00:00Z");
     expect(dedupe.inactivity("inactivity_checkin", "x", ref, "u")).toBe("inactivity_checkin:x:2026-01-01T00:00:00.000Z:u");
   });
