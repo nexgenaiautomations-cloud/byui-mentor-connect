@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Landing page", () => {
+test.describe("Landing page @public", () => {
   test("renders ICAN headline + CTA + hero photo", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1, name: /ICAN/i })).toBeVisible();

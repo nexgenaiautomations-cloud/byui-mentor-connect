@@ -26,7 +26,7 @@ async function internalHrefs(page: Page): Promise<string[]> {
   return [...new Set(hrefs)].filter((h) => h.startsWith("/") || h.startsWith("#"));
 }
 
-test.describe("Public links", () => {
+test.describe("Public links @public", () => {
   for (const path of PUBLIC_PAGES) {
     test(`every link on ${path} resolves`, async ({ page, request }) => {
       await page.goto(path);

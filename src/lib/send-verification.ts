@@ -3,6 +3,7 @@
 // can call it without duplicating the email construction.
 import { issueVerifyToken, VERIFY_TOKEN_TTL_MS } from "./email-verification";
 import { buildVerifyEmail } from "./verification-email";
+import { emailDeliveryDisabled } from "@/lib/email";
 
 const TTL_HOURS = Math.round(VERIFY_TOKEN_TTL_MS / (60 * 60 * 1000));
 
@@ -31,6 +32,10 @@ export async function sendVerificationEmail({
     email,
     expiresHours: TTL_HOURS,
   });
+  if (emailDeliveryDisabled()) {
+    console.info("[email:log] verification", subject);
+    return { ok: true, sent: false };
+  }
   const from = process.env.EMAIL_FROM ?? "ICAN <noreply@icareeradvancementnetwork.com>";
   try {
     const res = await fetch("https://api.resend.com/emails", {
