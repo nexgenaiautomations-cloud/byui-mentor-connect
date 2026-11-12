@@ -41,7 +41,8 @@ test.describe("Security regressions @public", () => {
     await page.getByRole("button", { name: /Send me a magic link/i }).click();
     await page.locator("#email-magic").fill("e2e-solo@e2e-alpha.edu");
     const requestPromise = page.waitForRequest(
-      (req) => req.method() === "POST" && req.url().includes("/login")
+      // The magic-link form posts to Auth.js, not to /login.
+      (req) => req.method() === "POST" && req.url().includes("/api/auth/signin")
     );
     await page.getByRole("button", { name: /Send magic link/i }).click();
     await requestPromise;

@@ -9,7 +9,8 @@ test.describe("Roles and authorization", () => {
     await signIn(page, ACCOUNTS.member, "member");
     await page.goto("/dashboard");
     await expect(page.getByText(/Welcome back/i)).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Where are you in your search|Exploring|Interviewing|Actively applying/ })).toBeVisible();
+    // Any stage (other specs move the fixture member along the pipeline).
+    await expect(page.getByRole("region", { name: /Where are you in your search|Exploring|Preparing|applying|Interviewing|Offer|Started/ })).toBeVisible();
   });
 
   test("member cannot open admin pages, even with a forged role cookie", async ({ page, context }) => {
