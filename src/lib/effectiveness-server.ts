@@ -109,71 +109,71 @@ export async function loadProgramData(scope: AdminScope, f: ProgramFilters): Pro
     return { students, matches: [], logs: [], feedback: [], milestones: [], options, studentById };
   }
 
-  const matchRows: MatchRow[] = [];
-  const logRows: LogRow[] = [];
-  const milestoneRows: ProgramData["milestones"] = [];
-  for (const part of chunks(ids)) {
-    const [m, l, c] = await Promise.all([
-      db
-        .select({
-          id: matches.id,
-          mentorId: matches.mentorId,
-          menteeId: matches.menteeId,
-          status: matches.status,
-          startedAt: matches.startedAt,
-          endedAt: matches.endedAt,
-          firstMeetingAt: matches.firstMeetingAt,
-          lastInteractionAt: matches.lastInteractionAt,
-        })
-        .from(matches)
-        .where(inArray(matches.menteeId, part)),
-      db
-        .select({
-          studentId: meetingLogs.studentId,
-          matchId: meetingLogs.matchId,
-          eventKind: meetingLogs.eventKind,
-          meetingDate: meetingLogs.meetingDate,
-          group: meetingLogs.accomplishmentGroup,
-          isSystemGenerated: meetingLogs.isSystemGenerated,
-          durationMinutes: meetingLogs.durationMinutes,
-        })
-        .from(meetingLogs)
-        .where(inArray(meetingLogs.studentId, part)),
-      db
-        .select({
-          id: careerMilestones.id,
-          studentId: careerMilestones.studentId,
-          stage: careerMilestones.stage,
-          opportunityType: careerMilestones.opportunityType,
-          relatedMilestoneId: careerMilestones.relatedMilestoneId,
-          occurredOn: careerMilestones.occurredOn,
-          createdAt: careerMilestones.createdAt,
-          verification: careerMilestones.verification,
-          source: careerMilestones.source,
-          employer: careerMilestones.employer,
-        })
-        .from(careerMilestones)
-        .where(inArray(careerMilestones.studentId, part)),
-    ]);
-    matchRows.push(...m);
-    logRows.push(...l);
-    milestoneRows.push(...c);
-  }
-
-  const feedback: FeedbackRow[] = [];
-  for (const part of chunks(matchRows.map((m) => m.id))) {
-    const rows = await db
-      .select({
-        matchId: monthlyFeedback.matchId,
-        role: monthlyFeedback.submittedByRole,
-        rating: monthlyFeedback.rating,
-        year: monthlyFeedback.year,
-        month: monthlyFeedback.month,
-      })
-      .from(monthlyFeedback)
-      .where(inArray(monthlyFeedback.matchId, part));
-    feedback.push(...rows);
-  }
+  // All chunks and all four row sets load in ONE parallel wave: each query
+  // is a separate HTTP round trip on the Neon driver, so running them
+  // sequentially made load time a multiple of the network latency.
+  const waves = await Promise.all(
+    chunks(ids).map((part) =>
+      Promise.all([
+        db
+          .select({
+            id: matches.id,
+            mentorId: matches.mentorId,
+            menteeId: matches.menteeId,
+            status: matches.status,
+            startedAt: matches.startedAt,
+            endedAt: matches.endedAt,
+            firstMeetingAt: matches.firstMeetingAt,
+            lastInteractionAt: matches.lastInteractionAt,
+          })
+          .from(matches)
+          .where(inArray(matches.menteeId, part)),
+        db
+          .select({
+            studentId: meetingLogs.studentId,
+            matchId: meetingLogs.matchId,
+            eventKind: meetingLogs.eventKind,
+            meetingDate: meetingLogs.meetingDate,
+            group: meetingLogs.accomplishmentGroup,
+            isSystemGenerated: meetingLogs.isSystemGenerated,
+            durationMinutes: meetingLogs.durationMinutes,
+          })
+          .from(meetingLogs)
+          .where(inArray(meetingLogs.studentId, part)),
+        db
+          .select({
+            id: careerMilestones.id,
+            studentId: careerMilestones.studentId,
+            stage: careerMilestones.stage,
+            opportunityType: careerMilestones.opportunityType,
+            relatedMilestoneId: careerMilestones.relatedMilestoneId,
+            occurredOn: careerMilestones.occurredOn,
+            createdAt: careerMilestones.createdAt,
+            verification: careerMilestones.verification,
+            source: careerMilestones.source,
+            employer: careerMilestones.employer,
+          })
+          .from(careerMilestones)
+          .where(inArray(careerMilestones.studentId, part)),
+        // Feedback for these students' pairs, via a subquery instead of a
+        // second sequential pass over match ids.
+        db
+          .select({
+            matchId: monthlyFeedback.matchId,
+            role: monthlyFeedback.submittedByRole,
+            rating: monthlyFeedback.rating,
+            year: monthlyFeedback.year,
+            month: monthlyFeedback.month,
+          })
+          .from(monthlyFeedback)
+          .where(inArray(monthlyFeedback.matchId, db.select({ id: matches.id }).from(matches).where(inArray(matches.menteeId, part)))),
+      ])
+    )
+  );
+  const matchRows: MatchRow[] = waves.flatMap((w) => w[0]);
+  const logRows: LogRow[] = waves.flatMap((w) => w[1]);
+  const milestoneRows: ProgramData["milestones"] = waves.flatMap((w) => w[2]);
+  const feedback: FeedbackRow[] = waves.flatMap((w) => w[3]);
 
   return { students, matches: matchRows, logs: logRows, feedback, milestones: milestoneRows, options, studentById };
 }
