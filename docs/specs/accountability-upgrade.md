@@ -127,6 +127,11 @@ Assignment targets: admins or executive mentors of the same school.
 
 ## 6. Analytics
 
+Charts (2026-11-12 redesign) follow these rules:
+
+- **Chart types:** heatmaps for group × time, smooth line/area trends for time series, horizontal bars only for direct comparisons, no donut or pie charts.
+- **Components:** shadcn/ui chart primitives on Recharts 3.8 (`src/components/ui/chart.tsx`, `src/components/analytics-charts.tsx`). Pages aggregate on the server (`src/lib/analytics-series.ts`), so only small series reach the browser.
+
 `src/lib/effectiveness.ts` (pure, unit-tested) + `effectiveness-server.ts`
 (scoped loader). Pages: `/admin/effectiveness` (Program Effectiveness),
 `/admin/executive`, `/admin/roi`. Definitions:
@@ -147,9 +152,15 @@ Assignment targets: admins or executive mentors of the same school.
 
 ## 7. School scoping
 
-A school is the domain of the user's email (existing `school-scope.ts`).
-All new admin queries filter to the admin's school unless they are a
-platform admin. Existing pre-upgrade admin pages are unchanged (follow-up).
+A school is the domain of the user's verified email (`school-scope.ts`).
+Users can't change their email in the app, and sign-up is limited to
+registered school domains.
+
+- **One boundary everywhere:** `src/lib/admin-scope.ts` and `admin-scope-server.ts` cover every admin page, API, export and analytics query, old and new. Program admins see only their school. Platform admins (`PLATFORM_ADMIN_EMAILS`, checked server-side) may choose a school; a school sent by any other client is ignored.
+- **Out-of-scope records** answer 404, exactly like missing ones, and the attempt is audited.
+- **Audit events** belong to a school through their actor or target. Anonymous security events are platform-only.
+- **Member-facing:** the pod leaderboard, mentor search, requests and the waitlist are same-school only.
+- **Tests:** `tests/unit/school-isolation.test.ts` (negative tests), plus the cross-school browser check in `tests/e2e/roles.spec.ts`.
 
 ## 8. Voice dictation
 
