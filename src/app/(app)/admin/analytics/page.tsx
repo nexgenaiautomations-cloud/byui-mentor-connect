@@ -1,23 +1,15 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/db/client";
-import {
-  meetingLogs,
-  monthlyFeedback,
-  matches,
-  requests,
-  users,
-} from "@/db/schema";
+import { meetingLogs, matches, requests, users } from "@/db/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { AnalyticsTabs } from "@/components/analytics-tabs";
+import { adminScopeFor, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
-import {
-  MonthlyLine,
-  MonthlyBars,
-  HBarList,
-  Donut,
-  DeltaPill,
-} from "@/components/charts";
+import { MonthlyLine, HBarList, DeltaPill } from "@/components/charts";
+import { AreaTrend, LineTrend } from "@/components/analytics-charts";
+import { CHART_COLORS } from "@/lib/chart-colors";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +43,19 @@ export default async function AnalyticsPage() {
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
 
+  // School boundary (src/lib/admin-scope.ts). Every raw query below reads
+  // from these school-filtered row sets instead of the whole table, so the
+  // counts and charts never include another school's students.
+  const scope = adminScopeFor(me)!;
+  const T = {
+    user: sql`(select * from "user" where ${rawUserIdInScope('"user".id', scope)})`,
+    request: sql`(select * from "request" where ${rawUserIdInScope('"request".mentee_id', scope)})`,
+    match: sql`(select * from "match" where ${rawUserIdInScope('"match".mentee_id', scope)})`,
+    meeting_log: sql`(select * from "meeting_log" where ${rawUserIdInScope('"meeting_log".student_id', scope)})`,
+    monthly_feedback: sql`(select * from "monthly_feedback" where ${rawUserIdInScope('"monthly_feedback".submitted_by_user_id', scope)})`,
+    mentor_application: sql`(select * from "mentor_application" where ${rawUserIdInScope('"mentor_application".user_id', scope)})`,
+  };
+
   const buckets = monthBuckets(12);
   const monthsBack = buckets[0].key; // unused server-side, kept for clarity
   void monthsBack;
@@ -59,7 +64,7 @@ export default async function AnalyticsPage() {
   const requestsByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', requested_at), 'YYYY-MM') as key,
            count(*)::int as value
-      from "request"
+      from ${T.request} "request"
      where requested_at >= now() - interval '12 months'
      group by 1
      order by 1
@@ -68,7 +73,7 @@ export default async function AnalyticsPage() {
   const acceptedByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', requested_at), 'YYYY-MM') as key,
            count(*)::int as value
-      from "request"
+      from ${T.request} "request"
      where requested_at >= now() - interval '12 months'
        and status = 'accepted'
      group by 1
@@ -78,7 +83,7 @@ export default async function AnalyticsPage() {
   const matchesByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', started_at), 'YYYY-MM') as key,
            count(*)::int as value
-      from "match"
+      from ${T.match} "match"
      where started_at >= now() - interval '12 months'
      group by 1
      order by 1
@@ -87,8 +92,9 @@ export default async function AnalyticsPage() {
   const meetingsByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', meeting_date), 'YYYY-MM') as key,
            count(*)::int as value
-      from "meeting_log"
+      from ${T.meeting_log} "meeting_log"
      where meeting_date >= now() - interval '12 months'
+       and event_kind = 'mentor_meeting'
      group by 1
      order by 1
   `);
@@ -96,8 +102,9 @@ export default async function AnalyticsPage() {
   const minutesByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', meeting_date), 'YYYY-MM') as key,
            coalesce(sum(duration_minutes),0)::int as value
-      from "meeting_log"
+      from ${T.meeting_log} "meeting_log"
      where meeting_date >= now() - interval '12 months'
+       and event_kind in ('mentor_meeting','touchpoint')
      group by 1
      order by 1
   `);
@@ -105,7 +112,7 @@ export default async function AnalyticsPage() {
   const ratingByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(make_date(year, month, 1), 'YYYY-MM') as key,
            round(avg(rating)::numeric, 2)::float as value
-      from "monthly_feedback"
+      from ${T.monthly_feedback} "monthly_feedback"
      where make_date(year, month, 1) >= date_trunc('month', now()) - interval '11 months'
      group by 1
      order by 1
@@ -114,7 +121,7 @@ export default async function AnalyticsPage() {
   const newMembersByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', created_at), 'YYYY-MM') as key,
            count(*)::int as value
-      from "user"
+      from ${T.user} "user"
      where created_at >= now() - interval '12 months'
      group by 1
      order by 1
@@ -140,12 +147,12 @@ export default async function AnalyticsPage() {
   // -------- KPIs + month-over-month --------
   const [headline] = await db
     .select({
-      members: sql<number>`(select count(*)::int from "user")`,
-      mentors: sql<number>`(select count(*)::int from "user" where is_mentor = true)`,
-      activeMatches: sql<number>`(select count(*)::int from "match" where status = 'active')`,
-      pendingRequests: sql<number>`(select count(*)::int from "request" where status = 'pending')`,
-      pendingApps: sql<number>`(select count(*)::int from "mentor_application" where status = 'pending')`,
-      capacityTotal: sql<number>`(select coalesce(sum(coalesce(mentor_capacity,5)),0)::int from "user" where is_mentor = true and mentor_available = true)`,
+      members: sql<number>`(select count(*)::int from ${T.user} "user")`,
+      mentors: sql<number>`(select count(*)::int from ${T.user} "user" where is_mentor = true)`,
+      activeMatches: sql<number>`(select count(*)::int from ${T.match} "match" where status = 'active')`,
+      pendingRequests: sql<number>`(select count(*)::int from ${T.request} "request" where status = 'pending')`,
+      pendingApps: sql<number>`(select count(*)::int from ${T.mentor_application} "mentor_application" where status = 'pending')`,
+      capacityTotal: sql<number>`(select coalesce(sum(coalesce(mentor_capacity,5)),0)::int from ${T.user} "user" where is_mentor = true and mentor_available = true)`,
     })
     .from(sql`(select 1) as _t`);
 
@@ -153,7 +160,6 @@ export default async function AnalyticsPage() {
   const thisMonth = meetingsSeries[meetingsSeries.length - 1]?.value ?? 0;
   const lastMonth = meetingsSeries[meetingsSeries.length - 2]?.value ?? 0;
   const ratingThis = ratingSeries[ratingSeries.length - 1]?.value ?? 0;
-  const ratingPrev = ratingSeries[ratingSeries.length - 2]?.value ?? 0;
   const accThis = acceptanceRateSeries[acceptanceRateSeries.length - 1]?.value ?? 0;
   const accPrev = acceptanceRateSeries[acceptanceRateSeries.length - 2]?.value ?? 0;
   const membersThis = newMembersSeries[newMembersSeries.length - 1]?.value ?? 0;
@@ -164,7 +170,7 @@ export default async function AnalyticsPage() {
   // -------- Distributions --------
   const topMajors = await db.execute(sql<{ label: string; value: number }>`
     select coalesce(major, 'Unknown') as label, count(*)::int as value
-      from "user"
+      from ${T.user} "user"
      where is_mentor = true
      group by 1
      order by value desc
@@ -176,7 +182,7 @@ export default async function AnalyticsPage() {
   // throws "column \"label\" does not exist".
   const semesterDistribution = await db.execute(sql<{ label: string; value: number }>`
     select coalesce(semester_level, 'Unknown') as label, count(*)::int as value
-      from "user"
+      from ${T.user} "user"
      group by 1
      order by case coalesce(semester_level, 'Unknown')
                 when 'Freshman' then 1
@@ -190,14 +196,15 @@ export default async function AnalyticsPage() {
 
   const meetingTypes = await db.execute(sql<{ label: string; value: number }>`
     select meeting_type::text as label, count(*)::int as value
-      from "meeting_log"
+      from ${T.meeting_log} "meeting_log"
+     where event_kind = 'mentor_meeting'
      group by 1
      order by value desc
   `);
 
   const topInterests = await db.execute(sql<{ label: string; value: number }>`
     select interest as label, count(*)::int as value
-      from (select unnest(career_interests) as interest from "user") s
+      from (select unnest(career_interests) as interest from ${T.user} "user") s
      where interest is not null
      group by 1
      order by value desc
@@ -207,9 +214,9 @@ export default async function AnalyticsPage() {
   // -------- Engagement / at-risk --------
   const [atRisk] = await db
     .select({
-      stale30: sql<number>`(select count(*)::int from "match" where status = 'active' and last_activity_at < now() - interval '30 days')`,
-      stale60: sql<number>`(select count(*)::int from "match" where status = 'active' and last_activity_at < now() - interval '60 days')`,
-      capacityFilled: sql<number>`(select count(*)::int from "match" where status = 'active')`,
+      stale30: sql<number>`(select count(*)::int from ${T.match} "match" where status = 'active' and coalesce(last_interaction_at, started_at) < now() - interval '30 days')`,
+      stale60: sql<number>`(select count(*)::int from ${T.match} "match" where status = 'active' and coalesce(last_interaction_at, started_at) < now() - interval '60 days')`,
+      capacityFilled: sql<number>`(select count(*)::int from ${T.match} "match" where status = 'active')`,
     })
     .from(sql`(select 1) as _t`);
 
@@ -229,8 +236,8 @@ export default async function AnalyticsPage() {
       u.mentor_capacity as capacity,
       coalesce(sum(case when m.status = 'active' then 1 else 0 end), 0)::int as active,
       coalesce(count(distinct m.mentee_id), 0)::int as lifetime
-    from "user" u
-    left join "match" m on m.mentor_id = u.id
+    from ${T.user} u
+    left join ${T.match} m on m.mentor_id = u.id
     where u.is_mentor = true
     group by u.id, u.name, u.mentor_capacity
     order by active desc, lifetime desc
@@ -254,6 +261,7 @@ export default async function AnalyticsPage() {
     })
     .from(requests)
     .innerJoin(users, eq(users.id, requests.menteeId))
+    .where(userIdInScope(requests.menteeId, scope))
     .orderBy(desc(requests.requestedAt))
     .limit(8);
 
@@ -263,6 +271,7 @@ export default async function AnalyticsPage() {
       at: matches.startedAt,
     })
     .from(matches)
+    .where(userIdInScope(matches.menteeId, scope))
     .orderBy(desc(matches.startedAt))
     .limit(4);
 
@@ -273,6 +282,7 @@ export default async function AnalyticsPage() {
       topic: meetingLogs.topicsDiscussed,
     })
     .from(meetingLogs)
+    .where(and(eq(meetingLogs.eventKind, "mentor_meeting"), userIdInScope(meetingLogs.studentId, scope)))
     .orderBy(desc(meetingLogs.meetingDate))
     .limit(6);
 
@@ -287,6 +297,7 @@ export default async function AnalyticsPage() {
   // -------- Render --------
   return (
     <div className="space-y-6">
+      <AnalyticsTabs current="/admin/analytics" />
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Program</p>
@@ -359,25 +370,39 @@ export default async function AnalyticsPage() {
 
       {/* Trends */}
       <section className="grid gap-4 lg:grid-cols-2">
-        <ChartCard title="Requests submitted" subtitle="By month, last 12">
-          <MonthlyBars points={requestsSeries} color="#8B5CF6" />
-        </ChartCard>
-        <ChartCard title="Requests accepted" subtitle="By month, last 12">
-          <MonthlyBars points={acceptedSeries} color="#0F766E" />
-        </ChartCard>
-        <ChartCard title="Meeting minutes" subtitle="Total time logged per month">
-          <MonthlyLine
-            points={minutesSeries}
-            color="#4C1D95"
-            format={(n) => `${Math.round(n / 60)}h`}
-            unit=""
+        <ChartCard title="Mentor requests" subtitle="Submitted and accepted per month, last 12">
+          <AreaTrend
+            title="Mentor requests submitted and accepted by month"
+            data={requestsSeries.map((r, i) => ({ label: r.label, submitted: r.value, accepted: acceptedSeries[i]?.value ?? 0 }))}
+            series={[
+              { key: "submitted", label: "Submitted", color: CHART_COLORS.violet },
+              { key: "accepted", label: "Accepted", color: CHART_COLORS.emerald },
+            ]}
           />
         </ChartCard>
-        <ChartCard title="Avg feedback rating" subtitle="Mentee + mentor monthly check-ins">
-          <MonthlyLine
-            points={ratingSeries}
-            color="#6D28D9"
-            format={(n) => n.toFixed(2)}
+        <ChartCard title="Mentorship hours" subtitle="Time logged on meetings and touchpoints per month">
+          <AreaTrend
+            title="Mentorship hours logged by month"
+            format="hours"
+            data={minutesSeries.map((m) => ({ label: m.label, hours: Math.round((m.value / 60) * 10) / 10 }))}
+            series={[{ key: "hours", label: "Hours", color: CHART_COLORS.plum }]}
+          />
+        </ChartCard>
+        <ChartCard title="Average check-in rating" subtitle="Mentee + mentor monthly check-ins (1–5); months without check-ins are gaps">
+          <LineTrend
+            title="Average check-in rating by month"
+            format="decimal"
+            data={ratingSeries.map((r) => ({ label: r.label, rating: r.value || null }))}
+            series={[{ key: "rating", label: "Average rating", color: CHART_COLORS.plum }]}
+            emptyText="No check-ins in the last 12 months."
+          />
+        </ChartCard>
+        <ChartCard title="Request acceptance rate" subtitle={`${overallAcceptance}% of ${totalReq12} requests accepted in the last year; months without requests are gaps`}>
+          <LineTrend
+            title="Mentor request acceptance rate by month"
+            format="percent"
+            data={acceptanceRateSeries.map((r, i) => ({ label: r.label, rate: (requestsSeries[i]?.value ?? 0) > 0 ? r.value : null }))}
+            series={[{ key: "rate", label: "Accepted", color: CHART_COLORS.emerald }]}
           />
         </ChartCard>
       </section>
@@ -387,13 +412,19 @@ export default async function AnalyticsPage() {
         <div className="card">
           <h3 className="font-display text-base font-bold text-plum-800">Capacity utilization</h3>
           <p className="mt-1 text-xs text-slate-500">Active matches vs total mentor capacity</p>
-          <div className="mt-3 flex items-center gap-4">
-            <Donut value={capFilled} total={Math.max(1, capTotal)} color="#6D28D9" />
-            <div className="text-sm">
-              <p className="font-display text-2xl font-black text-plum-800">
-                {capFilled}<span className="text-base font-medium text-slate-500"> / {capTotal}</span>
-              </p>
-              <p className="text-xs text-slate-500">slots filled</p>
+          <div className="mt-3">
+            <p className="font-display text-2xl font-black text-plum-800">
+              {capFilled}<span className="text-base font-medium text-slate-600"> / {capTotal} slots filled</span>
+            </p>
+            <div
+              className="mt-2 h-2.5 overflow-hidden rounded-full bg-slate-100"
+              role="meter"
+              aria-label="Mentor capacity used"
+              aria-valuemin={0}
+              aria-valuemax={capTotal}
+              aria-valuenow={capFilled}
+            >
+              <div className="h-full rounded-full bg-plum-600" style={{ width: `${capTotal ? Math.min(100, (capFilled / capTotal) * 100) : 0}%` }} />
             </div>
           </div>
         </div>
@@ -453,28 +484,8 @@ export default async function AnalyticsPage() {
         </ChartCard>
       </section>
 
-      {/* Overall acceptance + activity feed */}
-      <section className="grid gap-4 lg:grid-cols-[1fr_2fr]">
-        <div className="card">
-          <h3 className="font-display text-base font-bold text-plum-800">Acceptance rate (12 mo)</h3>
-          <p className="mt-1 text-xs text-slate-500">
-            Of {totalReq12} requests submitted in the last year
-          </p>
-          <div className="mt-3 flex items-center gap-4">
-            <Donut value={totalAcc12} total={Math.max(1, totalReq12)} color="#6D28D9" />
-            <div className="text-sm">
-              <p className="font-display text-2xl font-black text-plum-800">
-                {overallAcceptance}%
-              </p>
-              <p className="text-xs text-slate-500">{totalAcc12} accepted</p>
-            </div>
-          </div>
-          <div className="mt-4">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Monthly rate</p>
-            <MonthlyLine points={acceptanceRateSeries} color="#6D28D9" format={(n) => `${n}%`} />
-          </div>
-        </div>
-
+      {/* Activity feed */}
+      <section>
         <div className="card">
           <h3 className="font-display text-base font-bold text-plum-800">Recent activity</h3>
           <ul className="mt-3 space-y-2 text-sm">

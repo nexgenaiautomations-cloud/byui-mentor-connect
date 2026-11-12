@@ -59,7 +59,7 @@ describe("GET /api/admin/audit-events", () => {
   });
 
   it("returns 400 on invalid query params (bad limit)", async () => {
-    spy.requireAdmin.mockResolvedValueOnce({ id: "admin", isAdmin: true });
+    spy.requireAdmin.mockResolvedValueOnce({ id: "admin", email: "admin@byui.edu", isAdmin: true });
     const res = await GET(
       new Request("https://app.example/api/admin/audit-events?limit=abc")
     );
@@ -67,7 +67,7 @@ describe("GET /api/admin/audit-events", () => {
   });
 
   it("returns 400 on unknown eventType (rejected before hitting Postgres)", async () => {
-    spy.requireAdmin.mockResolvedValueOnce({ id: "admin", isAdmin: true });
+    spy.requireAdmin.mockResolvedValueOnce({ id: "admin", email: "admin@byui.edu", isAdmin: true });
     const res = await GET(
       new Request(
         "https://app.example/api/admin/audit-events?eventType=DROP_TABLE_USERS"
@@ -77,7 +77,7 @@ describe("GET /api/admin/audit-events", () => {
   });
 
   it("returns 400 on unknown severity", async () => {
-    spy.requireAdmin.mockResolvedValueOnce({ id: "admin", isAdmin: true });
+    spy.requireAdmin.mockResolvedValueOnce({ id: "admin", email: "admin@byui.edu", isAdmin: true });
     const res = await GET(
       new Request(
         "https://app.example/api/admin/audit-events?severity=catastrophic"

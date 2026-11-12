@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Security regressions", () => {
+test.describe("Security regressions @public", () => {
   test("/api/cron/inactivity rejects unauthenticated requests", async ({ request }) => {
     const res = await request.get("/api/cron/inactivity");
     expect(res.status()).toBe(401);
@@ -30,15 +30,19 @@ test.describe("Security regressions", () => {
     expect(res.status()).toBe(401);
   });
 
+  // Sends a magic-link request, so it never runs against a deployment.
   test("/login rejects open-redirect via next=", async ({ page }) => {
+    test.skip(!!process.env.E2E_BASE_URL, "Writes data; local fixture runs only");
     // The form action sanitizes `next` to a relative path before passing to
     // signIn. The page URL legitimately still contains `?next=https://evil.com`
     // (it's the query string of the page we're on); what we care about is
     // that the browser never NAVIGATES TO evil.com.
     await page.goto("/login?next=https://evil.com");
-    await page.fill("input[name='email']", "demo@byui.edu");
+    await page.getByRole("button", { name: /Send me a magic link/i }).click();
+    await page.locator("#email-magic").fill("e2e-solo@e2e-alpha.edu");
     const requestPromise = page.waitForRequest(
-      (req) => req.method() === "POST" && req.url().includes("/login")
+      // The magic-link form posts to Auth.js, not to /login.
+      (req) => req.method() === "POST" && req.url().includes("/api/auth/signin")
     );
     await page.getByRole("button", { name: /Send magic link/i }).click();
     await requestPromise;

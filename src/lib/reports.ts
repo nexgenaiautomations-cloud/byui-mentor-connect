@@ -185,7 +185,7 @@ export const ROLE_LABEL: Record<ReportRole, string> = {
 
 // --- CSV export ---
 
-function csvCell(v: string | number | null): string {
+export function csvCell(v: string | number | null): string {
   let s = v === null ? "" : String(v);
   if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`; // stop spreadsheet formula injection
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;

@@ -7,6 +7,21 @@ import {
   transferHeadAdminTo,
 } from "@/lib/head-admin";
 import { auditEvent } from "@/lib/audit";
+import { adminScopeFor, emailInScopeJs } from "@/lib/admin-scope";
+import { db } from "@/db/client";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
+
+// The head admin manages admins at their own school only (platform admins:
+// any school). Out-of-school targets are reported as not found.
+async function targetInScope(me: { email: string; isAdmin: boolean }, by: { id?: string; email?: string }) {
+  const scope = adminScopeFor(me);
+  if (!scope) return false;
+  const where = by.id ? eq(users.id, by.id) : by.email ? eq(users.email, by.email.toLowerCase()) : null;
+  if (!where) return false;
+  const [u] = await db.select({ email: users.email }).from(users).where(where).limit(1);
+  return !!u && emailInScopeJs(u.email, scope);
+}
 
 const bodySchema = z.discriminatedUnion("action", [
   z.object({
@@ -46,6 +61,24 @@ export async function POST(req: Request) {
   const parsed = raw ? bodySchema.safeParse(raw) : null;
   if (!parsed || !parsed.success) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  const targetRef =
+    parsed.data.action === "promote"
+      ? { id: parsed.data.userId, email: parsed.data.email }
+      : { id: parsed.data.userId };
+  if ((targetRef.id || targetRef.email) && !(await targetInScope(me, targetRef))) {
+    await auditEvent({
+      actorUserId: me.id,
+      eventType: "UNAUTHORIZED_ADMIN_ATTEMPT",
+      severity: "warning",
+      request: req,
+      metadata: { route: "admin/admins", reason: "cross_school", action: parsed.data.action },
+    });
+    return NextResponse.json(
+      { error: "No user found with that email yet. Ask them to sign in once, then try again." },
+      { status: 404 }
+    );
   }
 
   try {

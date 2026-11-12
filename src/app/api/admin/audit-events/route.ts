@@ -4,7 +4,8 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { auditEvents, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
-import { requireAdmin } from "@/lib/session";
+import { requireAdminScope } from "@/lib/admin-scope-server";
+import { auditEventInScope } from "@/lib/admin-scope";
 
 // GET /api/admin/audit-events?eventType=...&severity=...&limit=50&cursor=<ISO>
 //
@@ -32,8 +33,9 @@ const querySchema = z.object({
 });
 
 export async function GET(req: Request) {
-  const auth = await requireAdmin(req);
+  const auth = await requireAdminScope(req);
   if (auth instanceof Response) return auth;
+  const { scope } = auth;
 
   const url = new URL(req.url);
   const parsed = querySchema.safeParse({
@@ -85,7 +87,7 @@ export async function GET(req: Request) {
     .from(auditEvents)
     .leftJoin(actor, eq(actor.id, auditEvents.actorUserId))
     .leftJoin(target, eq(target.id, auditEvents.targetUserId))
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(and(auditEventInScope(auditEvents.actorUserId, auditEvents.targetUserId, scope), ...conditions))
     .orderBy(desc(auditEvents.createdAt))
     .limit(q.limit + 1);
 

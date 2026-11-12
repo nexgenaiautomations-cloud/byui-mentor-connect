@@ -83,7 +83,11 @@ export function MatchmakerBoard({
   // Server may re-fetch after a match — reapply the latest seeded suggestions
   // for the rows still on the board, while preserving any manual edits the
   // admin made for mentees that survived the refresh.
-  useEffect(() => {
+  // (React's "adjust state when a prop changes" pattern: compare during
+  // render instead of copying props into state from an effect.)
+  const [seenProps, setSeenProps] = useState({ mentees, initialAssignments });
+  if (seenProps.mentees !== mentees || seenProps.initialAssignments !== initialAssignments) {
+    setSeenProps({ mentees, initialAssignments });
     setMenteeList(mentees);
     setAssignments((prev) => {
       const next: Record<string, string> = {};
@@ -93,7 +97,7 @@ export function MatchmakerBoard({
       }
       return next;
     });
-  }, [mentees, initialAssignments]);
+  }
 
   const mentorById = useMemo(() => {
     const map = new Map<string, MentorCard>();

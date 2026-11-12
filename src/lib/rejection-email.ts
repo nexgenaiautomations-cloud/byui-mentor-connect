@@ -17,7 +17,6 @@ Two real-world experiences, such as internships, shadowing, or projects, before 
 3. Career Chats — monthly
 Three Career Chats a month with mentors, alumni, or peers. Networking that compounds.`;
 
-const BRAND_BLUE = "#6D28D9";
 const BRAND_DARK = "#4C1D95";
 const BRAND_LIGHT = "#C4B5FD";
 const BRAND_TEXT = "#0f172a";

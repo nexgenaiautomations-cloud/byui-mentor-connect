@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/session";
+import { requireAdminScope } from "@/lib/admin-scope-server";
 import { saveStewardship } from "@/lib/stewardship-server";
 
 const bodySchema = z.object({
@@ -10,11 +10,12 @@ const bodySchema = z.object({
 // PUT /api/admin/stewardship { assignments: { mentorId: executiveId | null } }
 // Saves the admin-approved stewardship board.
 export async function PUT(req: Request) {
-  const admin = await requireAdmin(req);
-  if (admin instanceof Response) return admin;
+  const auth = await requireAdminScope(req);
+  if (auth instanceof Response) return auth;
+  const { admin, scope } = auth;
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
-  const result = await saveStewardship(admin.id, parsed.data.assignments, req);
+  const result = await saveStewardship(admin.id, parsed.data.assignments, req, scope);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 409 });
   return NextResponse.json(result);
 }

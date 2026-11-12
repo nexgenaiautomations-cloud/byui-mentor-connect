@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useClientValue } from "@/lib/use-client-value";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -32,12 +33,16 @@ export function InstallButton({
   fallback?: "hide" | "instructions";
 }) {
   const [event, setEvent] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(false);
+  const [installedNow, setInstalled] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
-  const [platform, setPlatform] = useState<Platform>("other");
+  const platform = useClientValue<Platform>(detectPlatform, "other");
+  const standalone = useClientValue(
+    () => !!window.matchMedia?.("(display-mode: standalone)").matches,
+    false
+  );
+  const installed = installedNow || standalone;
 
   useEffect(() => {
-    setPlatform(detectPlatform());
     const onPrompt = (e: Event) => {
       e.preventDefault();
       setEvent(e as BeforeInstallPromptEvent);
@@ -46,9 +51,6 @@ export function InstallButton({
       setInstalled(true);
       setEvent(null);
     };
-    if (window.matchMedia?.("(display-mode: standalone)").matches) {
-      setInstalled(true);
-    }
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {

@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { matches } from "@/db/schema";
-import { requireAdmin } from "@/lib/session";
+import { crossSchoolDenied, emailForUser, requireAdminScope } from "@/lib/admin-scope-server";
+import { emailInScopeJs } from "@/lib/admin-scope";
 import { auditEvent } from "@/lib/audit";
 
 // DELETE /api/admin/matches/[id]
@@ -15,10 +16,20 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const adminOrResp = await requireAdmin(req);
-  if (adminOrResp instanceof Response) return adminOrResp;
-  const admin = adminOrResp;
+  const auth = await requireAdminScope(req);
+  if (auth instanceof Response) return auth;
+  const { admin, scope } = auth;
   const { id } = await params;
+
+  const [existing] = await db
+    .select({ menteeId: matches.menteeId })
+    .from(matches)
+    .where(eq(matches.id, id))
+    .limit(1);
+  if (!existing) return NextResponse.json({ error: "Match not found or no longer active" }, { status: 409 });
+  if (!emailInScopeJs(await emailForUser(existing.menteeId), scope)) {
+    return crossSchoolDenied(admin, req, { route: "admin/matches", matchId: id });
+  }
 
   const updated = await db
     .update(matches)

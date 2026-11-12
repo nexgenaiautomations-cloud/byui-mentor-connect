@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor } from "@/lib/admin-scope";
 import {
   ISSUE_CATEGORIES,
   acknowledgementSummary,
@@ -43,9 +44,9 @@ export default async function AdminIssuesPage({
   const status = params.status && isIssueStatus(params.status) ? params.status : null;
 
   const [allIssues, receipts, admins] = await Promise.all([
-    listIssuesNewestFirst(),
-    listReceipts(),
-    listAdmins(),
+    listIssuesNewestFirst(adminScopeFor(me)!),
+    listReceipts(adminScopeFor(me)!),
+    listAdmins(adminScopeFor(me)!),
   ]);
   const issues = allIssues.filter(
     (i) => (!category || i.category === category) && (!status || i.status === status)

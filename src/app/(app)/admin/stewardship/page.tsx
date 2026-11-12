@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor } from "@/lib/admin-scope";
 import { loadStewardship } from "@/lib/stewardship-server";
 import { StewardshipBoard } from "./board";
 
@@ -10,7 +11,7 @@ export default async function StewardshipPage() {
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
 
-  const { executives, mentors, current } = await loadStewardship();
+  const { executives, mentors, current } = await loadStewardship(adminScopeFor(me)!);
 
   return (
     <div className="space-y-5">

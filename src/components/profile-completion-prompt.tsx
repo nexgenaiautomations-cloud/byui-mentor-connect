@@ -2,10 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
+import { useClientValue, useHydrated } from "@/lib/use-client-value";
 import { shouldNagProfile } from "@/lib/profile-completeness";
 
 const SNOOZE_KEY = "ican-profile-nag-snoozed-at";
+
+// Wall clock, kept out of the component body so render stays pure-looking;
+// the snooze window is minutes long, so per-render precision is irrelevant.
+function nowMs(): number {
+  return Date.now();
+}
 
 function readSnooze(): number | null {
   try {
@@ -20,11 +27,13 @@ function readSnooze(): number | null {
 // profile fields are blank. "Not now" only snoozes it for a few minutes.
 export function ProfileCompletionPrompt({ missing }: { missing: string[] }) {
   const pathname = usePathname();
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    setShow(shouldNagProfile(pathname, readSnooze(), Date.now()));
-  }, [pathname]);
+  const hydrated = useHydrated();
+  // Re-read on every render; `bump` re-renders after "Not now" writes it.
+  const snoozedAt = useClientValue(readSnooze, null);
+  const [, bump] = useReducer((n: number) => n + 1, 0);
+  // Hidden on this page after "Complete my profile" (navigating away).
+  const [hiddenOn, setHiddenOn] = useState<string | null>(null);
+  const show = hydrated && hiddenOn !== pathname && shouldNagProfile(pathname, snoozedAt, nowMs());
 
   useEffect(() => {
     if (!show) return;
@@ -43,7 +52,7 @@ export function ProfileCompletionPrompt({ missing }: { missing: string[] }) {
     } catch {
       // storage blocked: just hide for this page view
     }
-    setShow(false);
+    bump();
   }
 
   return (
@@ -84,7 +93,7 @@ export function ProfileCompletionPrompt({ missing }: { missing: string[] }) {
           </button>
           <Link
             href="/settings"
-            onClick={() => setShow(false)}
+            onClick={() => setHiddenOn(pathname)}
             autoFocus
             className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
           >

@@ -18,7 +18,7 @@ export default async function LeaderboardPage() {
 
   await ensureMajorPods();
   const [{ since, pods }, allPods, [fresh]] = await Promise.all([
-    monthlyLeaderboard(),
+    monthlyLeaderboard(me.email),
     listPods(),
     db.select({ podId: users.podId }).from(users).where(eq(users.id, me.id)),
   ]);

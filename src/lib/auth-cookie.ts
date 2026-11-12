@@ -19,12 +19,12 @@ import { encode } from "next-auth/jwt";
 // Cookie name + secure flag are pinned to NODE_ENV so they match what
 // auth.ts configures Auth.js to read. Don't switch to AUTH_URL-protocol
 // detection — see auth.ts cookies.sessionToken comment for why.
-function useSecureCookies(): boolean {
+function shouldUseSecureCookies(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
 export function sessionCookieName(): string {
-  return useSecureCookies()
+  return shouldUseSecureCookies()
     ? "__Secure-authjs.session-token"
     : "authjs.session-token";
 }
@@ -64,7 +64,7 @@ export async function attachSessionCookie(
     value: token,
     httpOnly: true,
     sameSite: "lax",
-    secure: useSecureCookies(),
+    secure: shouldUseSecureCookies(),
     path: "/",
     expires: new Date(Date.now() + ttl * 1000),
   });

@@ -12,6 +12,7 @@ import {
   resolveRange,
 } from "@/lib/reports";
 import { loadReport } from "@/lib/reports-server";
+import { adminScopeFor } from "@/lib/admin-scope";
 
 type Search = Record<string, string | undefined>;
 
@@ -29,7 +30,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   const params = await searchParams;
   const range = resolveRange({ preset: params.range, from: params.from, to: params.to });
   const filters = parseFilters(params);
-  const { rows, matchesStarted, requestsMade } = await loadReport(range);
+  const { rows, matchesStarted, requestsMade } = await loadReport(range, adminScopeFor(me)!);
   const shown = applyFilters(rows, filters).sort((a, b) => b.points - a.points || (a.name ?? "").localeCompare(b.name ?? ""));
 
   const sum = (k: "activities" | "careerTasks" | "industryExperiences" | "careerChats" | "points") =>

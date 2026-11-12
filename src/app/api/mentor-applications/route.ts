@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { mentorApplications } from "@/db/schema";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, userIdInScope } from "@/lib/admin-scope";
 
 const INTERVIEW_BUCKETS = ["1-10", "11-25", "26-50", "51-100", "100+"] as const;
 const INTERNSHIP_BUCKETS = ["None", "1", "2", "3 or more"] as const;
@@ -20,9 +21,11 @@ export async function GET() {
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (me.isAdmin) {
+    // Admins see their own school's applications (platform admins: all).
     const all = await db
       .select()
       .from(mentorApplications)
+      .where(userIdInScope(mentorApplications.userId, adminScopeFor(me)!))
       .orderBy(desc(mentorApplications.submittedAt));
     return NextResponse.json({ applications: all });
   }

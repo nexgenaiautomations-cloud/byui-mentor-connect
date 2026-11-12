@@ -6,12 +6,21 @@ import type { User } from "@/db/schema";
 import { auditEvent } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
 import { categoryLabel } from "@/lib/issues";
+import { emailInScope, emailInScopeJs, type AdminScope } from "@/lib/admin-scope";
+import { schoolOf } from "@/lib/school-scope";
+import { sql } from "drizzle-orm";
 
-export async function listAdmins() {
+// An issue belongs to its reporter's school. Issues whose reporter account
+// is gone have no school and are visible to platform admins only.
+function issueScopeCond(scope: AdminScope) {
+  return scope.school === null ? sql`true` : emailInScope(users.email, scope);
+}
+
+export async function listAdmins(scope?: AdminScope) {
   return db
     .select({ id: users.id, name: users.name, email: users.email })
     .from(users)
-    .where(eq(users.isAdmin, true))
+    .where(and(eq(users.isAdmin, true), scope ? emailInScope(users.email, scope) : sql`true`))
     .orderBy(asc(users.name));
 }
 
@@ -35,7 +44,10 @@ export async function notifyAdminsOfIssue(
   reporter: Pick<User, "name" | "email" | "isAdmin" | "isMentor">,
   origin: string
 ) {
-  const admins = await listAdmins();
+  // Only the reporter's own school's admins (plus ISSUE_REPORT_TO, which is
+  // the platform operator's inbox) hear about it.
+  const school = schoolOf(reporter.email);
+  const admins = school ? await listAdmins({ school, platform: false }) : [];
   const recipients = new Set(admins.map((a) => a.email.toLowerCase()));
   if (process.env.ISSUE_REPORT_TO) {
     for (const e of process.env.ISSUE_REPORT_TO.split(",")) {
@@ -86,7 +98,7 @@ export async function notifyAdminsOfIssue(
 }
 
 // Issues this admin has not acknowledged, oldest first, for the login popup.
-export async function pendingIssuesForAdmin(adminId: string) {
+export async function pendingIssuesForAdmin(adminId: string, scope: AdminScope) {
   const reporter = users;
   return db
     .select({
@@ -107,11 +119,11 @@ export async function pendingIssuesForAdmin(adminId: string) {
         eq(issueReportReceipts.adminId, adminId)
       )
     )
-    .where(isNull(issueReportReceipts.issueId))
+    .where(and(isNull(issueReportReceipts.issueId), issueScopeCond(scope)))
     .orderBy(asc(issueReports.createdAt));
 }
 
-export async function listIssuesNewestFirst() {
+export async function listIssuesNewestFirst(scope: AdminScope) {
   return db
     .select({
       id: issueReports.id,
@@ -130,10 +142,11 @@ export async function listIssuesNewestFirst() {
     })
     .from(issueReports)
     .leftJoin(users, eq(users.id, issueReports.userId))
+    .where(issueScopeCond(scope))
     .orderBy(desc(issueReports.createdAt));
 }
 
-export async function listReceipts() {
+export async function listReceipts(scope: AdminScope) {
   return db
     .select({
       issueId: issueReportReceipts.issueId,
@@ -143,7 +156,8 @@ export async function listReceipts() {
       adminEmail: users.email,
     })
     .from(issueReportReceipts)
-    .leftJoin(users, eq(users.id, issueReportReceipts.adminId));
+    .leftJoin(users, eq(users.id, issueReportReceipts.adminId))
+    .where(scope.school === null ? sql`true` : emailInScope(users.email, scope));
 }
 
 export type AcknowledgeResult = "ok" | "not_found";
@@ -155,14 +169,17 @@ export async function acknowledgeIssue(
   admin: Pick<User, "id">,
   action: "seen" | "addressed",
   note: string | null,
-  request?: Request
+  request: Request | undefined,
+  scope: AdminScope
 ): Promise<AcknowledgeResult> {
   const [issue] = await db
-    .select({ id: issueReports.id, category: issueReports.category, status: issueReports.status })
+    .select({ id: issueReports.id, category: issueReports.category, status: issueReports.status, reporterEmail: users.email })
     .from(issueReports)
+    .leftJoin(users, eq(users.id, issueReports.userId))
     .where(eq(issueReports.id, issueId))
     .limit(1);
   if (!issue) return "not_found";
+  if (scope.school !== null && !emailInScopeJs(issue.reporterEmail, scope)) return "not_found";
 
   const inserted = await db
     .insert(issueReportReceipts)

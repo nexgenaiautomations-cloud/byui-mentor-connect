@@ -4,13 +4,9 @@ import { matches, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 import { desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, emailInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
-import {
-  ActiveMatchesTable,
-  EndedMatchesTable,
-  type ActiveMatchRow,
-  type EndedMatchRow,
-} from "./matches-table";
+import { ActiveMatchesTable, EndedMatchesTable, type ActiveMatchRow, type EndedMatchRow } from "./matches-table";
 
 function daysSince(d: Date) {
   return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
@@ -20,6 +16,8 @@ export default async function AdminMatchesPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
+  // School boundary: program admins see only their school (src/lib/admin-scope.ts).
+  const scope = adminScopeFor(me)!;
 
   const mentor = alias(users, "mentor_u");
   const mentee = alias(users, "mentee_u");
@@ -29,7 +27,10 @@ export default async function AdminMatchesPage() {
       id: matches.id,
       status: matches.status,
       startedAt: matches.startedAt,
-      lastActivityAt: matches.lastActivityAt,
+      // Inactivity is measured from the last real interaction (meeting or
+      // touchpoint), falling back to the match start — never from the
+      // student's independent activity.
+      lastActivityAt: sql<Date>`coalesce(${matches.lastInteractionAt}, ${matches.startedAt})`.mapWith(matches.startedAt),
       endedAt: matches.endedAt,
       mentorName: mentor.name,
       mentorImage: mentor.image,
@@ -37,11 +38,14 @@ export default async function AdminMatchesPage() {
       menteeName: mentee.name,
       menteeImage: mentee.image,
       menteeEmail: mentee.email,
-      meetingCount: sql<number>`(select count(*)::int from "meeting_log" where match_id = "match".id)`,
+      // Actual mentor meetings only — independent activity and system
+      // auto-logs are not meetings (docs/specs/accountability-upgrade.md §1).
+      meetingCount: sql<number>`(select count(*)::int from "meeting_log" where match_id = "match".id and event_kind = 'mentor_meeting')`,
     })
     .from(matches)
     .innerJoin(mentor, eq(mentor.id, matches.mentorId))
     .innerJoin(mentee, eq(mentee.id, matches.menteeId))
+    .where(emailInScope(mentee.email, scope))
     .orderBy(desc(matches.startedAt));
 
   const active = rows.filter((r) => r.status === "active");

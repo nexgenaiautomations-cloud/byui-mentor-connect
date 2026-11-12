@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, emailInScope } from "@/lib/admin-scope";
 import { AdminManager } from "./manager";
 
 export default async function ManageAdminsPage() {
@@ -24,7 +25,7 @@ export default async function ManageAdminsPage() {
       createdAt: users.createdAt,
     })
     .from(users)
-    .where(eq(users.isAdmin, true))
+    .where(and(eq(users.isAdmin, true), emailInScope(users.email, adminScopeFor(me)!)))
     .orderBy(desc(users.isHeadAdmin), desc(users.createdAt));
 
   return (

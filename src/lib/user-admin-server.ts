@@ -12,12 +12,17 @@ import {
   type ManagedRole,
 } from "@/lib/user-admin";
 import { clearStewardshipFor } from "@/lib/stewardship-server";
+import { adminScopeFor, emailInScopeJs } from "@/lib/admin-scope";
+import { buildProfileUpdate, checkProfileEdit, type AdminProfileEdit } from "@/lib/member-profile-edit";
 
 export type AdminActionResult = { ok: true } | { ok: false; status: number; error: string };
 
-async function loadTarget(id: string) {
+// Out-of-school targets look exactly like missing ones.
+async function loadTarget(id: string, actor: User) {
   const [u] = await db.select().from(users).where(eq(users.id, id)).limit(1);
-  return u ?? null;
+  const scope = adminScopeFor(actor);
+  if (!u || !scope || !emailInScopeJs(u.email, scope)) return null;
+  return u;
 }
 
 // End this person's active mentor-side matches and decline pending requests
@@ -40,7 +45,7 @@ export async function changeRole(
   role: ManagedRole,
   request?: Request
 ): Promise<AdminActionResult> {
-  const target = await loadTarget(targetId);
+  const target = await loadTarget(targetId, actor);
   if (!target) return { ok: false, status: 404, error: "Member not found." };
   const err = checkRoleChange(actor, target, role);
   if (err) return { ok: false, status: 403, error: err };
@@ -86,7 +91,7 @@ export async function removeUser(
   reason: string | null,
   request?: Request
 ): Promise<AdminActionResult> {
-  const target = await loadTarget(targetId);
+  const target = await loadTarget(targetId, actor);
   if (!target) return { ok: false, status: 404, error: "Member not found." };
   const err = checkRemoval(actor, target);
   if (err) return { ok: false, status: 403, error: err };
@@ -136,7 +141,7 @@ export async function restoreUser(
   targetId: string,
   request?: Request
 ): Promise<AdminActionResult> {
-  const target = await loadTarget(targetId);
+  const target = await loadTarget(targetId, actor);
   if (!target) return { ok: false, status: 404, error: "Member not found." };
   const err = checkRestore(actor, target);
   if (err) return { ok: false, status: 403, error: err };
@@ -151,6 +156,33 @@ export async function restoreUser(
     targetUserId: target.id,
     eventType: "ADMIN_RESTORED_USER",
     request,
+  });
+  return { ok: true };
+}
+
+// Admin edit of a member's profile fields. Same school boundary as the other
+// actions: an out-of-school target answers 404. The audit event records which
+// fields changed, not their values.
+export async function editProfile(
+  actor: User,
+  targetId: string,
+  edit: AdminProfileEdit,
+  request?: Request
+): Promise<AdminActionResult> {
+  const target = await loadTarget(targetId, actor);
+  if (!target) return { ok: false, status: 404, error: "Member not found." };
+  const err = checkProfileEdit(actor, target);
+  if (err) return { ok: false, status: 403, error: err };
+
+  const { set, changed } = buildProfileUpdate(target, edit);
+  if (changed.length === 0) return { ok: true };
+  await db.update(users).set(set).where(eq(users.id, target.id));
+  await auditEvent({
+    actorUserId: actor.id,
+    targetUserId: target.id,
+    eventType: "ADMIN_EDITED_PROFILE",
+    request,
+    metadata: { fields: changed },
   });
   return { ok: true };
 }

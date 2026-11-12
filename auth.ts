@@ -6,6 +6,7 @@ import { db } from "@/db/client";
 import { users, accounts, sessions, verificationTokens } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { buildMagicLinkEmail } from "@/lib/magic-link-email";
+import { emailDeliveryDisabled } from "@/lib/email";
 import { verifyPassword } from "@/lib/password";
 import { auditEvent } from "@/lib/audit";
 import { limitPasswordSignIn } from "@/lib/rate-limit";
@@ -82,6 +83,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           expiresMinutes: MAGIC_LINK_TTL_MIN,
         });
 
+        if (emailDeliveryDisabled()) {
+          console.info("[email:log] magic link", subject);
+          return;
+        }
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {

@@ -9,7 +9,7 @@ import { test, expect } from "@playwright/test";
 // remain useful against any deploy (production, preview, local). If no CSP
 // is sent the suite still verifies the page renders.
 
-test.describe("CSP smoke", () => {
+test.describe("CSP smoke @public", () => {
   test("landing renders correctly under whatever CSP mode is active", async ({ page }) => {
     const consoleBlocks: string[] = [];
     const pageErrors: string[] = [];

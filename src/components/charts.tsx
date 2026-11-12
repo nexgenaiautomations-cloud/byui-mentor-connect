@@ -147,93 +147,6 @@ export function MonthlyLine({
   );
 }
 
-export function MonthlyBars({
-  points,
-  color = "#0F766E",
-  format,
-  compact = false,
-}: {
-  points: Pt[];
-  color?: string;
-  format?: (n: number) => string;
-  compact?: boolean;
-}) {
-  if (points.length === 0) {
-    return <div className="text-xs text-slate-500">No data</div>;
-  }
-
-  if (compact) return <Sparkline points={points} color={color} kind="bar" />;
-
-  const top = niceTop(Math.max(...points.map((p) => p.value), 1));
-  const plotH = FULL.bottom - FULL.top;
-  const colW = FULL_PLOT_W / points.length;
-  const barW = colW * 0.7;
-  const padX = (colW - barW) / 2;
-  const last = points[points.length - 1];
-  const labelIdx = pickLabelIndices(points.length);
-  const gridYs = [0, top / 2, top];
-
-  return (
-    <div>
-      <svg
-        viewBox={`0 0 100 ${FULL.height}`}
-        preserveAspectRatio="xMidYMid meet"
-        className="block h-36 w-full"
-      >
-        {gridYs.map((v, i) => {
-          const y = FULL.top + (1 - v / top) * plotH;
-          return (
-            <g key={i}>
-              <line
-                x1={FULL.left}
-                x2={FULL.right}
-                y1={y}
-                y2={y}
-                stroke="#E2E8F0"
-                strokeWidth="0.3"
-              />
-              <text
-                x={FULL.left - 1.5}
-                y={y + 1}
-                textAnchor="end"
-                fontSize="3"
-                fill="#94A3B8"
-                fontFamily="Inter, ui-sans-serif, system-ui"
-              >
-                {formatY(v, format)}
-              </text>
-            </g>
-          );
-        })}
-        {points.map((p, i) => {
-          const h = (p.value / top) * plotH;
-          const x = FULL.left + i * colW + padX;
-          const y = FULL.bottom - h;
-          return <rect key={i} x={x} y={y} width={barW} height={h} fill={color} rx={0.4} />;
-        })}
-        {points.map((p, i) =>
-          labelIdx.has(i) ? (
-            <text
-              key={i}
-              x={FULL.left + i * colW + colW / 2}
-              y={FULL.bottom + 5}
-              textAnchor="middle"
-              fontSize="3.2"
-              fill="#64748B"
-              fontFamily="Inter, ui-sans-serif, system-ui"
-            >
-              {p.label}
-            </text>
-          ) : null
-        )}
-      </svg>
-      <p className="mt-1 text-right text-[11px] font-semibold text-slate-600">
-        {(format ?? ((n: number) => String(n)))(last.value)} this month
-      </p>
-    </div>
-  );
-}
-
 // Minimal sparkline — no axes, no labels — for use inside MoMTile etc. We
 // fill the whole viewBox so the chart shape is the only signal.
 function Sparkline({
@@ -350,58 +263,6 @@ export function HBarList({
   );
 }
 
-// Compact donut showing one part vs. whole.
-export function Donut({
-  value,
-  total,
-  size = 96,
-  color = "#4A2585",
-  trackColor = "#E2E8F0",
-  label,
-}: {
-  value: number;
-  total: number;
-  size?: number;
-  color?: string;
-  trackColor?: string;
-  label?: string;
-}) {
-  const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
-  const r = 16;
-  const c = 2 * Math.PI * r;
-  const dash = (pct / 100) * c;
-  return (
-    <div className="flex items-center gap-3">
-      <svg width={size} height={size} viewBox="0 0 40 40" className="block">
-        <circle cx="20" cy="20" r={r} fill="none" stroke={trackColor} strokeWidth={5} />
-        <circle
-          cx="20"
-          cy="20"
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth={5}
-          strokeDasharray={`${dash} ${c}`}
-          strokeLinecap="round"
-          transform="rotate(-90 20 20)"
-        />
-        <text
-          x="20"
-          y="22"
-          textAnchor="middle"
-          fontSize="9"
-          fontWeight="800"
-          fill="#0f172a"
-          fontFamily="Inter, ui-sans-serif, system-ui"
-        >
-          {pct}%
-        </text>
-      </svg>
-      {label && <span className="text-xs font-medium text-slate-600">{label}</span>}
-    </div>
-  );
-}
-
 // "+12% MoM" pill with arrow direction.
 export function DeltaPill({
   current,
@@ -440,5 +301,44 @@ export function DeltaPill({
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${cls}`}>
       {sign} {shown}{suffix}
     </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Program Effectiveness additions (docs/specs/accountability-upgrade.md §6).
+// Same no-dependency approach as above: plain markup, server-renderable.
+// ---------------------------------------------------------------------------
+
+// Stage funnel: each bar is unique students, width relative to the first
+// stage, with step conversion shown alongside.
+// `conversionFrom`: the first step whose "% of the step above" is meaningful.
+// Earlier stages (exploring, preparing) are optional, so converting from them
+// would show nonsense like 337%; a share above 100% is never shown.
+export function Funnel({ steps, conversionFrom = 1 }: { steps: { label: string; value: number }[]; conversionFrom?: number }) {
+  if (steps.every((s) => s.value === 0)) return <p className="text-xs text-slate-500">No career updates in this view yet.</p>;
+  const max = Math.max(...steps.map((s) => s.value), 1);
+  return (
+    <ol className="space-y-2">
+      {steps.map((s, i) => {
+        const prev = i > 0 ? steps[i - 1].value : null;
+        const raw = i > conversionFrom && prev ? Math.round((s.value / prev) * 100) : null;
+        const conv = raw !== null && raw <= 100 ? raw : null;
+        return (
+          <li key={s.label} className="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-2 text-xs">
+            <span className="font-medium text-slate-700">{s.label}</span>
+            <span className="h-5 rounded bg-slate-100" aria-hidden>
+              <span
+                className="block h-5 rounded bg-plum-600"
+                style={{ width: `${Math.max(s.value ? 3 : 0, Math.round((s.value / max) * 100))}%` }}
+              />
+            </span>
+            <span className="w-24 text-right font-semibold tabular-nums text-slate-900" title={conv !== null ? `${conv}% of the step above` : undefined}>
+              {s.value}
+              {conv !== null && <span className="ml-1 font-normal text-slate-500">({conv}%)</span>}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

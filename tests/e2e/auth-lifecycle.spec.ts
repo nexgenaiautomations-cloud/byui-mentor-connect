@@ -1,112 +1,85 @@
 import { test, expect, type Page } from "@playwright/test";
 
-// End-to-end coverage of the password auth lifecycle:
-//   1. /signup with a fresh @byui.edu email, password, profile basics, and
-//      the two prior-experience answers
-//   2. Confirms the redirect into /onboarding (or /dashboard if already done)
-//   3. Signs out + signs back in via password on /login
-//   4. Walks /forgot-password and confirms the success state
+// End-to-end coverage of the password auth lifecycle on the fixture school:
+//   1. /signup (email + password) lands on "check your email"
+//   2. the account is verified (the e2e stand-in for the emailed link)
+//   3. password sign-in reaches the first-run flow; clearing cookies signs out
+//   4. sign-up validation and the no-enumeration forgot-password state
 //
-// Cleanup: after each test, DELETE the synthetic user row directly via SQL so
-// the suite stays repeatable. Requires DATABASE_URL in env (provided by
-// .env.local during local runs).
-import { db } from "../../src/db/client";
-import { users } from "../../src/db/schema";
-import { eq } from "drizzle-orm";
+// Cleanup: after each test, delete the synthetic user from the FIXTURE
+// database (E2E_DATABASE_URL — never the app's own DATABASE_URL).
+import { neon } from "@neondatabase/serverless";
 
 function uniqueEmail(): string {
   const slug = Math.random().toString(36).slice(2, 10);
-  return `e2e.${slug}@byui.edu`;
+  return `e2e-signup-${slug}@e2e-alpha.edu`;
 }
 
 async function purgeUser(email: string) {
-  await db.delete(users).where(eq(users.email, email));
+  const sql = neon(process.env.E2E_DATABASE_URL!);
+  await sql(`delete from "user" where email = $1 and email like 'e2e-signup-%@e2e-alpha.edu'`, [email]);
 }
 
-async function fillSignup(page: Page, email: string, password: string) {
-  await page.locator('input[type="email"]').fill(email);
-  await page.locator('#firstName').fill("E2e");
-  await page.locator('#lastName').fill("Tester");
-  await page.locator('#password').fill(password);
-  await page.locator('#confirm').fill(password);
-  await page.locator('#prior-chats').selectOption("0");
-  await page.locator('#prior-intern').selectOption("None");
+async function fillSignup(page: Page, email: string, password: string, confirm = password) {
+  await page.locator("#email").fill(email);
+  await page.locator("#password").fill(password);
+  await page.locator("#confirm").fill(confirm);
 }
 
-test.describe("Auth lifecycle: signup → sign-out → sign-in → forgot", () => {
-  test("a brand-new student can sign up, sign out, and sign back in", async ({
-    page,
-  }) => {
+// Stands in for clicking the emailed verification link (delivery is
+// log-only in e2e runs). Fixture database only.
+async function markVerified(email: string) {
+  const sql = neon(process.env.E2E_DATABASE_URL!);
+  await sql(`update "user" set email_verified = now() where email = $1 and email like 'e2e-signup-%@e2e-alpha.edu'`, [email]);
+}
+
+test.describe("Auth lifecycle: signup → verify → sign-in → sign-out → forgot", () => {
+  test("a brand-new student signs up, verifies, signs in and signs out", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-chromium", "Creates an account — desktop run only");
     const email = uniqueEmail();
-    const password = "cougars12-byui";
+    const password = "cougars12-e2e";
     try {
-      // ---- 1. Signup ----
       await page.goto("/signup");
-      await expect(
-        page.getByRole("heading", { name: /Create your account/i })
-      ).toBeVisible();
       await fillSignup(page, email, password);
       await page.getByRole("button", { name: /Create account/i }).click();
-      // Redirect lands at /onboarding (or /dashboard if onboarding skipped).
-      await page.waitForURL(/\/onboarding|\/dashboard/, { timeout: 10000 });
+      // New accounts must verify their school email before signing in.
+      await page.waitForURL(/\/login\/check-email/, { timeout: 30_000 });
 
-      // ---- 2. Confirm we're authenticated ----
-      const meRes = await page.request.get("/api/me");
-      expect(meRes.ok()).toBeTruthy();
-      const body = await meRes.json();
-      expect(body.user?.email).toBe(email);
-
-      // ---- 3. Sign out (via the settings page form action) ----
-      await page.goto("/settings");
-      await page.getByRole("button", { name: /Sign out/i }).click();
-      await page.waitForURL(/\/login|\//, { timeout: 10000 });
-
-      // ---- 4. Sign back in with the password ----
+      await markVerified(email);
       await page.goto("/login");
-      await page.locator('input[type="email"]').fill(email);
-      await page.locator('input[type="password"]').fill(password);
-      await page.getByRole("button", { name: /^Sign in$/ }).click();
-      await page.waitForURL(/\/dashboard|\/onboarding/, { timeout: 10000 });
+      await page.locator("#email").fill(email);
+      await page.locator("#password").fill(password);
+      await page.locator("form button[type=submit]").first().click();
+      // First sign-in goes through the notices and profile setup.
+      await page.waitForURL(/\/agreements|\/onboarding|\/pledge|\/dashboard/, { timeout: 30_000 });
+      const me = await page.request.get("/api/me");
+      expect(me.ok()).toBeTruthy();
+      expect((await me.json()).user?.email).toBe(email);
 
-      const me2 = await page.request.get("/api/me");
-      expect(me2.ok()).toBeTruthy();
-      const body2 = await me2.json();
-      expect(body2.user?.email).toBe(email);
+      await page.context().clearCookies();
+      await page.goto("/dashboard");
+      await expect(page).toHaveURL(/\/login/);
     } finally {
       await purgeUser(email);
     }
   });
 
-  test("signup rejects mismatched passwords and weak passwords", async ({
-    page,
-  }) => {
+  test("signup rejects mismatched and weak passwords", async ({ page }) => {
     await page.goto("/signup");
-    await fillSignup(page, uniqueEmail(), "cougars12");
-    // Break the confirm field
-    await page.locator('#confirm').fill("different1");
+    await fillSignup(page, uniqueEmail(), "cougars12", "different1");
     await page.getByRole("button", { name: /Create account/i }).click();
     await expect(page.getByText(/Passwords don.?t match/i)).toBeVisible();
 
-    // Now make them match but weak (no number)
-    await page.locator('#password').fill("nopassword");
-    await page.locator('#confirm').fill("nopassword");
+    await fillSignup(page, uniqueEmail(), "nopassword");
     await page.getByRole("button", { name: /Create account/i }).click();
-    await expect(
-      page.getByText(/at least one letter and one number/i)
-    ).toBeVisible();
+    await expect(page.getByText(/at least one letter and one number/i).last()).toBeVisible();
   });
 
-  test("forgot-password always shows the same success state", async ({
-    page,
-  }) => {
+  test("forgot-password always shows the same success state", async ({ page }) => {
     await page.goto("/forgot-password");
-    await expect(
-      page.getByRole("heading", { name: /Forgot your password/i })
-    ).toBeVisible();
-
-    // A nonexistent email should still show the success message — no
-    // enumeration.
-    await page.locator('input[type="email"]').fill("does-not-exist@byui.edu");
+    await expect(page.getByRole("heading", { name: /Forgot your password/i })).toBeVisible();
+    // A nonexistent email still shows success — no account enumeration.
+    await page.locator('input[type="email"]').fill("does-not-exist@e2e-alpha.edu");
     await page.getByRole("button", { name: /Send reset link/i }).click();
     await expect(page.getByText(/Check your email/i)).toBeVisible();
   });

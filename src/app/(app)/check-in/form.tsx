@@ -144,7 +144,7 @@ export function CheckInForm({
       </div>
       <div>
         <label className="label">
-          What's been most valuable?{" "}
+          What&apos;s been most valuable?{" "}
           <span className="font-normal text-slate-500">(optional)</span>
         </label>
         <textarea

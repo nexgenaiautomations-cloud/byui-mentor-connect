@@ -3,17 +3,25 @@ import { db } from "@/db/client";
 import { mentorApplications, users } from "@/db/schema";
 import { desc, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, emailInScope, userIdInScope } from "@/lib/admin-scope";
 import { MembersTable, type MemberRow } from "./members-table";
 
 export default async function AdminMembersPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
+  // School boundary: program admins see only their school (src/lib/admin-scope.ts).
+  const scope = adminScopeFor(me)!;
 
   const rows = await db
     .select({
       id: users.id,
       name: users.name,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      phone: users.phone,
+      preferredContactMethod: users.preferredContactMethod,
+      bio: users.bio,
       email: users.email,
       image: users.image,
       major: users.major,
@@ -37,6 +45,7 @@ export default async function AdminMembersPage() {
       achievementsEarned: sql<number>`(select count(*)::int from "achievement" where student_id = "user".id)`,
     })
     .from(users)
+    .where(emailInScope(users.email, scope))
     .orderBy(desc(users.createdAt));
 
   // Most recent application per user — we surface it on the profile modal so
@@ -54,6 +63,7 @@ export default async function AdminMembersPage() {
       capacity: mentorApplications.capacity,
     })
     .from(mentorApplications)
+    .where(userIdInScope(mentorApplications.userId, scope))
     .orderBy(desc(mentorApplications.submittedAt));
   const latestAppByUser = new Map<string, (typeof apps)[number]>();
   for (const a of apps) {
@@ -65,6 +75,11 @@ export default async function AdminMembersPage() {
     return {
       id: u.id,
       name: u.name,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      phone: u.phone,
+      preferredContactMethod: u.preferredContactMethod,
+      bio: u.bio,
       email: u.email,
       image: u.image,
       major: u.major,

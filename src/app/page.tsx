@@ -176,7 +176,7 @@ export default async function LandingPage() {
               Why Peer-to-Peer Career Mentoring Matters
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600">
-              The biggest career advantage isn't the resume — it's the relationships behind it.
+              The biggest career advantage isn&apos;t the resume — it&apos;s the relationships behind it.
               ICAN makes those relationships intentional.
             </p>
           </header>

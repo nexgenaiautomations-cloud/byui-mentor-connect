@@ -18,7 +18,7 @@ const PUBLIC_PAGES = [
 ];
 
 for (const path of PUBLIC_PAGES) {
-  test(`WCAG 2.1 AA: ${path}`, async ({ page }) => {
+  test(`WCAG 2.1 AA: ${path} @public`, async ({ page }) => {
     await page.goto(path, { waitUntil: "networkidle" });
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])

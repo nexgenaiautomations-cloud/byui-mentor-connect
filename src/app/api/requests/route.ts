@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { matches, requests, users } from "@/db/schema";
+import { requests, users } from "@/db/schema";
 import { and, eq, or, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { sameSchool } from "@/lib/school-scope";

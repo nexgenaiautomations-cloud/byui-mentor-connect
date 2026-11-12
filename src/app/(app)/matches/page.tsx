@@ -13,40 +13,54 @@ import { CanTodosButton } from "./can-todos-button";
 import { ProgressBlock } from "@/components/progress-block";
 import { getStudentKpisBatch } from "@/lib/kpis";
 import { LogActions } from "./log-actions";
+import { MeetingFollowUps, type FollowUpItem } from "./meeting-follow-ups";
+import { EVENT_KIND_LABEL, type EventKind } from "@/lib/engagement";
 
 function daysSince(d: Date) {
   return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
 }
 
-// History row typing — derived from log.createdBy + isSystemGenerated so the
-// type is stable even if labels change.
-type HistoryEventType = "mentee_activity" | "mentor_meeting" | "system_goal";
+// History row typing — from the log's event kind (docs/specs/
+// accountability-upgrade.md §1), falling back to createdBy for any row the
+// backfill hasn't reached.
+type HistoryEventType = "mentee_activity" | "mentor_meeting" | "touchpoint" | "system_goal" | "unverified";
 
 function recordTypeOf(
+  eventKind: EventKind | null,
   createdBy: string | null,
   isSystemGenerated: boolean
 ): HistoryEventType {
-  if (isSystemGenerated || createdBy === "system") return "system_goal";
+  if (eventKind === "mentor_meeting") return "mentor_meeting";
+  if (eventKind === "touchpoint") return "touchpoint";
+  if (eventKind === "independent_activity") return "mentee_activity";
+  if (eventKind === "unverified") return "unverified";
+  if (isSystemGenerated || createdBy === "system" || eventKind === "system_event") return "system_goal";
   if (createdBy === "mentee") return "mentee_activity";
-  return "mentor_meeting";
+  return "unverified";
 }
 
 const RECORD_LABEL: Record<HistoryEventType, string> = {
   mentee_activity: "Mentee Activity",
   mentor_meeting: "Mentor Meeting",
+  touchpoint: "Touchpoint",
   system_goal: "Goal Met",
+  unverified: "Earlier log",
 };
 
 const RECORD_BG: Record<HistoryEventType, string> = {
   mentee_activity: "border-brand-light/40 bg-brand-light/15",
   mentor_meeting: "border-emerald-200 bg-emerald-50/50",
+  touchpoint: "border-sky-200 bg-sky-50/50",
   system_goal: "border-slate-200 bg-slate-100/60",
+  unverified: "border-slate-200 bg-white",
 };
 
 const RECORD_PILL: Record<HistoryEventType, string> = {
   mentee_activity: "bg-brand-light/40 text-brand-dark",
   mentor_meeting: "bg-emerald-100 text-emerald-800",
+  touchpoint: "bg-sky-100 text-sky-800",
   system_goal: "bg-slate-200 text-slate-700",
+  unverified: "bg-slate-100 text-slate-700",
 };
 
 export default async function MatchesPage() {
@@ -69,10 +83,15 @@ export default async function MatchesPage() {
       id: matches.id,
       status: matches.status,
       startedAt: matches.startedAt,
-      lastActivityAt: matches.lastActivityAt,
+      // Inactivity is measured from the last real interaction (meeting or
+      // touchpoint), falling back to the match start — never from the
+      // student's independent activity.
+      lastActivityAt: sql<Date>`coalesce(${matches.lastInteractionAt}, ${matches.startedAt})`.mapWith(matches.startedAt),
       mentorId: matches.mentorId,
       menteeId: matches.menteeId,
-      meetingCount: sql<number>`(select count(*)::int from "meeting_log" where match_id = "match".id)`,
+      // Actual mentor meetings only — independent activity and system
+      // auto-logs are not meetings (docs/specs/accountability-upgrade.md §1).
+      meetingCount: sql<number>`(select count(*)::int from "meeting_log" where match_id = "match".id and event_kind = 'mentor_meeting')`,
       mentorName: mentor.name,
       mentorImage: mentor.image,
       mentorEmail: mentor.email,
@@ -121,6 +140,7 @@ export default async function MatchesPage() {
           actionItems: meetingLogs.actionItems,
           isSystemGenerated: meetingLogs.isSystemGenerated,
           createdBy: meetingLogs.createdBy,
+          eventKind: meetingLogs.eventKind,
         })
         .from(meetingLogs)
         .where(inArray(meetingLogs.matchId, mentorMatchIds))
@@ -133,6 +153,53 @@ export default async function MatchesPage() {
       list.push(a);
       activitiesByMatch.set(a.matchId, list);
     }
+  }
+
+  // Follow-ups for every active pair I'm in: meetings my partner logged that
+  // I haven't confirmed, and open action items (last 60 days).
+  const allMatchIds = rows.map((r) => r.id);
+  const followUpRows = allMatchIds.length
+    ? await db
+        .select({
+          id: meetingLogs.id,
+          matchId: meetingLogs.matchId,
+          meetingDate: meetingLogs.meetingDate,
+          eventKind: meetingLogs.eventKind,
+          studentId: meetingLogs.studentId,
+          mentorConfirmed: meetingLogs.mentorConfirmed,
+          menteeConfirmed: meetingLogs.menteeConfirmed,
+          actionItems: meetingLogs.actionItems,
+          actionItemsDoneAt: meetingLogs.actionItemsDoneAt,
+        })
+        .from(meetingLogs)
+        .where(
+          and(
+            inArray(meetingLogs.matchId, allMatchIds),
+            inArray(meetingLogs.eventKind, ["mentor_meeting", "touchpoint"]),
+            sql`${meetingLogs.meetingDate} >= now() - interval '60 days'`
+          )
+        )
+        .orderBy(desc(meetingLogs.meetingDate))
+    : [];
+  const followUpsByMatch = new Map<string, FollowUpItem[]>();
+  for (const r of followUpRows) {
+    const match = rows.find((x) => x.id === r.matchId);
+    if (!match || !r.matchId) continue;
+    const iAmMentorHere = match.mentorId === me.id;
+    const needsMyConfirmation = iAmMentorHere ? !r.mentorConfirmed : !r.menteeConfirmed;
+    const openActionItems = !!r.actionItems?.trim() && !r.actionItemsDoneAt;
+    if (!needsMyConfirmation && !openActionItems) continue;
+    const list = followUpsByMatch.get(r.matchId) ?? [];
+    if (list.length >= 5) continue;
+    list.push({
+      id: r.id,
+      meetingDate: r.meetingDate.toISOString(),
+      kindLabel: r.eventKind ? EVENT_KIND_LABEL[r.eventKind] : "Meeting",
+      needsMyConfirmation,
+      openActionItems,
+      canMarkActions: true,
+    });
+    followUpsByMatch.set(r.matchId, list);
   }
 
   // Batch KPI fetch for the mentor's mentees. Single SQL round-trip even with
@@ -366,6 +433,8 @@ export default async function MatchesPage() {
                   />
                 )}
 
+                <MeetingFollowUps items={followUpsByMatch.get(m.id) ?? []} />
+
                 {/* Contact buttons row — Email / Call / Teams */}
                 <div className="grid grid-cols-3 gap-2">
                   <a
@@ -485,7 +554,7 @@ export default async function MatchesPage() {
                       ) : (
                         <ul className="mt-2 max-h-[220px] space-y-2 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-2 pr-1">
                           {items.map((a) => {
-                            const t = recordTypeOf(a.createdBy, a.isSystemGenerated);
+                            const t = recordTypeOf(a.eventKind, a.createdBy, a.isSystemGenerated);
                             return (
                               <li
                                 key={a.id}

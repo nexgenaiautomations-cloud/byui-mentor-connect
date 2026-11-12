@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { adminScopeFor } from "@/lib/admin-scope";
 import { auth } from "../../../auth";
 import { Sidebar, MobileBar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
@@ -37,7 +38,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let pendingIssues: PendingIssue[] = [];
   if (user.isAdmin) {
     try {
-      pendingIssues = (await pendingIssuesForAdmin(user.id)).map((i) => ({
+      pendingIssues = (await pendingIssuesForAdmin(user.id, adminScopeFor(user)!)).map((i) => ({
         id: i.id,
         categoryLabel: categoryLabel(i.category),
         message: i.message,
@@ -84,7 +85,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
           <IndependenceNotice
             tone="dark"
-            className="mx-auto mt-4 max-w-3xl px-2 text-center [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]"
+            // Solid dark backing: the note sits on the photo background, where
+            // a text shadow alone failed WCAG contrast (axe).
+            className="mx-auto mt-4 max-w-3xl rounded-xl bg-[rgba(30,8,60,0.82)] px-4 py-2.5 text-center"
           />
         </main>
       </div>

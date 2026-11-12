@@ -53,7 +53,12 @@ export type AuditEventType =
   | "ADMIN_RESTORED_USER"
   | "USER_SIGNED_PLEDGE"
   | "ADMIN_SET_STEWARDSHIP"
-  | "ADMIN_CHANGED_POD";
+  | "ADMIN_CHANGED_POD"
+  | "ADMIN_UPDATED_INTERVENTION"
+  | "ADMIN_UPDATED_PROGRAM_SETTINGS"
+  | "ADMIN_VERIFIED_CAREER_MILESTONE"
+  | "RETENTION_RUN"
+  | "ADMIN_EDITED_PROFILE";
 
 export type AuditSeverity = "info" | "warning" | "critical";
 

@@ -1,14 +1,17 @@
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { matches, meetingLogs, monthlyFeedback, users } from "@/db/schema";
+import { meetingLogs, monthlyFeedback, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 import { desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 
 export default async function AdminActivityPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
+  // School boundary: program admins see only their school (src/lib/admin-scope.ts).
+  const scope = adminScopeFor(me)!;
 
   const mentor = alias(users, "mentor_u");
   const student = alias(users, "student_u");
@@ -31,6 +34,7 @@ export default async function AdminActivityPage() {
     .from(meetingLogs)
     .leftJoin(mentor, eq(mentor.id, meetingLogs.mentorId))
     .innerJoin(student, eq(student.id, meetingLogs.studentId))
+    .where(emailInScope(student.email, scope))
     .orderBy(desc(meetingLogs.createdAt))
     .limit(25);
 
@@ -44,13 +48,14 @@ export default async function AdminActivityPage() {
       year: monthlyFeedback.year,
     })
     .from(monthlyFeedback)
+    .where(userIdInScope(monthlyFeedback.submittedByUserId, scope))
     .orderBy(desc(monthlyFeedback.submittedAt))
     .limit(15);
 
   const [feedbackAvg] = await db
     .select({
-      avg: sql<number | null>`(select avg(rating)::numeric(10,2) from "monthly_feedback")`,
-      n: sql<number>`(select count(*)::int from "monthly_feedback")`,
+      avg: sql<number | null>`(select avg(rating)::numeric(10,2) from "monthly_feedback" where ${rawUserIdInScope('"monthly_feedback".submitted_by_user_id', scope)})`,
+      n: sql<number>`(select count(*)::int from "monthly_feedback" where ${rawUserIdInScope('"monthly_feedback".submitted_by_user_id', scope)})`,
     })
     .from(sql`(select 1) as _t`);
 

@@ -1,12 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ManageUserButton } from "@/components/manage-user-button";
 import { currentRole } from "@/lib/user-admin";
+import {
+  DEFAULT_DIR,
+  MEMBER_SORT_KEYS,
+  MEMBER_SORT_LABEL,
+  sortMembers,
+  type MemberSortKey,
+  type SortDir,
+} from "@/lib/member-sort";
+import { MemberEditForm } from "./member-edit-form";
 
 export type MemberRow = {
   id: string;
   name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  preferredContactMethod: string | null;
+  bio: string | null;
   email: string;
   image: string | null;
   major: string | null;
@@ -45,6 +59,50 @@ function avatarUrl(name: string | null, email: string) {
 }
 
 export type Viewer = { id: string; isHeadAdmin: boolean };
+
+// Mirrors checkProfileEdit in src/lib/member-profile-edit.ts (the server enforces it).
+function editBlockedReason(u: MemberRow, viewer: Viewer): string | null {
+  if (u.id === viewer.id) return "Edit your own profile in Settings.";
+  if (u.isAdmin && !viewer.isHeadAdmin) return "Only the head admin can edit another admin's profile.";
+  return null;
+}
+
+function SortHeader({
+  k,
+  sort,
+  onSort,
+  className,
+}: {
+  k: MemberSortKey;
+  sort: { key: MemberSortKey; dir: SortDir };
+  onSort: (k: MemberSortKey) => void;
+  className: string;
+}) {
+  const active = sort.key === k;
+  return (
+    <th
+      className={className}
+      aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(k)}
+        className={`inline-flex items-center gap-1 rounded uppercase tracking-wider transition hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer ${active ? "text-brand" : ""}`}
+      >
+        {MEMBER_SORT_LABEL[k]}
+        <svg viewBox="0 0 12 12" className={`h-3 w-3 ${active ? "opacity-100" : "opacity-40"}`} aria-hidden="true" fill="currentColor">
+          {active && sort.dir === "asc" ? (
+            <path d="M6 3 10 8H2z" />
+          ) : active ? (
+            <path d="M6 9 2 4h8z" />
+          ) : (
+            <path d="M6 1.5 9 5H3zM6 10.5 3 7h6z" />
+          )}
+        </svg>
+      </button>
+    </th>
+  );
+}
 
 function manageButton(u: MemberRow, viewer: Viewer) {
   const disabledReason =
@@ -122,6 +180,13 @@ function displayList(values: string[] | null | undefined) {
 
 export function MembersTable({ rows, viewer }: { rows: MemberRow[]; viewer: Viewer }) {
   const [selected, setSelected] = useState<MemberRow | null>(null);
+  const [sort, setSort] = useState<{ key: MemberSortKey; dir: SortDir }>({ key: "createdAt", dir: "desc" });
+  const sorted = useMemo(() => sortMembers(rows, sort.key, sort.dir), [rows, sort]);
+  function onSort(key: MemberSortKey) {
+    setSort((cur) =>
+      cur.key === key ? { key, dir: cur.dir === "asc" ? "desc" : "asc" } : { key, dir: DEFAULT_DIR[key] }
+    );
+  }
 
   // Lock body scroll + Escape closes the modal.
   useEffect(() => {
@@ -140,9 +205,28 @@ export function MembersTable({ rows, viewer }: { rows: MemberRow[]; viewer: View
 
   return (
     <>
+      {/* Mobile sort control */}
+      <div className="mb-3 flex items-center gap-2 md:hidden">
+        <label htmlFor="member-sort" className="text-xs font-semibold text-slate-600">Sort by</label>
+        <select
+          id="member-sort"
+          className="input min-w-0 flex-1 cursor-pointer !py-2 text-sm"
+          value={`${sort.key}:${sort.dir}`}
+          onChange={(e) => {
+            const [key, dir] = e.target.value.split(":") as [MemberSortKey, SortDir];
+            setSort({ key, dir });
+          }}
+        >
+          {MEMBER_SORT_KEYS.flatMap((k) => [
+            <option key={`${k}:asc`} value={`${k}:asc`}>{MEMBER_SORT_LABEL[k]}, ascending</option>,
+            <option key={`${k}:desc`} value={`${k}:desc`}>{MEMBER_SORT_LABEL[k]}, descending</option>,
+          ])}
+        </select>
+      </div>
+
       {/* Mobile cards */}
       <div className="space-y-3 md:hidden">
-        {rows.map((u) => (
+        {sorted.map((u) => (
           <div key={u.id} className={`card relative !p-0 ${u.removedAt ? "opacity-70" : ""}`}>
           <div className="absolute right-3 top-3 z-10">{manageButton(u, viewer)}</div>
           <button
@@ -155,6 +239,7 @@ export function MembersTable({ rows, viewer }: { rows: MemberRow[]; viewer: View
               <img
                 src={u.image || avatarUrl(u.name, u.email)}
                 alt=""
+                loading="lazy"
                 className="h-11 w-11 rounded-full object-cover"
               />
               <div className="min-w-0 flex-1">
@@ -192,19 +277,19 @@ export function MembersTable({ rows, viewer }: { rows: MemberRow[]; viewer: View
           <table className="min-w-full divide-y divide-slate-100 text-sm">
             <thead className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="px-5 py-3">Member</th>
-                <th className="px-3 py-3">Major</th>
-                <th className="px-3 py-3">Semester</th>
-                <th className="px-3 py-3">Expected grad</th>
-                <th className="px-3 py-3">Role</th>
-                <th className="px-3 py-3">Active</th>
-                <th className="px-3 py-3">Trophies</th>
-                <th className="px-3 py-3">Joined</th>
+                <SortHeader k="name" sort={sort} onSort={onSort} className="px-5 py-3" />
+                <SortHeader k="major" sort={sort} onSort={onSort} className="px-3 py-3" />
+                <SortHeader k="semesterLevel" sort={sort} onSort={onSort} className="px-3 py-3" />
+                <SortHeader k="expectedGraduation" sort={sort} onSort={onSort} className="px-3 py-3" />
+                <SortHeader k="role" sort={sort} onSort={onSort} className="px-3 py-3" />
+                <SortHeader k="activeMatches" sort={sort} onSort={onSort} className="px-3 py-3" />
+                <SortHeader k="achievementsEarned" sort={sort} onSort={onSort} className="px-3 py-3" />
+                <SortHeader k="createdAt" sort={sort} onSort={onSort} className="px-3 py-3" />
                 <th className="px-5 py-3"><span className="sr-only">Manage</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {rows.map((u) => (
+              {sorted.map((u) => (
                 <tr
                   key={u.id}
                   onClick={() => setSelected(u)}
@@ -225,6 +310,7 @@ export function MembersTable({ rows, viewer }: { rows: MemberRow[]; viewer: View
                       <img
                         src={u.image || avatarUrl(u.name, u.email)}
                         alt=""
+                        loading="lazy"
                         className="h-9 w-9 rounded-full object-cover"
                       />
                       <div>
@@ -262,18 +348,27 @@ export function MembersTable({ rows, viewer }: { rows: MemberRow[]; viewer: View
         </div>
       </div>
 
-      {selected && <MemberProfileModal member={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <MemberProfileModal
+          member={selected}
+          editBlocked={editBlockedReason(selected, viewer)}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </>
   );
 }
 
 function MemberProfileModal({
   member,
+  editBlocked,
   onClose,
 }: {
   member: MemberRow;
+  editBlocked: string | null;
   onClose: () => void;
 }) {
+  const [editing, setEditing] = useState(false);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
@@ -327,6 +422,16 @@ function MemberProfileModal({
         </div>
 
         <div className="max-h-[70vh] space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
+          {editing ? (
+            <MemberEditForm member={member} onCancel={() => setEditing(false)} onSaved={onClose} />
+          ) : (
+          <>
+          <Section title="Contact">
+            <Field label="Phone" value={display(member.phone)} />
+            <Field label="Preferred contact" value={display(member.preferredContactMethod)} />
+            {member.bio && <Field label="Bio" value={member.bio} full />}
+          </Section>
+
           <Section title="Academic">
             <Field label="Major" value={display(member.major)} />
             <Field label="Minor" value={display(member.minor)} />
@@ -409,9 +514,19 @@ function MemberProfileModal({
               />
             </Section>
           )}
+          </>
+          )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
+          {!editing && editBlocked && (
+            <p className="mr-auto text-xs text-slate-500">{editBlocked}</p>
+          )}
+          {!editing && !editBlocked && (
+            <button type="button" onClick={() => setEditing(true)} className="btn-primary cursor-pointer">
+              Edit profile
+            </button>
+          )}
           <button
             type="button"
             onClick={onClose}

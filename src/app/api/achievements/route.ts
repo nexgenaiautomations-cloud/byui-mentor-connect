@@ -11,6 +11,14 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const targetId = url.searchParams.get("studentId") ?? me.id;
 
+  if (targetId !== me.id && me.isAdmin) {
+    // Admins may look up students at their own school only.
+    const { adminScopeFor, emailInScopeJs } = await import("@/lib/admin-scope");
+    const { emailForUser } = await import("@/lib/admin-scope-server");
+    if (!emailInScopeJs(await emailForUser(targetId), adminScopeFor(me)!)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
   if (targetId !== me.id) {
     // Authorization handled inline rather than in the lib so the lib stays
     // pure DB and reusable from server components.

@@ -77,6 +77,7 @@ export async function maybeCreateAutoLogs(
         meetingDate: now,
         meetingType: "other",
         topicsDiscussed: WEEKLY_AUTO_LOG_TOPIC,
+        eventKind: "system_event",
       })
       .onConflictDoNothing()
       .returning({ id: meetingLogs.id });
@@ -117,6 +118,7 @@ export async function maybeCreateAutoLogs(
         meetingDate: now,
         meetingType: "other",
         topicsDiscussed: MONTHLY_AUTO_LOG_TOPIC,
+        eventKind: "system_event",
       })
       .onConflictDoNothing()
       .returning({ id: meetingLogs.id });

@@ -3,7 +3,8 @@ import { z } from "zod";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { matches, users } from "@/db/schema";
-import { requireAdmin } from "@/lib/session";
+import { requireAdminScope } from "@/lib/admin-scope-server";
+import { emailInScopeJs } from "@/lib/admin-scope";
 import { auditEvent } from "@/lib/audit";
 import { sameSchool } from "@/lib/school-scope";
 
@@ -26,9 +27,9 @@ type Pair = z.infer<typeof pairSchema>;
 //   - the mentor would exceed their declared capacity
 // so a single failure inside Match All doesn't roll the whole batch back.
 export async function POST(req: Request) {
-  const adminOrResp = await requireAdmin(req);
-  if (adminOrResp instanceof Response) return adminOrResp;
-  const admin = adminOrResp;
+  const auth = await requireAdminScope(req);
+  if (auth instanceof Response) return auth;
+  const { admin, scope } = auth;
   const parsed = bodySchema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
       .from(users)
       .where(eq(users.id, p.menteeId))
       .limit(1);
-    if (!mentee || !sameSchool(mentor.email, mentee.email) || !sameSchool(admin.email, mentor.email)) {
+    if (!mentee || !sameSchool(mentor.email, mentee.email) || !emailInScopeJs(mentor.email, scope)) {
       skipped.push({ ...p, reason: "Mentor and mentee must be at your school" });
       continue;
     }

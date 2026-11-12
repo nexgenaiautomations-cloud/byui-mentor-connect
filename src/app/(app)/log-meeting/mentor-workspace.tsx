@@ -40,7 +40,8 @@ export function MentorWorkspace({
       : matches[0]?.id ?? "";
   const [matchId, setMatchId] = useState(firstId);
   const [logs, setLogs] = useState<RemoteLog[]>([]);
-  const [loading, setLoading] = useState(false);
+  // Starts true: the first fetch begins on mount.
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const selectedMatch = useMemo(
@@ -48,25 +49,34 @@ export function MentorWorkspace({
     [matches, matchId]
   );
 
-  const fetchLogs = useCallback(async () => {
+  // Bumping reloadKey re-runs the fetch effect (initial load, Refresh, and
+  // after a save). The `ignore` flag drops responses from superseded runs.
+  const [reloadKey, setReloadKey] = useState(0);
+  const fetchLogs = useCallback(() => {
     setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/meeting-logs");
-      if (!res.ok) throw new Error("Failed to load activity");
-      const body = await res.json();
-      setLogs(body.logs ?? []);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load activity");
-    } finally {
-      setLoading(false);
-    }
+    setReloadKey((k) => k + 1);
   }, []);
 
-  // Initial + after any save/edit/delete: re-fetch.
   useEffect(() => {
-    void fetchLogs();
-  }, [fetchLogs]);
+    let ignore = false;
+    fetch("/api/meeting-logs")
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to load activity");
+        const body = await res.json();
+        if (ignore) return;
+        setLogs(body.logs ?? []);
+        setError(null);
+      })
+      .catch((e) => {
+        if (!ignore) setError(e instanceof Error ? e.message : "Failed to load activity");
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [reloadKey]);
 
   // Logs for the currently-selected mentee — covers logs the mentor created,
   // ones the student self-logged, and system goal-met events.
@@ -113,7 +123,7 @@ export function MentorWorkspace({
           </div>
           <button
             type="button"
-            onClick={() => void fetchLogs()}
+            onClick={fetchLogs}
             disabled={loading}
             className="text-[11px] font-bold uppercase tracking-wider text-brand hover:underline disabled:opacity-40 cursor-pointer"
             aria-label="Refresh activity"

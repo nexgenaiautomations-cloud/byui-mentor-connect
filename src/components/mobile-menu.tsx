@@ -45,6 +45,7 @@ function buildNav(
       { href: "/admin/applications", label: "Applications" },
       { href: "/admin/matches", label: "Matches" },
       { href: "/admin/matchmaker", label: "Matchmaker" },
+      { href: "/admin/interventions", label: "Interventions" },
       { href: "/admin/meetings", label: "Meetings" }
     );
     if (isHeadAdmin) {
@@ -76,10 +77,12 @@ export function MobileMenu({
   const pathname = usePathname() || "/";
   const { primary, admin } = buildNav(activeRole, user.isHeadAdmin);
 
-  // Close on route change
-  useEffect(() => {
+  // Close on route change (compared during render, not in an effect).
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   // Lock body scroll while drawer is open
   useEffect(() => {

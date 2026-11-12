@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { mentorApplications, users, matches, requests, meetingLogs } from "@/db/schema";
-import { desc, eq, sql } from "drizzle-orm";
+import { mentorApplications, users, matches, meetingLogs } from "@/db/schema";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
 import { ApplicationActions } from "./actions";
 
@@ -11,6 +12,8 @@ export default async function AdminPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
+  // School boundary: program admins see only their school (src/lib/admin-scope.ts).
+  const scope = adminScopeFor(me)!;
 
   const apps = await db
     .select({
@@ -28,16 +31,17 @@ export default async function AdminPage() {
     })
     .from(mentorApplications)
     .innerJoin(users, eq(users.id, mentorApplications.userId))
+    .where(emailInScope(users.email, scope))
     .orderBy(desc(mentorApplications.submittedAt));
 
   const [counts] = await db
     .select({
-      members: sql<number>`(select count(*)::int from "user")`,
-      mentors: sql<number>`(select count(*)::int from "user" where is_mentor = true)`,
-      activeMatches: sql<number>`(select count(*)::int from "match" where status = 'active')`,
-      pendingRequests: sql<number>`(select count(*)::int from "request" where status = 'pending')`,
-      meetingLogs: sql<number>`(select count(*)::int from "meeting_log")`,
-      pendingApps: sql<number>`(select count(*)::int from "mentor_application" where status = 'pending')`,
+      members: sql<number>`(select count(*)::int from "user" where ${rawUserIdInScope('"user".id', scope)})`,
+      mentors: sql<number>`(select count(*)::int from "user" where is_mentor = true and ${rawUserIdInScope('"user".id', scope)})`,
+      activeMatches: sql<number>`(select count(*)::int from "match" where status = 'active' and ${rawUserIdInScope('"match".mentee_id', scope)})`,
+      pendingRequests: sql<number>`(select count(*)::int from "request" where status = 'pending' and ${rawUserIdInScope('"request".mentee_id', scope)})`,
+      meetingLogs: sql<number>`(select count(*)::int from "meeting_log" where event_kind = 'mentor_meeting' and ${rawUserIdInScope('"meeting_log".student_id', scope)})`,
+      pendingApps: sql<number>`(select count(*)::int from "mentor_application" where status = 'pending' and ${rawUserIdInScope('"mentor_application".user_id', scope)})`,
     })
     .from(sql`(select 1) as _t`);
 
@@ -49,7 +53,7 @@ export default async function AdminPage() {
       menteeId: matches.menteeId,
     })
     .from(matches)
-    .where(eq(matches.status, "active"))
+    .where(and(eq(matches.status, "active"), userIdInScope(matches.menteeId, scope)))
     .orderBy(desc(matches.startedAt))
     .limit(5);
 
@@ -60,6 +64,7 @@ export default async function AdminPage() {
       topicsDiscussed: meetingLogs.topicsDiscussed,
     })
     .from(meetingLogs)
+    .where(userIdInScope(meetingLogs.studentId, scope))
     .orderBy(desc(meetingLogs.createdAt))
     .limit(5);
 
@@ -76,7 +81,7 @@ export default async function AdminPage() {
       priorInternshipExperience: users.priorInternshipExperience,
     })
     .from(users)
-    .where(sql`${users.createdAt} > now() - interval '7 days'`)
+    .where(and(sql`${users.createdAt} > now() - interval '7 days'`, emailInScope(users.email, scope)))
     .orderBy(desc(users.createdAt))
     .limit(8);
 
@@ -93,12 +98,20 @@ export default async function AdminPage() {
             Program overview, mentor application review, recent activity.
           </p>
         </div>
-        <Link
-          href="/admin/analytics"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-brand-dark active:scale-[0.98] cursor-pointer"
-        >
-          Full analytics →
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/interventions" className="btn-outline min-h-[44px]">
+            Intervention Center
+          </Link>
+          <Link href="/admin/analytics/executive" className="btn-outline min-h-[44px]">
+            Executive summary
+          </Link>
+          <Link
+            href="/admin/analytics"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-brand-dark active:scale-[0.98] cursor-pointer"
+          >
+            Full analytics →
+          </Link>
+        </div>
       </header>
 
       <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
@@ -106,7 +119,7 @@ export default async function AdminPage() {
         <StatTile label="Mentors"      value={counts?.mentors ?? 0}        tone="emerald" hint="Approved" />
         <StatTile label="Matches"      value={counts?.activeMatches ?? 0}  tone="sky"     hint="Active" />
         <StatTile label="Requests"     value={counts?.pendingRequests ?? 0} tone="navy"    hint="Pending" />
-        <StatTile label="Meetings"     value={counts?.meetingLogs ?? 0}    tone="sky"     hint="All time" />
+        <StatTile label="Meetings"     value={counts?.meetingLogs ?? 0}    tone="sky"     hint="Mentor meetings" />
         <StatTile label="To review"    value={counts?.pendingApps ?? 0}    tone="amber"   hint="Applications" />
       </section>
 

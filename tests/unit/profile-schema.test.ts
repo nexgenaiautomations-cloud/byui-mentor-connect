@@ -45,6 +45,8 @@ describe("profile schema — image URL validation (security)", () => {
   it("rejects javascript: scheme — XSS prevention", () => {
     const r = profileSchema.safeParse({
       ...validBase,
+      // Deliberately a script URL: the test proves the schema rejects it.
+      // eslint-disable-next-line no-script-url
       image: "javascript:alert(1)",
     });
     expect(r.success).toBe(false);
