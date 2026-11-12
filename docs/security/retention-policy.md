@@ -20,6 +20,13 @@
 | **Neon point-in-time backups** | Neon plan tier (7 days free; longer on paid) | Disaster recovery |
 | **Resend email send logs** | Resend platform retention (~30 days) | Deliverability troubleshooting |
 | **Upstash rate-limit counters** | Sliding window (1 min — 1 hr depending on key) | Abuse mitigation; no longer-term value |
+| **Notification preferences** (`notification_preference`) | Life of the account (deleted with the user) | Honour opt-outs |
+| **Scheduled meetings** (`scheduled_meeting`) | Lifetime of match + 2 years (same as meeting logs) | Reminders, missed-meeting history |
+| **Notification delivery log** (`notification_delivery`) | 18 months, then delete | Idempotency, retry and ROI counts; holds no email content, only kind/status |
+| **Career milestones** (`career_milestone`) | Lifetime of participation + 2 years; student can delete their own self-reported rows | Outcome reporting; no salary or financial data is collected |
+| **Intervention cases + trail** (`intervention`, `intervention_event`) | 3 years after the case closes | Accountability record of staff follow-up; notes are admin-only |
+| **Program settings** (`program_setting`) | Until changed | Configuration |
+| **Voice dictation** | Not stored. Audio never reaches ICAN; only the edited text the user submits is saved | Privacy by design |
 
 ## Audit log specifically
 

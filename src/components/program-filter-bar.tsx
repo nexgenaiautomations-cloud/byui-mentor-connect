@@ -102,7 +102,9 @@ export function AnalyticsCard({
   footnote?: string;
 }) {
   return (
-    <section className="card">
+    // min-w-0: grid items otherwise refuse to shrink below a wide table's
+    // width, which pushed the page sideways on phones.
+    <section className="card min-w-0">
       <h2 className="font-display text-base font-bold text-plum-800">{title}</h2>
       {subtitle && <p className="mt-0.5 text-xs text-slate-600">{subtitle}</p>}
       <div className="mt-4">{children}</div>
