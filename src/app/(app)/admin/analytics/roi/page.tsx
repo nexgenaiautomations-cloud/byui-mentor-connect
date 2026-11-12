@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { adminScopeFor } from "@/lib/admin-scope";
-import { loadProgramData, loadRoiTracked, parseProgramFilters } from "@/lib/effectiveness-server";
+import { deliveriesByMonth, loadProgramData, loadRoiTracked, parseProgramFilters } from "@/lib/effectiveness-server";
+import { markPartialLast, roiByMonth } from "@/lib/analytics-series";
+import { lastMonthKeys } from "@/lib/effectiveness";
+import { AreaTrend, LineTrend } from "@/components/analytics-charts";
+import { CHART_COLORS } from "@/lib/chart-colors";
 import { getRoiAssumptions } from "@/lib/program-settings-server";
 import { resolveRange } from "@/lib/reports";
 import { computeRoi } from "@/lib/program-report";
@@ -34,6 +38,14 @@ export default async function RoiPage({ searchParams }: { searchParams: Promise<
   const data = await loadProgramData(scope, filters);
   const [tracked, assumptions] = await Promise.all([loadRoiTracked(scope, data, range), getRoiAssumptions(scope.school)]);
   const roi = computeRoi(tracked, assumptions);
+  const now = new Date();
+  const months = lastMonthKeys(now, 12);
+  const deliveries = await deliveriesByMonth(data, new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1)));
+  const trend = markPartialLast(
+    roiByMonth(data.logs, deliveries, months, assumptions.minutesPerReminder, assumptions.minutesPerFollowUp),
+    now,
+    months[months.length - 1]
+  );
   const q = filterQuery(filters, range);
 
   const trackedRows: [string, string | number, string?][] = [
@@ -107,6 +119,65 @@ export default async function RoiPage({ searchParams }: { searchParams: Promise<
               <li key={f}>{f}</li>
             ))}
           </ul>
+        </AnalyticsCard>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <AnalyticsCard title="Measured mentorship hours" subtitle="Tracked: minutes logged on mentor meetings and touchpoints, per month" footnote="A floor — some meetings are logged without a duration.">
+          <AreaTrend
+            title="Logged mentorship hours by month"
+            format="hours"
+            data={trend}
+            series={[{ key: "hours", label: "Logged hours", color: CHART_COLORS.plum }]}
+            emptyText="No meeting durations logged in the last 12 months."
+          />
+        </AnalyticsCard>
+        <AnalyticsCard title="Automated reminders and follow-ups" subtitle="Tracked: emails actually delivered per month (dry runs excluded)">
+          <AreaTrend
+            title="Automated emails delivered by month"
+            stacked
+            data={trend}
+            series={[
+              { key: "reminders", label: "Reminders", color: CHART_COLORS.sky },
+              { key: "followups", label: "Follow-ups", color: CHART_COLORS.violet },
+            ]}
+            emptyText="No reminders sent yet — they start when notifications go live."
+          />
+        </AnalyticsCard>
+        <AnalyticsCard
+          title="Estimated administrative time saved"
+          subtitle="Estimate: cumulative staff hours the automated emails replaced"
+          footnote={`Estimate = reminders × ${assumptions.minutesPerReminder} min + follow-ups × ${assumptions.minutesPerFollowUp} min. Change the assumptions below.`}
+        >
+          <AreaTrend
+            title="Estimated staff hours saved, cumulative"
+            format="hours"
+            data={trend}
+            series={[{ key: "cumulativeSavedHours", label: "Estimated hours saved (cumulative)", color: CHART_COLORS.amber }]}
+            emptyText="No automated emails delivered yet, so there is nothing to estimate."
+          />
+        </AnalyticsCard>
+        <AnalyticsCard
+          title="Observed activity vs modeled value"
+          subtitle="Tracked mentorship hours next to estimated staff hours saved, per month"
+          footnote="Solid purple is recorded data; amber is a model built on your assumptions, not an audited figure."
+        >
+          <LineTrend
+            title="Tracked mentorship hours and estimated staff hours saved by month"
+            format="hours"
+            data={trend}
+            series={[
+              { key: "hours", label: "Tracked mentorship hours", color: CHART_COLORS.plum },
+              // No modeled line until there is something to model — a flat
+              // estimate of 0 would read as a measured result.
+              ...(trend.some((t) => t.savedHours > 0)
+                ? [{ key: "savedHours", label: "Estimated staff hours saved", color: CHART_COLORS.amber }]
+                : []),
+            ]}
+          />
+          {!trend.some((t) => t.savedHours > 0) && (
+            <p className="mt-2 text-xs text-slate-600">The estimate line appears once automated reminders are being delivered.</p>
+          )}
         </AnalyticsCard>
       </div>
 

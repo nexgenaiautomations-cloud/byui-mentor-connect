@@ -147,93 +147,6 @@ export function MonthlyLine({
   );
 }
 
-export function MonthlyBars({
-  points,
-  color = "#0F766E",
-  format,
-  compact = false,
-}: {
-  points: Pt[];
-  color?: string;
-  format?: (n: number) => string;
-  compact?: boolean;
-}) {
-  if (points.length === 0) {
-    return <div className="text-xs text-slate-500">No data</div>;
-  }
-
-  if (compact) return <Sparkline points={points} color={color} kind="bar" />;
-
-  const top = niceTop(Math.max(...points.map((p) => p.value), 1));
-  const plotH = FULL.bottom - FULL.top;
-  const colW = FULL_PLOT_W / points.length;
-  const barW = colW * 0.7;
-  const padX = (colW - barW) / 2;
-  const last = points[points.length - 1];
-  const labelIdx = pickLabelIndices(points.length);
-  const gridYs = [0, top / 2, top];
-
-  return (
-    <div>
-      <svg
-        viewBox={`0 0 100 ${FULL.height}`}
-        preserveAspectRatio="xMidYMid meet"
-        className="block h-36 w-full"
-      >
-        {gridYs.map((v, i) => {
-          const y = FULL.top + (1 - v / top) * plotH;
-          return (
-            <g key={i}>
-              <line
-                x1={FULL.left}
-                x2={FULL.right}
-                y1={y}
-                y2={y}
-                stroke="#E2E8F0"
-                strokeWidth="0.3"
-              />
-              <text
-                x={FULL.left - 1.5}
-                y={y + 1}
-                textAnchor="end"
-                fontSize="3"
-                fill="#94A3B8"
-                fontFamily="Inter, ui-sans-serif, system-ui"
-              >
-                {formatY(v, format)}
-              </text>
-            </g>
-          );
-        })}
-        {points.map((p, i) => {
-          const h = (p.value / top) * plotH;
-          const x = FULL.left + i * colW + padX;
-          const y = FULL.bottom - h;
-          return <rect key={i} x={x} y={y} width={barW} height={h} fill={color} rx={0.4} />;
-        })}
-        {points.map((p, i) =>
-          labelIdx.has(i) ? (
-            <text
-              key={i}
-              x={FULL.left + i * colW + colW / 2}
-              y={FULL.bottom + 5}
-              textAnchor="middle"
-              fontSize="3.2"
-              fill="#64748B"
-              fontFamily="Inter, ui-sans-serif, system-ui"
-            >
-              {p.label}
-            </text>
-          ) : null
-        )}
-      </svg>
-      <p className="mt-1 text-right text-[11px] font-semibold text-slate-600">
-        {(format ?? ((n: number) => String(n)))(last.value)} this month
-      </p>
-    </div>
-  );
-}
-
 // Minimal sparkline — no axes, no labels — for use inside MoMTile etc. We
 // fill the whole viewBox so the chart shape is the only signal.
 function Sparkline({
@@ -350,58 +263,6 @@ export function HBarList({
   );
 }
 
-// Compact donut showing one part vs. whole.
-export function Donut({
-  value,
-  total,
-  size = 96,
-  color = "#4A2585",
-  trackColor = "#E2E8F0",
-  label,
-}: {
-  value: number;
-  total: number;
-  size?: number;
-  color?: string;
-  trackColor?: string;
-  label?: string;
-}) {
-  const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
-  const r = 16;
-  const c = 2 * Math.PI * r;
-  const dash = (pct / 100) * c;
-  return (
-    <div className="flex items-center gap-3">
-      <svg width={size} height={size} viewBox="0 0 40 40" className="block">
-        <circle cx="20" cy="20" r={r} fill="none" stroke={trackColor} strokeWidth={5} />
-        <circle
-          cx="20"
-          cy="20"
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth={5}
-          strokeDasharray={`${dash} ${c}`}
-          strokeLinecap="round"
-          transform="rotate(-90 20 20)"
-        />
-        <text
-          x="20"
-          y="22"
-          textAnchor="middle"
-          fontSize="9"
-          fontWeight="800"
-          fill="#0f172a"
-          fontFamily="Inter, ui-sans-serif, system-ui"
-        >
-          {pct}%
-        </text>
-      </svg>
-      {label && <span className="text-xs font-medium text-slate-600">{label}</span>}
-    </div>
-  );
-}
-
 // "+12% MoM" pill with arrow direction.
 export function DeltaPill({
   current,
@@ -448,127 +309,20 @@ export function DeltaPill({
 // Same no-dependency approach as above: plain markup, server-renderable.
 // ---------------------------------------------------------------------------
 
-// Rate bars where a value can be suppressed (null) for small groups. Each
-// row shows the numerator/denominator so a "100%" of 1 reads honestly.
-export function RateBars({
-  rows,
-  color = "#4A2585",
-  emptyText = "No data yet",
-}: {
-  rows: { label: string; pct: number | null; num: number; den: number; note?: string }[];
-  color?: string;
-  emptyText?: string;
-}) {
-  if (rows.length === 0) return <p className="text-xs text-slate-500">{emptyText}</p>;
-  return (
-    <ul className="space-y-2.5">
-      {rows.map((r) => (
-        <li key={r.label}>
-          <div className="flex items-start justify-between gap-3 text-xs">
-            <span className="min-w-0 break-words font-medium text-slate-700">{r.label}</span>
-            <span className="shrink-0 font-semibold text-slate-900">
-              {r.pct === null ? (
-                <span className="text-slate-500" title="Not enough data to show a reliable rate">—</span>
-              ) : (
-                `${r.pct}%`
-              )}
-              <span className="ml-1 font-normal text-slate-500">
-                ({r.num}/{r.den})
-              </span>
-            </span>
-          </div>
-          <div className="mt-1 h-1.5 rounded-full bg-slate-100" aria-hidden>
-            {r.pct !== null && (
-              <div className="h-1.5 rounded-full" style={{ width: `${Math.max(2, r.pct)}%`, background: color }} />
-            )}
-          </div>
-          {r.note && <p className="mt-0.5 text-[10px] text-slate-500">{r.note}</p>}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-// Group x month heatmap. Cells carry the value AND n as text (not color
-// alone), and the table is a real <table> so screen readers can navigate it.
-export function Heatmap({
-  rows,
-  columns,
-  caption,
-}: {
-  rows: { group: string; cells: { month: string; active: number; engaged: number; pct: number | null }[] }[];
-  columns: { key: string; label: string }[];
-  caption: string;
-}) {
-  if (rows.length === 0) return <p className="text-xs text-slate-500">No mentorship pairs in this view yet.</p>;
-  const tone = (pct: number | null) =>
-    pct === null
-      ? "bg-slate-50 text-slate-500"
-      : pct >= 75
-        ? "bg-emerald-600 text-white"
-        : pct >= 50
-          ? "bg-emerald-200 text-emerald-950"
-          : pct >= 25
-            ? "bg-amber-200 text-amber-950"
-            : "bg-rose-200 text-rose-950";
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-separate border-spacing-1 text-xs">
-        <caption className="sr-only">{caption}</caption>
-        <thead>
-          <tr>
-            <th scope="col" className="text-left font-semibold text-slate-600">Group</th>
-            {columns.map((c) => (
-              <th key={c.key} scope="col" className="min-w-[52px] text-center font-semibold text-slate-600">
-                {c.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.group}>
-              <th scope="row" className="whitespace-nowrap pr-2 text-left font-medium text-slate-800">{r.group}</th>
-              {r.cells.map((c) => (
-                <td
-                  key={c.month}
-                  className={`rounded-md px-1 py-1.5 text-center ${tone(c.active ? c.pct : null)}`}
-                  title={c.active ? `${c.engaged} of ${c.active} pairs interacted` : "No active pairs"}
-                >
-                  {c.active ? (
-                    <>
-                      <span className="block font-bold">{c.pct}%</span>
-                      <span className="block text-[10px] opacity-80">n={c.active}</span>
-                    </>
-                  ) : (
-                    "·"
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="mt-2 flex flex-wrap gap-3 text-[10px] text-slate-600">
-        <span><span className="mr-1 inline-block h-2 w-3 rounded-sm bg-emerald-600 align-middle" />75%+ of pairs interacted</span>
-        <span><span className="mr-1 inline-block h-2 w-3 rounded-sm bg-emerald-200 align-middle" />50–74%</span>
-        <span><span className="mr-1 inline-block h-2 w-3 rounded-sm bg-amber-200 align-middle" />25–49%</span>
-        <span><span className="mr-1 inline-block h-2 w-3 rounded-sm bg-rose-200 align-middle" />under 25%</span>
-      </p>
-    </div>
-  );
-}
-
 // Stage funnel: each bar is unique students, width relative to the first
 // stage, with step conversion shown alongside.
-export function Funnel({ steps }: { steps: { label: string; value: number }[] }) {
+// `conversionFrom`: the first step whose "% of the step above" is meaningful.
+// Earlier stages (exploring, preparing) are optional, so converting from them
+// would show nonsense like 337%; a share above 100% is never shown.
+export function Funnel({ steps, conversionFrom = 1 }: { steps: { label: string; value: number }[]; conversionFrom?: number }) {
   if (steps.every((s) => s.value === 0)) return <p className="text-xs text-slate-500">No career updates in this view yet.</p>;
   const max = Math.max(...steps.map((s) => s.value), 1);
   return (
     <ol className="space-y-2">
       {steps.map((s, i) => {
         const prev = i > 0 ? steps[i - 1].value : null;
-        const conv = prev ? Math.round((s.value / prev) * 100) : null;
+        const raw = i > conversionFrom && prev ? Math.round((s.value / prev) * 100) : null;
+        const conv = raw !== null && raw <= 100 ? raw : null;
         return (
           <li key={s.label} className="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-2 text-xs">
             <span className="font-medium text-slate-700">{s.label}</span>
@@ -578,7 +332,7 @@ export function Funnel({ steps }: { steps: { label: string; value: number }[] })
                 style={{ width: `${Math.max(s.value ? 3 : 0, Math.round((s.value / max) * 100))}%` }}
               />
             </span>
-            <span className="w-20 text-right font-semibold text-slate-900">
+            <span className="w-24 text-right font-semibold tabular-nums text-slate-900" title={conv !== null ? `${conv}% of the step above` : undefined}>
               {s.value}
               {conv !== null && <span className="ml-1 font-normal text-slate-500">({conv}%)</span>}
             </span>

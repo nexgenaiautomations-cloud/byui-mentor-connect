@@ -12,6 +12,24 @@ export async function listMilestones(studentId: string) {
     .orderBy(desc(careerMilestones.occurredOn), desc(careerMilestones.createdAt));
 }
 
+// Dates of logged applications (for the pipeline trend), one per log.
+export async function applicationLogDates(studentIds: string[]): Promise<Date[]> {
+  if (!studentIds.length) return [];
+  const rows = await db
+    .select({ topics: meetingLogs.topicsDiscussed, at: meetingLogs.meetingDate })
+    .from(meetingLogs)
+    .where(
+      and(
+        sql`${meetingLogs.topicsDiscussed} ilike '%appl%'`,
+        eq(meetingLogs.isSystemGenerated, false),
+        inArray(meetingLogs.studentId, studentIds)
+      )
+    );
+  return rows
+    .filter((r) => (r.topics ?? "").split(" · ").some((p) => keyForLabel(p.trim()) === "apply_internship"))
+    .map((r) => r.at);
+}
+
 // Students who logged "Applied to an internship or job" (any role wording)
 // — an applying signal from existing activity logs, counted per student.
 export async function applicationLogCounts(studentIds?: string[]): Promise<Map<string, number>> {

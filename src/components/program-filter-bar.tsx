@@ -28,7 +28,7 @@ export function ProgramFilterBar({
       {isPlatform && (
         <label className={label}>
           School
-          <select name="school" defaultValue={filters.school} className={select}>
+          <select name="school" aria-label="School" defaultValue={filters.school} className={select}>
             <option value="">All schools</option>
             {options.schools.map((s) => (
               <option key={s} value={s}>{s}</option>
@@ -38,7 +38,7 @@ export function ProgramFilterBar({
       )}
       <label className={label}>
         Department
-        <select name="department" defaultValue={filters.department} className={select}>
+        <select name="department" aria-label="Department" defaultValue={filters.department} className={select}>
           <option value="">All</option>
           {DEPARTMENT_OPTIONS.map((d) => (
             <option key={d} value={d}>{d}</option>
@@ -47,7 +47,7 @@ export function ProgramFilterBar({
       </label>
       <label className={label}>
         Major
-        <select name="major" defaultValue={filters.major} className={select}>
+        <select name="major" aria-label="Major" defaultValue={filters.major} className={select}>
           <option value="">All</option>
           {options.majors.map((m) => (
             <option key={m} value={m}>{m}</option>
@@ -56,7 +56,7 @@ export function ProgramFilterBar({
       </label>
       <label className={label}>
         Pod
-        <select name="pod" defaultValue={filters.pod} className={select}>
+        <select name="pod" aria-label="Pod" defaultValue={filters.pod} className={select}>
           <option value="">All</option>
           {options.pods.map((p) => (
             <option key={p} value={p}>{p}</option>
@@ -65,7 +65,7 @@ export function ProgramFilterBar({
       </label>
       <label className={label}>
         Cohort (joined)
-        <select name="cohort" defaultValue={filters.cohort} className={select}>
+        <select name="cohort" aria-label="Cohort (joined)" defaultValue={filters.cohort} className={select}>
           <option value="">All</option>
           {options.cohorts.map((c) => (
             <option key={c} value={c}>{c}</option>
@@ -75,7 +75,7 @@ export function ProgramFilterBar({
       {showRange && range && (
         <label className={label}>
           Period
-          <select name="range" defaultValue={range.preset === "custom" ? "last_90" : range.preset} className={select}>
+          <select name="range" aria-label="Period" defaultValue={range.preset === "custom" ? "last_90" : range.preset} className={select}>
             {RANGE_PRESETS.filter((p) => p.value !== "custom").map((p) => (
               <option key={p.value} value={p.value}>{p.label}</option>
             ))}

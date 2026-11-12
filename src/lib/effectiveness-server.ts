@@ -278,3 +278,46 @@ export async function loadRoiTracked(scope: AdminScope, data: ProgramData, range
     casesResolved: resolved[0]?.n ?? 0,
   };
 }
+
+// ---- Chart series loaders (aggregated in SQL, school-scoped) ----
+
+// Sent reminders vs follow-ups per month, for pairs in scope.
+export async function deliveriesByMonth(data: ProgramData, since: Date) {
+  const matchIds = data.matches.map((m) => m.id);
+  if (!matchIds.length) return [] as { month: string; kind: "reminder" | "followup"; n: number }[];
+  const rows = await db
+    .select({
+      month: sql<string>`to_char(date_trunc('month', ${notificationDeliveries.createdAt}), 'YYYY-MM')`,
+      kind: notificationDeliveries.kind,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(notificationDeliveries)
+    .where(
+      and(
+        eq(notificationDeliveries.status, "sent"),
+        inArray(notificationDeliveries.matchId, matchIds),
+        gte(notificationDeliveries.createdAt, since)
+      )
+    )
+    .groupBy(sql`1`, notificationDeliveries.kind);
+  return rows.map((r) => ({
+    month: r.month,
+    kind: (FOLLOW_UP_KINDS.includes(r.kind) ? "followup" : "reminder") as "reminder" | "followup",
+    n: r.n,
+  }));
+}
+
+// Intervention cases opened per month, by risk reason (a case can carry
+// several reasons, so this counts reason occurrences).
+export async function interventionReasonsByMonth(scope: AdminScope, since: Date) {
+  const rows = await db
+    .select({
+      month: sql<string>`to_char(date_trunc('month', ${interventions.openedAt}), 'YYYY-MM')`,
+      reason: sql<string>`unnest(${interventions.reasons})`,
+    })
+    .from(interventions)
+    .where(and(gte(interventions.openedAt, since), scope.school ? eq(interventions.school, scope.school) : sql`true`));
+  const out = new Map<string, number>();
+  for (const r of rows) out.set(`${r.reason}|${r.month}`, (out.get(`${r.reason}|${r.month}`) ?? 0) + 1);
+  return out;
+}

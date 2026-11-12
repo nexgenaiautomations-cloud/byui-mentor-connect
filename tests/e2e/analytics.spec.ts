@@ -24,11 +24,11 @@ test.describe("Analytics", () => {
   test("filters apply through the URL and survive a reload", async ({ page }) => {
     await signIn(page, ACCOUNTS.admin);
     await page.goto("/admin/analytics/effectiveness");
-    await page.getByLabel("Department").selectOption("Accounting");
+    await page.getByRole("combobox", { name: "Department", exact: true }).selectOption("Accounting");
     await page.getByRole("button", { name: "Apply filters" }).click();
     await expect(page).toHaveURL(/department=Accounting/);
     await page.reload();
-    await expect(page.getByLabel("Department")).toHaveValue("Accounting");
+    await expect(page.getByRole("combobox", { name: "Department", exact: true })).toHaveValue("Accounting");
   });
 
   for (const v of VIEWS) {

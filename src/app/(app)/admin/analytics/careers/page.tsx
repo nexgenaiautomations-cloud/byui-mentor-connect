@@ -5,7 +5,7 @@ import { users } from "@/db/schema";
 import { getCurrentUser } from "@/lib/session";
 import { adminScopeFor } from "@/lib/admin-scope";
 import { loadProgramData, parseProgramFilters } from "@/lib/effectiveness-server";
-import { applicationLogCounts } from "@/lib/career-server";
+import { applicationLogCounts, applicationLogDates } from "@/lib/career-server";
 import { resolveRange } from "@/lib/reports";
 import {
   CAREER_STAGES,
@@ -14,13 +14,16 @@ import {
   STAGE_LABEL,
   countOffers,
   funnelUniqueStudents,
-  studentsByCurrentStage,
   type OpportunityType,
 } from "@/lib/career";
 import { K_ANON, rate } from "@/lib/effectiveness";
 import { AnalyticsTabs } from "@/components/analytics-tabs";
 import { AnalyticsCard, ProgramFilterBar, filterQuery } from "@/components/program-filter-bar";
-import { Funnel, HBarList, RateBars } from "@/components/charts";
+import { Funnel } from "@/components/charts";
+import { AreaTrend, Bars, HeatmapChart, LineTrend } from "@/components/analytics-charts";
+import { CHART_COLORS } from "@/lib/chart-colors";
+import { markPartialLast, pipelineByMonth, stageHeatmap } from "@/lib/analytics-series";
+import { lastMonthKeys, monthLabel } from "@/lib/effectiveness";
 import { StatTile } from "@/components/stat-card";
 import { VerifyButton } from "./verify-button";
 
@@ -39,9 +42,16 @@ export default async function CareerOutcomesPage({ searchParams }: { searchParam
   const data = await loadProgramData(scope, filters);
 
   const inRange = data.milestones.filter((m) => m.occurredOn >= range.start && m.occurredOn < range.end);
-  const appCounts = await applicationLogCounts(data.students.map((s) => s.id));
+  const [appCounts, appDates] = await Promise.all([
+    applicationLogCounts(data.students.map((s) => s.id)),
+    applicationLogDates(data.students.map((s) => s.id)),
+  ]);
+  const now = new Date();
+  const months = lastMonthKeys(now, 12);
+  const pipeline = markPartialLast(pipelineByMonth(data.milestones, appDates, months), now, months[months.length - 1]);
+  const stageMonths = lastMonthKeys(now, 6);
+  const stages = stageHeatmap(data.milestones, stageMonths);
   const funnel = funnelUniqueStudents(inRange, [...appCounts.keys()]);
-  const current = studentsByCurrentStage(data.milestones);
   const offers = countOffers(inRange);
   const verifiedOffers = countOffers(inRange.filter((m) => m.verification === "verified"));
   const totalOffers = OPPORTUNITY_TYPES.reduce((s, t) => s + offers[t], 0);
@@ -49,8 +59,6 @@ export default async function CareerOutcomesPage({ searchParams }: { searchParam
   const started = new Set(inRange.filter((m) => m.stage === "started").map((m) => m.studentId)).size;
   const reporting = new Set(data.milestones.map((m) => m.studentId)).size;
 
-  // Events (not students) in the period, kept separate from the funnel.
-  const eventsByStage = CAREER_STAGES.map((s) => ({ label: STAGE_LABEL[s], value: inRange.filter((m) => m.stage === s).length }));
 
   // By major, suppressed below k.
   const withOffer = new Set(
@@ -65,7 +73,7 @@ export default async function CareerOutcomesPage({ searchParams }: { searchParam
     .sort((a, b) => b[1].length - a[1].length)
     .map(([major, ids]) => {
       const r = rate(ids.filter((id) => withOffer.has(id)).length, ids.length, K_ANON);
-      return { label: major, ...r, note: ids.length < K_ANON ? `Fewer than ${K_ANON} students — hidden for privacy` : undefined };
+      return { label: major, ...r };
     });
 
   // Offers awaiting verification (names are fine here: admins already see
@@ -103,16 +111,71 @@ export default async function CareerOutcomesPage({ searchParams }: { searchParam
 
       <div className="grid gap-6 lg:grid-cols-2">
         <AnalyticsCard
-          title="Career funnel"
-          subtitle="Unique students who reached each stage in the period (conversion from the step above)"
-          footnote="Counts students, not events. Reaching a later stage implies the stages from 'Actively applying' up to it. 'Applying' also includes students who logged an application in their activity log."
+          title="Career progression funnel"
+          subtitle="Unique students who reached each stage in the period"
+          footnote="Counts students, not events. Reaching a later stage implies the stages from 'Actively applying' up to it; 'applying' also includes students who logged an application. Exploring and preparing are optional, so conversion starts at applying."
         >
-          <Funnel steps={CAREER_STAGES.map((s) => ({ label: STAGE_LABEL[s], value: funnel[s] }))} />
+          <Funnel conversionFrom={2} steps={CAREER_STAGES.map((s) => ({ label: STAGE_LABEL[s], value: funnel[s] }))} />
         </AnalyticsCard>
-        <AnalyticsCard title="Students by current stage" subtitle="Each student's most recent update, all time">
-          <HBarList rows={CAREER_STAGES.map((s) => ({ label: STAGE_LABEL[s], value: current[s] })).filter((r) => r.value > 0)} />
+        <AnalyticsCard title="Applications and interviews" subtitle="Per month, from career updates and logged applications">
+          <AreaTrend
+            title="Applications and interviews by month"
+            data={pipeline}
+            series={[
+              { key: "applications", label: "Applications", color: CHART_COLORS.plum },
+              { key: "interviews", label: "Interviews", color: CHART_COLORS.sky },
+            ]}
+          />
         </AnalyticsCard>
-        <AnalyticsCard title="Offers by type" subtitle="Each offer counted once, in period" footnote="An acceptance linked to an offer is not a second offer. Verified = confirmed by a program admin.">
+        <AnalyticsCard title="Internship vs job outcomes" subtitle="Offers reported per month, by type (each offer once)">
+          <AreaTrend
+            title="Offers by type and month"
+            stacked
+            data={pipeline}
+            series={[
+              { key: "internship", label: "Internship", color: CHART_COLORS.plum },
+              { key: "part_time", label: "Part-time", color: CHART_COLORS.violet },
+              { key: "full_time", label: "Full-time", color: CHART_COLORS.emerald },
+            ]}
+            emptyText="No offers reported in the last 12 months."
+          />
+        </AnalyticsCard>
+        <AnalyticsCard
+          title="Offers reported vs verified"
+          subtitle="Verified = confirmed by a program admin"
+          footnote="Self-reported offers are counted but kept separate from verified ones in every report."
+        >
+          <LineTrend
+            title="Offers reported and verified by month"
+            data={pipeline.map((p) => ({ label: p.label, reported: p.internship + p.part_time + p.full_time, verified: p.verified }))}
+            series={[
+              { key: "reported", label: "Reported", color: CHART_COLORS.plum },
+              { key: "verified", label: "Verified", color: CHART_COLORS.emerald },
+            ]}
+            emptyText="No offers reported in the last 12 months."
+          />
+        </AnalyticsCard>
+      </div>
+
+      <AnalyticsCard
+        title="Stage progression over time"
+        subtitle="Students by their most recent career stage at the end of each month"
+        footnote="Shows how the cohort moves through the pipeline. A student appears in one stage per month."
+      >
+        <HeatmapChart
+          title="Students by current career stage and month"
+          rowHeader="Stage"
+          format="count"
+          scale="purple"
+          columns={stageMonths.map((k) => monthLabel(k))}
+          rows={stages.map((r) => ({ label: STAGE_LABEL[r.stage], cells: r.cells.map((v) => ({ value: v })) }))}
+          cellUnit="students"
+          emptyText="No career updates yet."
+        />
+      </AnalyticsCard>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <AnalyticsCard title="Offers by type" subtitle="Each offer counted once, in period" footnote="An acceptance linked to an offer is not a second offer.">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-slate-600">
@@ -125,18 +188,22 @@ export default async function CareerOutcomesPage({ searchParams }: { searchParam
               {OPPORTUNITY_TYPES.map((t) => (
                 <tr key={t} className="border-t border-slate-100">
                   <td className="py-1.5">{OPPORTUNITY_LABEL[t]}</td>
-                  <td className="py-1.5 text-right font-semibold">{offers[t]}</td>
-                  <td className="py-1.5 text-right">{verifiedOffers[t]}</td>
+                  <td className="py-1.5 text-right font-semibold tabular-nums">{offers[t]}</td>
+                  <td className="py-1.5 text-right tabular-nums">{verifiedOffers[t]}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </AnalyticsCard>
-        <AnalyticsCard title="Updates in the period" subtitle="Events, not students — one student can report several">
-          <HBarList rows={eventsByStage.filter((r) => r.value > 0)} color="#7C3AED" />
-        </AnalyticsCard>
         <AnalyticsCard title="Students with an offer, by major" subtitle="In period" footnote={`Majors with fewer than ${K_ANON} students are hidden so no one can be identified.`}>
-          <RateBars rows={byMajor} />
+          <Bars
+            title="Share of students with an offer by major"
+            horizontal
+            showValues
+            format="percent"
+            data={byMajor.map((m) => ({ label: `${m.label} (n=${m.den})`, value: m.pct }))}
+            series={[{ key: "value", label: "Have an offer", color: CHART_COLORS.emerald }]}
+          />
         </AnalyticsCard>
       </div>
 

@@ -7,7 +7,9 @@ import { getCurrentUser } from "@/lib/session";
 import { AnalyticsTabs } from "@/components/analytics-tabs";
 import { adminScopeFor, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
-import { MonthlyLine, MonthlyBars, HBarList, Donut, DeltaPill } from "@/components/charts";
+import { MonthlyLine, HBarList, DeltaPill } from "@/components/charts";
+import { AreaTrend, LineTrend } from "@/components/analytics-charts";
+import { CHART_COLORS } from "@/lib/chart-colors";
 
 export const dynamic = "force-dynamic";
 
@@ -368,25 +370,39 @@ export default async function AnalyticsPage() {
 
       {/* Trends */}
       <section className="grid gap-4 lg:grid-cols-2">
-        <ChartCard title="Requests submitted" subtitle="By month, last 12">
-          <MonthlyBars points={requestsSeries} color="#8B5CF6" />
-        </ChartCard>
-        <ChartCard title="Requests accepted" subtitle="By month, last 12">
-          <MonthlyBars points={acceptedSeries} color="#0F766E" />
-        </ChartCard>
-        <ChartCard title="Meeting minutes" subtitle="Total time logged per month">
-          <MonthlyLine
-            points={minutesSeries}
-            color="#4C1D95"
-            format={(n) => `${Math.round(n / 60)}h`}
-            unit=""
+        <ChartCard title="Mentor requests" subtitle="Submitted and accepted per month, last 12">
+          <AreaTrend
+            title="Mentor requests submitted and accepted by month"
+            data={requestsSeries.map((r, i) => ({ label: r.label, submitted: r.value, accepted: acceptedSeries[i]?.value ?? 0 }))}
+            series={[
+              { key: "submitted", label: "Submitted", color: CHART_COLORS.violet },
+              { key: "accepted", label: "Accepted", color: CHART_COLORS.emerald },
+            ]}
           />
         </ChartCard>
-        <ChartCard title="Avg feedback rating" subtitle="Mentee + mentor monthly check-ins">
-          <MonthlyLine
-            points={ratingSeries}
-            color="#6D28D9"
-            format={(n) => n.toFixed(2)}
+        <ChartCard title="Mentorship hours" subtitle="Time logged on meetings and touchpoints per month">
+          <AreaTrend
+            title="Mentorship hours logged by month"
+            format="hours"
+            data={minutesSeries.map((m) => ({ label: m.label, hours: Math.round((m.value / 60) * 10) / 10 }))}
+            series={[{ key: "hours", label: "Hours", color: CHART_COLORS.plum }]}
+          />
+        </ChartCard>
+        <ChartCard title="Average check-in rating" subtitle="Mentee + mentor monthly check-ins (1–5); months without check-ins are gaps">
+          <LineTrend
+            title="Average check-in rating by month"
+            format="decimal"
+            data={ratingSeries.map((r) => ({ label: r.label, rating: r.value || null }))}
+            series={[{ key: "rating", label: "Average rating", color: CHART_COLORS.plum }]}
+            emptyText="No check-ins in the last 12 months."
+          />
+        </ChartCard>
+        <ChartCard title="Request acceptance rate" subtitle={`${overallAcceptance}% of ${totalReq12} requests accepted in the last year; months without requests are gaps`}>
+          <LineTrend
+            title="Mentor request acceptance rate by month"
+            format="percent"
+            data={acceptanceRateSeries.map((r, i) => ({ label: r.label, rate: (requestsSeries[i]?.value ?? 0) > 0 ? r.value : null }))}
+            series={[{ key: "rate", label: "Accepted", color: CHART_COLORS.emerald }]}
           />
         </ChartCard>
       </section>
@@ -396,13 +412,19 @@ export default async function AnalyticsPage() {
         <div className="card">
           <h3 className="font-display text-base font-bold text-plum-800">Capacity utilization</h3>
           <p className="mt-1 text-xs text-slate-500">Active matches vs total mentor capacity</p>
-          <div className="mt-3 flex items-center gap-4">
-            <Donut value={capFilled} total={Math.max(1, capTotal)} color="#6D28D9" />
-            <div className="text-sm">
-              <p className="font-display text-2xl font-black text-plum-800">
-                {capFilled}<span className="text-base font-medium text-slate-500"> / {capTotal}</span>
-              </p>
-              <p className="text-xs text-slate-500">slots filled</p>
+          <div className="mt-3">
+            <p className="font-display text-2xl font-black text-plum-800">
+              {capFilled}<span className="text-base font-medium text-slate-600"> / {capTotal} slots filled</span>
+            </p>
+            <div
+              className="mt-2 h-2.5 overflow-hidden rounded-full bg-slate-100"
+              role="meter"
+              aria-label="Mentor capacity used"
+              aria-valuemin={0}
+              aria-valuemax={capTotal}
+              aria-valuenow={capFilled}
+            >
+              <div className="h-full rounded-full bg-plum-600" style={{ width: `${capTotal ? Math.min(100, (capFilled / capTotal) * 100) : 0}%` }} />
             </div>
           </div>
         </div>
@@ -462,28 +484,8 @@ export default async function AnalyticsPage() {
         </ChartCard>
       </section>
 
-      {/* Overall acceptance + activity feed */}
-      <section className="grid gap-4 lg:grid-cols-[1fr_2fr]">
-        <div className="card">
-          <h3 className="font-display text-base font-bold text-plum-800">Acceptance rate (12 mo)</h3>
-          <p className="mt-1 text-xs text-slate-500">
-            Of {totalReq12} requests submitted in the last year
-          </p>
-          <div className="mt-3 flex items-center gap-4">
-            <Donut value={totalAcc12} total={Math.max(1, totalReq12)} color="#6D28D9" />
-            <div className="text-sm">
-              <p className="font-display text-2xl font-black text-plum-800">
-                {overallAcceptance}%
-              </p>
-              <p className="text-xs text-slate-500">{totalAcc12} accepted</p>
-            </div>
-          </div>
-          <div className="mt-4">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Monthly rate</p>
-            <MonthlyLine points={acceptanceRateSeries} color="#6D28D9" format={(n) => `${n}%`} />
-          </div>
-        </div>
-
+      {/* Activity feed */}
+      <section>
         <div className="card">
           <h3 className="font-display text-base font-bold text-plum-800">Recent activity</h3>
           <ul className="mt-3 space-y-2 text-sm">
