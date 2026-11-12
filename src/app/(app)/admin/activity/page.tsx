@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { matches, meetingLogs, monthlyFeedback, users } from "@/db/schema";
+import { meetingLogs, monthlyFeedback, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 import { desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";

@@ -77,10 +77,12 @@ export function MobileMenu({
   const pathname = usePathname() || "/";
   const { primary, admin } = buildNav(activeRole, user.isHeadAdmin);
 
-  // Close on route change
-  useEffect(() => {
+  // Close on route change (compared during render, not in an effect).
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   // Lock body scroll while drawer is open
   useEffect(() => {

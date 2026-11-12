@@ -4,7 +4,7 @@ import { meetingLogs, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 import { desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
-import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
+import { adminScopeFor, emailInScope, rawUserIdInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
 
 export default async function AdminMeetingsPage() {

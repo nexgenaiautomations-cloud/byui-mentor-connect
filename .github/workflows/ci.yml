@@ -1,20 +1,13 @@
-# Required status checks for pull requests into master.
+# Required status checks for pull requests into master: lint, typecheck,
+# unit tests and a production build. All four run with NO secrets and NO
+# database (the DB client falls back to a placeholder URL at build time, and
+# every page is rendered on demand), confirmed by building with .env.local
+# removed.
 #
-# Scope is deliberately limited to what runs correctly with NO secrets and
-# NO database: type checking and the unit suite. Both were confirmed green
-# on a clean checkout with every env var unset before this workflow was
-# wired up as a required check.
-#
-# Deliberately NOT here:
-#   * E2E / Playwright and the accessibility scanner — both need a running
-#     server and a live database. Those are covered by the Vercel preview
-#     deployment on each PR, and are run locally before merge. Making them
-#     required here would mean either shipping database credentials into CI
-#     or a permanently red gate.
-#   * `next lint` — removed in Next 16, so the existing `lint` script is
-#     broken. Left alone rather than silently swapped for something else.
-#   * `next build` — needs environment variables to succeed; the Vercel
-#     preview build is the real signal and already blocks nothing else.
+# Deliberately NOT here: Playwright E2E and the accessibility scanner. They
+# need a running server and a seeded, isolated database (a Neon branch), and
+# CI must never hold credentials for the production database. Run them
+# locally against a disposable branch — see tests/e2e/README.md.
 name: CI
 
 on:
@@ -32,6 +25,8 @@ concurrency:
 
 jobs:
   verify:
+    # Job name kept so the existing branch-protection "required check" keeps
+    # matching; it now also lints and builds.
     name: Typecheck and unit tests
     runs-on: ubuntu-latest
     steps:
@@ -45,8 +40,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
       - name: Typecheck
         run: npm run typecheck
 
       - name: Unit tests
         run: npm test
+
+      - name: Production build
+        run: npm run build
+        env:
+          # Builds must never need real secrets; a missing var must not be
+          # papered over with a production value.
+          NEXT_TELEMETRY_DISABLED: "1"

@@ -1,25 +1,13 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/db/client";
-import {
-  meetingLogs,
-  monthlyFeedback,
-  matches,
-  requests,
-  users,
-} from "@/db/schema";
+import { meetingLogs, matches, requests, users } from "@/db/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { AnalyticsTabs } from "@/components/analytics-tabs";
 import { adminScopeFor, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
-import {
-  MonthlyLine,
-  MonthlyBars,
-  HBarList,
-  Donut,
-  DeltaPill,
-} from "@/components/charts";
+import { MonthlyLine, MonthlyBars, HBarList, Donut, DeltaPill } from "@/components/charts";
 
 export const dynamic = "force-dynamic";
 
@@ -170,7 +158,6 @@ export default async function AnalyticsPage() {
   const thisMonth = meetingsSeries[meetingsSeries.length - 1]?.value ?? 0;
   const lastMonth = meetingsSeries[meetingsSeries.length - 2]?.value ?? 0;
   const ratingThis = ratingSeries[ratingSeries.length - 1]?.value ?? 0;
-  const ratingPrev = ratingSeries[ratingSeries.length - 2]?.value ?? 0;
   const accThis = acceptanceRateSeries[acceptanceRateSeries.length - 1]?.value ?? 0;
   const accPrev = acceptanceRateSeries[acceptanceRateSeries.length - 2]?.value ?? 0;
   const membersThis = newMembersSeries[newMembersSeries.length - 1]?.value ?? 0;

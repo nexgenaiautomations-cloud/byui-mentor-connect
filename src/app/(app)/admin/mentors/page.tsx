@@ -3,7 +3,7 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
-import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
+import { adminScopeFor, emailInScope } from "@/lib/admin-scope";
 import { ManageUserButton } from "@/components/manage-user-button";
 import { currentRole } from "@/lib/user-admin";
 

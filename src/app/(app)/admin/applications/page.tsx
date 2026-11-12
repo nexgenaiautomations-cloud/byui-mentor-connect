@@ -3,7 +3,7 @@ import { db } from "@/db/client";
 import { mentorApplications, users } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
-import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
+import { adminScopeFor, emailInScope } from "@/lib/admin-scope";
 import { ApplicationActions } from "../actions";
 import { EmptyState } from "@/components/empty-state";
 

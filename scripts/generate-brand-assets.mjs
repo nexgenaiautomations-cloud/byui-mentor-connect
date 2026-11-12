@@ -20,7 +20,6 @@ const GOLD = "#E9C46A";
 // Wordmark face: Cinzel (OFL, Google Fonts) — classical Roman capitals.
 // Rendered as outlined paths so the PNGs don't depend on installed fonts.
 const CINZEL = opentype.loadSync(resolve(process.cwd(), "scripts/fonts/Cinzel.ttf"));
-const FONT = "'Arial Black', 'Segoe UI Black', Arial, Helvetica, sans-serif";
 
 // Centered, letter-spaced text as an SVG path in the Cinzel face.
 function cinzel(text, cx, baseline, size, tracking = 0, fill = "#ffffff") {

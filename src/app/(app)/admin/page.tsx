@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { mentorApplications, users, matches, requests, meetingLogs } from "@/db/schema";
+import { mentorApplications, users, matches, meetingLogs } from "@/db/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";

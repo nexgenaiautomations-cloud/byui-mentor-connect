@@ -5,6 +5,7 @@
 // text lands in the normal (editable) textarea. Browsers without the API
 // get a short note and keep typing as usual.
 import { useEffect, useRef, useState } from "react";
+import { useClientValue } from "@/lib/use-client-value";
 import {
   appendTranscript,
   dictationErrorMessage,
@@ -21,19 +22,19 @@ export function DictationButton({
   onChange: (next: string) => void;
   label?: string;
 }) {
-  const [supported, setSupported] = useState<boolean | null>(null);
+  // null during SSR/hydration so server and first client render match.
+  const supported = useClientValue<boolean | null>(() => getRecognitionCtor(window) !== null, null);
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
   const [error, setError] = useState("");
   const recRef = useRef<RecognitionLike | null>(null);
   // Latest value without re-binding the recognition handlers.
   const valueRef = useRef(value);
-  valueRef.current = value;
-
   useEffect(() => {
-    setSupported(getRecognitionCtor(typeof window === "undefined" ? undefined : window) !== null);
-    return () => recRef.current?.abort();
-  }, []);
+    valueRef.current = value;
+  }, [value]);
+
+  useEffect(() => () => recRef.current?.abort(), []);
 
   function start() {
     const Ctor = getRecognitionCtor(window);

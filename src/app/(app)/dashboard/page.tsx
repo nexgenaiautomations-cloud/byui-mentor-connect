@@ -101,11 +101,6 @@ export default async function DashboardPage() {
     .orderBy(desc(matches.startedAt))
     .limit(4);
 
-  const [mentorCount] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(users)
-    .where(and(eq(users.isMentor, true), eq(users.mentorAvailable, true)));
-
   // Mentor impact metrics. People helped = distinct mentees the mentor has
   // ever been matched with; career accomplishments = sum of " · "-separated
   // items in topics_discussed across all logs (matches how the log form

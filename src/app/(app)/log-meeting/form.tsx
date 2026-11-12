@@ -15,8 +15,17 @@ import {
 } from "@/components/celebration";
 import { DictationButton } from "@/components/dictation-button";
 import { suggestAccomplishments } from "@/lib/dictation";
+import { useClientValue } from "@/lib/use-client-value";
 
 type LogKind = "mentor_meeting" | "touchpoint" | "independent_activity";
+
+function browserTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Denver";
+  } catch {
+    return "America/Denver";
+  }
+}
 
 // What the log is. Mentors log meetings or quick touchpoints; members log
 // their own activity, or (when they have a mentor) a meeting/touchpoint.
@@ -74,7 +83,8 @@ type MenteeProps = {
 export function LogActivityForm(props: MentorProps | MenteeProps) {
   const router = useRouter();
   const isMentor = props.mode === "mentor";
-  const matches = isMentor ? props.matches : [];
+  const mentorMatches = isMentor ? props.matches : null;
+  const matches = useMemo(() => mentorMatches ?? [], [mentorMatches]);
   const preselect =
     isMentor && props.initialMatchId && matches.some((m) => m.id === props.initialMatchId)
       ? props.initialMatchId
@@ -98,15 +108,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
   const [kind, setKind] = useState<LogKind>(isMentor ? "mentor_meeting" : "independent_activity");
   const isInteraction = kind !== "independent_activity";
   // The browser's zone, so a meeting time means what the user meant.
-  const [timeZone, setTimeZone] = useState("America/Denver");
-  useEffect(() => {
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (tz) setTimeZone(tz);
-    } catch {
-      // keep default
-    }
-  }, []);
+  const timeZone = useClientValue(browserTimeZone, "America/Denver");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);

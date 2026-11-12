@@ -4,14 +4,9 @@ import { matches, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 import { desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
-import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
+import { adminScopeFor, emailInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
-import {
-  ActiveMatchesTable,
-  EndedMatchesTable,
-  type ActiveMatchRow,
-  type EndedMatchRow,
-} from "./matches-table";
+import { ActiveMatchesTable, EndedMatchesTable, type ActiveMatchRow, type EndedMatchRow } from "./matches-table";
 
 function daysSince(d: Date) {
   return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));

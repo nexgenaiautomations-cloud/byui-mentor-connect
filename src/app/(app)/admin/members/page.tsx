@@ -3,7 +3,7 @@ import { db } from "@/db/client";
 import { mentorApplications, users } from "@/db/schema";
 import { desc, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
-import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
+import { adminScopeFor, emailInScope, userIdInScope } from "@/lib/admin-scope";
 import { MembersTable, type MemberRow } from "./members-table";
 
 export default async function AdminMembersPage() {

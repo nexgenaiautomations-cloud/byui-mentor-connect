@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useClientValue, useHydrated } from "@/lib/use-client-value";
 
 export type PendingRequest = {
   id: string;
@@ -17,13 +18,12 @@ export type PendingRequest = {
 
 const DISMISS_KEY = "pending-popup-dismissed-ids";
 
-function readDismissed(): Set<string> {
-  if (typeof window === "undefined") return new Set();
+// Raw string so it's a stable snapshot for useSyncExternalStore.
+function readDismissedRaw(): string {
   try {
-    const raw = sessionStorage.getItem(DISMISS_KEY);
-    return new Set<string>(raw ? JSON.parse(raw) : []);
+    return sessionStorage.getItem(DISMISS_KEY) ?? "[]";
   } catch {
-    return new Set();
+    return "[]";
   }
 }
 
@@ -41,14 +41,22 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<null | "accepted" | "declined" | "error">(null);
-  const [hydrated, setHydrated] = useState(false);
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const hydrated = useHydrated();
+  // Dismissals persist for the browser session (sessionStorage) plus any
+  // made on this page view.
+  const storedDismissed = useClientValue(readDismissedRaw, "[]");
+  const [localDismissed, setLocalDismissed] = useState<Set<string>>(new Set());
+  const dismissed = useMemo(() => {
+    const out = new Set(localDismissed);
+    try {
+      for (const id of JSON.parse(storedDismissed) as string[]) out.add(id);
+    } catch {
+      // ignore malformed storage
+    }
+    return out;
+  }, [storedDismissed, localDismissed]);
   const [confirmingDecline, setConfirmingDecline] = useState(false);
 
-  useEffect(() => {
-    setDismissed(readDismissed());
-    setHydrated(true);
-  }, []);
 
   // Lock body scroll while open. Skip on small screens where the popup is
   // already full-bleed and scrolling the underlying page isn't needed.
@@ -72,7 +80,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
   function dismissCurrent() {
     const next = new Set(dismissed);
     next.add(current.id);
-    setDismissed(next);
+    setLocalDismissed(next);
     writeDismissed(next);
     setResult(null);
     setConfirmingDecline(false);

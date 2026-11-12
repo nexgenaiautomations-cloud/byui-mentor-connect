@@ -52,7 +52,7 @@ test.describe("Landing page", () => {
     await expect(page.getByRole("button", { name: /Send to the ICAN team/i })).toBeVisible();
   });
 
-  test("captures mobile screenshot", async ({ page, browserName }, testInfo) => {
+  test("captures mobile screenshot", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === "desktop-chromium", "desktop covered elsewhere");
     await page.goto("/");
     await page.waitForLoadState("networkidle");
