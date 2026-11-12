@@ -37,7 +37,9 @@ export async function GET(req: Request) {
   const data = await loadProgramData(scope, filters);
   const header = `ICAN ${report} report — ${scope.school ?? "all schools"} — ${range.from} to ${range.to}`;
   const filterNote: [string, string][] = Object.entries(filters)
-    .filter(([, v]) => v)
+    // The school actually applied is in the header; never echo a requested
+    // school that wasn't honoured.
+    .filter(([k, v]) => v && k !== "school")
     .map(([k, v]) => [`Filter: ${k}`, v]);
 
   let csv: string;

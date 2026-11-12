@@ -2,8 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { mentorApplications, users, matches, requests, meetingLogs } from "@/db/schema";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
 import { ApplicationActions } from "./actions";
 
@@ -11,6 +12,8 @@ export default async function AdminPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
+  // School boundary: program admins see only their school (src/lib/admin-scope.ts).
+  const scope = adminScopeFor(me)!;
 
   const apps = await db
     .select({
@@ -28,16 +31,17 @@ export default async function AdminPage() {
     })
     .from(mentorApplications)
     .innerJoin(users, eq(users.id, mentorApplications.userId))
+    .where(emailInScope(users.email, scope))
     .orderBy(desc(mentorApplications.submittedAt));
 
   const [counts] = await db
     .select({
-      members: sql<number>`(select count(*)::int from "user")`,
-      mentors: sql<number>`(select count(*)::int from "user" where is_mentor = true)`,
-      activeMatches: sql<number>`(select count(*)::int from "match" where status = 'active')`,
-      pendingRequests: sql<number>`(select count(*)::int from "request" where status = 'pending')`,
-      meetingLogs: sql<number>`(select count(*)::int from "meeting_log" where event_kind = 'mentor_meeting')`,
-      pendingApps: sql<number>`(select count(*)::int from "mentor_application" where status = 'pending')`,
+      members: sql<number>`(select count(*)::int from "user" where ${rawUserIdInScope('"user".id', scope)})`,
+      mentors: sql<number>`(select count(*)::int from "user" where is_mentor = true and ${rawUserIdInScope('"user".id', scope)})`,
+      activeMatches: sql<number>`(select count(*)::int from "match" where status = 'active' and ${rawUserIdInScope('"match".mentee_id', scope)})`,
+      pendingRequests: sql<number>`(select count(*)::int from "request" where status = 'pending' and ${rawUserIdInScope('"request".mentee_id', scope)})`,
+      meetingLogs: sql<number>`(select count(*)::int from "meeting_log" where event_kind = 'mentor_meeting' and ${rawUserIdInScope('"meeting_log".student_id', scope)})`,
+      pendingApps: sql<number>`(select count(*)::int from "mentor_application" where status = 'pending' and ${rawUserIdInScope('"mentor_application".user_id', scope)})`,
     })
     .from(sql`(select 1) as _t`);
 
@@ -49,7 +53,7 @@ export default async function AdminPage() {
       menteeId: matches.menteeId,
     })
     .from(matches)
-    .where(eq(matches.status, "active"))
+    .where(and(eq(matches.status, "active"), userIdInScope(matches.menteeId, scope)))
     .orderBy(desc(matches.startedAt))
     .limit(5);
 
@@ -60,6 +64,7 @@ export default async function AdminPage() {
       topicsDiscussed: meetingLogs.topicsDiscussed,
     })
     .from(meetingLogs)
+    .where(userIdInScope(meetingLogs.studentId, scope))
     .orderBy(desc(meetingLogs.createdAt))
     .limit(5);
 
@@ -76,7 +81,7 @@ export default async function AdminPage() {
       priorInternshipExperience: users.priorInternshipExperience,
     })
     .from(users)
-    .where(sql`${users.createdAt} > now() - interval '7 days'`)
+    .where(and(sql`${users.createdAt} > now() - interval '7 days'`, emailInScope(users.email, scope)))
     .orderBy(desc(users.createdAt))
     .limit(8);
 

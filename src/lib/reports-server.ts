@@ -3,10 +3,12 @@ import { and, eq, gte, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { matches, meetingLogs, pods, requests, users } from "@/db/schema";
 import { logPoints } from "@/lib/pods";
+import { emailInScope, userIdInScope, type AdminScope } from "@/lib/admin-scope";
 import { departmentOf, type ReportRole, type ReportRow, type ResolvedRange } from "@/lib/reports";
 
 // One row per active (not removed) user with their activity inside the range.
-export async function loadReport(range: ResolvedRange) {
+// Every query is restricted to the caller's school (src/lib/admin-scope.ts).
+export async function loadReport(range: ResolvedRange, scope: AdminScope) {
   const [people, logs, menteeCounts, matchesStarted, requestsMade] = await Promise.all([
     db
       .select({
@@ -23,7 +25,7 @@ export async function loadReport(range: ResolvedRange) {
       })
       .from(users)
       .leftJoin(pods, eq(pods.id, users.podId))
-      .where(isNull(users.deactivatedAt)),
+      .where(and(isNull(users.deactivatedAt), emailInScope(users.email, scope))),
     db
       .select({
         studentId: meetingLogs.studentId,
@@ -32,20 +34,20 @@ export async function loadReport(range: ResolvedRange) {
         isSystemGenerated: meetingLogs.isSystemGenerated,
       })
       .from(meetingLogs)
-      .where(and(gte(meetingLogs.meetingDate, range.start), lt(meetingLogs.meetingDate, range.end))),
+      .where(and(gte(meetingLogs.meetingDate, range.start), lt(meetingLogs.meetingDate, range.end), userIdInScope(meetingLogs.studentId, scope))),
     db
       .select({ mentorId: matches.mentorId, n: sql<number>`count(*)::int` })
       .from(matches)
-      .where(eq(matches.status, "active"))
+      .where(and(eq(matches.status, "active"), userIdInScope(matches.menteeId, scope)))
       .groupBy(matches.mentorId),
     db
       .select({ n: sql<number>`count(*)::int` })
       .from(matches)
-      .where(and(gte(matches.startedAt, range.start), lt(matches.startedAt, range.end))),
+      .where(and(gte(matches.startedAt, range.start), lt(matches.startedAt, range.end), userIdInScope(matches.menteeId, scope))),
     db
       .select({ n: sql<number>`count(*)::int` })
       .from(requests)
-      .where(and(gte(requests.requestedAt, range.start), lt(requests.requestedAt, range.end))),
+      .where(and(gte(requests.requestedAt, range.start), lt(requests.requestedAt, range.end), userIdInScope(requests.menteeId, scope))),
   ]);
 
   const mentees = new Map(menteeCounts.map((r) => [r.mentorId, r.n]));

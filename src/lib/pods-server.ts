@@ -3,6 +3,7 @@ import { and, eq, gte, isNotNull, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { meetingLogs, pods, users } from "@/db/schema";
 import { currentMonthStart, logPoints, rankPods } from "@/lib/pods";
+import { sameSchoolAs } from "@/lib/school-scope";
 
 // Put everyone without a pod into the pod for their major, creating major
 // pods as needed. Idempotent and cheap; run before showing the leaderboard.
@@ -36,14 +37,17 @@ export async function listPods() {
 }
 
 // This month's standings: every pod with its members' points.
-export async function monthlyLeaderboard(now = new Date()) {
+// Scoped to one school: pods are shared by major name across schools, so
+// without this a member would see other schools' students on the board.
+export async function monthlyLeaderboard(viewerEmail: string, now = new Date()) {
+  const inSchool = sameSchoolAs(viewerEmail);
   const since = currentMonthStart(now);
   const [allPods, members, logs] = await Promise.all([
     listPods(),
     db
       .select({ id: users.id, name: users.name, image: users.image, podId: users.podId })
       .from(users)
-      .where(and(isNotNull(users.podId), isNull(users.deactivatedAt))),
+      .where(and(isNotNull(users.podId), isNull(users.deactivatedAt), inSchool)),
     db
       .select({
         studentId: meetingLogs.studentId,
@@ -51,7 +55,13 @@ export async function monthlyLeaderboard(now = new Date()) {
         isSystemGenerated: meetingLogs.isSystemGenerated,
       })
       .from(meetingLogs)
-      .where(and(gte(meetingLogs.meetingDate, since), sql`${meetingLogs.meetingDate} <= ${now}`)),
+      .where(
+        and(
+          gte(meetingLogs.meetingDate, since),
+          sql`${meetingLogs.meetingDate} <= ${now}`,
+          sql`${meetingLogs.studentId} in (select "id" from "user" where ${inSchool})`
+        )
+      ),
   ]);
 
   const pointsByUser = new Map<string, number>();

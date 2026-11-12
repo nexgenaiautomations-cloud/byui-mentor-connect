@@ -4,12 +4,15 @@ import { meetingLogs, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 import { desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
 
 export default async function AdminMeetingsPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
+  // School boundary: program admins see only their school (src/lib/admin-scope.ts).
+  const scope = adminScopeFor(me)!;
 
   // Mentor join is LEFT so mentee-self-logs (no mentor) and system-generated
   // logs still appear. Student join is INNER on studentId since every row
@@ -35,16 +38,17 @@ export default async function AdminMeetingsPage() {
     .from(meetingLogs)
     .leftJoin(mentor, eq(mentor.id, meetingLogs.mentorId))
     .innerJoin(student, eq(student.id, meetingLogs.studentId))
+    .where(emailInScope(student.email, scope))
     .orderBy(desc(meetingLogs.meetingDate))
     .limit(100);
 
   const [totals] = await db
     .select({
-      total: sql<number>`(select count(*)::int from "meeting_log" where is_system_generated = false)`,
-      totalMinutes: sql<number>`(select coalesce(sum(duration_minutes), 0)::int from "meeting_log" where event_kind in ('mentor_meeting','touchpoint'))`,
-      thisMonth: sql<number>`(select count(*)::int from "meeting_log" where is_system_generated = false and meeting_date >= now() - interval '30 days')`,
-      selfLogged: sql<number>`(select count(*)::int from "meeting_log" where created_by = 'mentee')`,
-      systemLogged: sql<number>`(select count(*)::int from "meeting_log" where is_system_generated = true)`,
+      total: sql<number>`(select count(*)::int from "meeting_log" where is_system_generated = false and ${rawUserIdInScope('"meeting_log".student_id', scope)})`,
+      totalMinutes: sql<number>`(select coalesce(sum(duration_minutes), 0)::int from "meeting_log" where event_kind in ('mentor_meeting','touchpoint') and ${rawUserIdInScope('"meeting_log".student_id', scope)})`,
+      thisMonth: sql<number>`(select count(*)::int from "meeting_log" where is_system_generated = false and meeting_date >= now() - interval '30 days' and ${rawUserIdInScope('"meeting_log".student_id', scope)})`,
+      selfLogged: sql<number>`(select count(*)::int from "meeting_log" where created_by = 'mentee' and ${rawUserIdInScope('"meeting_log".student_id', scope)})`,
+      systemLogged: sql<number>`(select count(*)::int from "meeting_log" where is_system_generated = true and ${rawUserIdInScope('"meeting_log".student_id', scope)})`,
     })
     .from(sql`(select 1) as _t`);
 

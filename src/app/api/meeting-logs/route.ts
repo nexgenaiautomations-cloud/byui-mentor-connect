@@ -11,6 +11,8 @@ import {
 import { evaluateAchievementsForStudent } from "@/lib/achievements";
 import { maybeCreateAutoLogs } from "@/lib/auto-logs";
 import { resolveEventKind } from "@/lib/engagement";
+import { adminScopeFor, emailInScopeJs } from "@/lib/admin-scope";
+import { emailForUser } from "@/lib/admin-scope-server";
 import { afterLogWrite } from "@/lib/engagement-server";
 import { isValidTimeZone, parseHHMM } from "@/lib/schedule";
 
@@ -151,8 +153,11 @@ export async function POST(req: Request) {
     if (!match) {
       return NextResponse.json({ error: "Match not found" }, { status: 404 });
     }
-    // Allow mentor (owner) or admin to log on behalf of the mentee.
-    if (match.mentorId !== me.id && !me.isAdmin) {
+    // Allow mentor (owner) or an admin AT THE SAME SCHOOL to log on behalf
+    // of the mentee.
+    const adminInScope =
+      me.isAdmin && emailInScopeJs(await emailForUser(match.menteeId), adminScopeFor(me)!);
+    if (match.mentorId !== me.id && !adminInScope) {
       return NextResponse.json(
         { error: "Only the mentor can log activity for this match" },
         { status: 403 }

@@ -13,3 +13,7 @@ drizzle/meta
 
 .vercel
 .env*.local
+
+# Playwright output (may contain screenshots of real data)
+/tests/e2e-report/
+/test-results/

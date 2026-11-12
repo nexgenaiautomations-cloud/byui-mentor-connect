@@ -10,6 +10,8 @@ import {
 } from "@/lib/possible-actions";
 import { evaluateAchievementsForStudent } from "@/lib/achievements";
 import { resolveEventKind } from "@/lib/engagement";
+import { adminScopeFor, emailInScopeJs } from "@/lib/admin-scope";
+import { emailForUser } from "@/lib/admin-scope-server";
 import { afterLogWrite, recomputeMatchEngagement } from "@/lib/engagement-server";
 import { isValidTimeZone, parseHHMM } from "@/lib/schedule";
 
@@ -59,7 +61,9 @@ export async function PATCH(
   //   - mentor: if log.mentorId === me.id OR they're the active mentor for
   //     log.studentId on any match
   //   - student: if log.studentId === me.id AND createdBy === 'mentee'
-  let allowed = me.isAdmin;
+  // Admins may edit logs for students at their own school only.
+  let allowed =
+    me.isAdmin && emailInScopeJs(await emailForUser(log.studentId), adminScopeFor(me)!);
   if (!allowed && log.mentorId === me.id) allowed = true;
   if (!allowed && log.studentId === me.id && log.createdBy === "mentee") {
     allowed = true;
@@ -188,7 +192,7 @@ export async function DELETE(
   }
 
   const allowed =
-    me.isAdmin ||
+    (me.isAdmin && emailInScopeJs(await emailForUser(log.studentId), adminScopeFor(me)!)) ||
     log.mentorId === me.id ||
     (log.studentId === me.id && log.createdBy === "mentee");
   if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });

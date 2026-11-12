@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { adminScopeFor } from "@/lib/admin-scope";
 import { auth } from "../../../auth";
 import { Sidebar, MobileBar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
@@ -37,7 +38,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let pendingIssues: PendingIssue[] = [];
   if (user.isAdmin) {
     try {
-      pendingIssues = (await pendingIssuesForAdmin(user.id)).map((i) => ({
+      pendingIssues = (await pendingIssuesForAdmin(user.id, adminScopeFor(user)!)).map((i) => ({
         id: i.id,
         categoryLabel: categoryLabel(i.category),
         message: i.message,

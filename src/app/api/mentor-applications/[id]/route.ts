@@ -4,7 +4,8 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { mentorApplications, users } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
-import { requireAdmin } from "@/lib/session";
+import { crossSchoolDenied, emailForUser, requireAdminScope } from "@/lib/admin-scope-server";
+import { emailInScopeJs } from "@/lib/admin-scope";
 import { auditEvent } from "@/lib/audit";
 
 const reviewSchema = z.object({
@@ -16,9 +17,9 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const adminOrResp = await requireAdmin(req);
-  if (adminOrResp instanceof Response) return adminOrResp;
-  const admin = adminOrResp;
+  const auth = await requireAdminScope(req);
+  if (auth instanceof Response) return auth;
+  const { admin, scope } = auth;
   const { id } = await params;
   const body = await req.json();
   const parsed = reviewSchema.safeParse(body);
@@ -32,6 +33,9 @@ export async function PATCH(
     .where(eq(mentorApplications.id, id))
     .limit(1);
   if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!emailInScopeJs(await emailForUser(app.userId), scope)) {
+    return crossSchoolDenied(admin, req, { route: "mentor-applications", applicationId: id });
+  }
 
   if (app.status !== "pending") {
     return NextResponse.json(

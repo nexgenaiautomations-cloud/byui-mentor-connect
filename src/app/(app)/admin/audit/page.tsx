@@ -4,6 +4,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db/client";
 import { auditEvents, users } from "@/db/schema";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, auditEventInScope } from "@/lib/admin-scope";
 
 const SEVERITY_TONE: Record<string, string> = {
   info: "bg-slate-100 text-slate-700",
@@ -25,6 +26,7 @@ export default async function AdminAuditPage({
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
+  const scope = adminScopeFor(me)!;
 
   const params = await searchParams;
   const filterType = params.eventType?.trim() || null;
@@ -73,7 +75,7 @@ export default async function AdminAuditPage({
     .from(auditEvents)
     .leftJoin(actor, eq(actor.id, auditEvents.actorUserId))
     .leftJoin(target, eq(target.id, auditEvents.targetUserId))
-    .where(conds.length ? and(...conds) : undefined)
+    .where(and(auditEventInScope(auditEvents.actorUserId, auditEvents.targetUserId, scope), ...conds))
     .orderBy(desc(auditEvents.createdAt))
     .limit(DEFAULT_LIMIT);
 

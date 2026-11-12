@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 import { ManageUserButton } from "@/components/manage-user-button";
 import { currentRole } from "@/lib/user-admin";
 
@@ -10,6 +11,8 @@ export default async function AdminMentorsPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
+  // School boundary: program admins see only their school (src/lib/admin-scope.ts).
+  const scope = adminScopeFor(me)!;
 
   const rows = await db
     .select({
@@ -30,7 +33,7 @@ export default async function AdminMentorsPage() {
       totalMeetings: sql<number>`(select count(*)::int from "meeting_log" where mentor_id = "user".id)`,
     })
     .from(users)
-    .where(eq(users.isMentor, true));
+    .where(and(eq(users.isMentor, true), emailInScope(users.email, scope)));
 
   return (
     <div className="space-y-6">

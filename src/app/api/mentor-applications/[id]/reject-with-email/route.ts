@@ -3,7 +3,8 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { mentorApplications, users } from "@/db/schema";
-import { requireAdmin } from "@/lib/session";
+import { crossSchoolDenied, emailForUser, requireAdminScope } from "@/lib/admin-scope-server";
+import { emailInScopeJs } from "@/lib/admin-scope";
 import { sendEmail } from "@/lib/email";
 import { buildRejectionEmail } from "@/lib/rejection-email";
 import { auditEvent } from "@/lib/audit";
@@ -18,9 +19,9 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const adminOrResp = await requireAdmin(req);
-  if (adminOrResp instanceof Response) return adminOrResp;
-  const admin = adminOrResp;
+  const auth = await requireAdminScope(req);
+  if (auth instanceof Response) return auth;
+  const { admin, scope } = auth;
   const { id } = await params;
 
   const parsed = schema.safeParse(await req.json());
@@ -41,6 +42,9 @@ export async function POST(
     .limit(1);
 
   if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!emailInScopeJs(await emailForUser(app.userId), scope)) {
+    return crossSchoolDenied(admin, req, { route: "mentor-applications", applicationId: id });
+  }
   if (app.status !== "pending") {
     return NextResponse.json(
       { error: `Application is already ${app.status}` },

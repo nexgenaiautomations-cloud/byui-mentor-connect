@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { mentorApplications, users } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 import { ApplicationActions } from "../actions";
 import { EmptyState } from "@/components/empty-state";
 
@@ -10,6 +11,8 @@ export default async function AdminApplicationsPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
+  // School boundary: program admins see only their school (src/lib/admin-scope.ts).
+  const scope = adminScopeFor(me)!;
 
   const apps = await db
     .select({
@@ -28,6 +31,7 @@ export default async function AdminApplicationsPage() {
     })
     .from(mentorApplications)
     .innerJoin(users, eq(users.id, mentorApplications.userId))
+    .where(emailInScope(users.email, scope))
     .orderBy(desc(mentorApplications.submittedAt));
 
   const pending = apps.filter((a) => a.status === "pending");

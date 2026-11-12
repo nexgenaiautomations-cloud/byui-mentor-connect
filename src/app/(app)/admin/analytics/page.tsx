@@ -11,6 +11,7 @@ import {
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { AnalyticsTabs } from "@/components/analytics-tabs";
+import { adminScopeFor, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
 import {
   MonthlyLine,
@@ -52,6 +53,19 @@ export default async function AnalyticsPage() {
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
 
+  // School boundary (src/lib/admin-scope.ts). Every raw query below reads
+  // from these school-filtered row sets instead of the whole table, so the
+  // counts and charts never include another school's students.
+  const scope = adminScopeFor(me)!;
+  const T = {
+    user: sql`(select * from "user" where ${rawUserIdInScope('"user".id', scope)})`,
+    request: sql`(select * from "request" where ${rawUserIdInScope('"request".mentee_id', scope)})`,
+    match: sql`(select * from "match" where ${rawUserIdInScope('"match".mentee_id', scope)})`,
+    meeting_log: sql`(select * from "meeting_log" where ${rawUserIdInScope('"meeting_log".student_id', scope)})`,
+    monthly_feedback: sql`(select * from "monthly_feedback" where ${rawUserIdInScope('"monthly_feedback".submitted_by_user_id', scope)})`,
+    mentor_application: sql`(select * from "mentor_application" where ${rawUserIdInScope('"mentor_application".user_id', scope)})`,
+  };
+
   const buckets = monthBuckets(12);
   const monthsBack = buckets[0].key; // unused server-side, kept for clarity
   void monthsBack;
@@ -60,7 +74,7 @@ export default async function AnalyticsPage() {
   const requestsByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', requested_at), 'YYYY-MM') as key,
            count(*)::int as value
-      from "request"
+      from ${T.request} "request"
      where requested_at >= now() - interval '12 months'
      group by 1
      order by 1
@@ -69,7 +83,7 @@ export default async function AnalyticsPage() {
   const acceptedByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', requested_at), 'YYYY-MM') as key,
            count(*)::int as value
-      from "request"
+      from ${T.request} "request"
      where requested_at >= now() - interval '12 months'
        and status = 'accepted'
      group by 1
@@ -79,7 +93,7 @@ export default async function AnalyticsPage() {
   const matchesByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', started_at), 'YYYY-MM') as key,
            count(*)::int as value
-      from "match"
+      from ${T.match} "match"
      where started_at >= now() - interval '12 months'
      group by 1
      order by 1
@@ -88,7 +102,7 @@ export default async function AnalyticsPage() {
   const meetingsByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', meeting_date), 'YYYY-MM') as key,
            count(*)::int as value
-      from "meeting_log"
+      from ${T.meeting_log} "meeting_log"
      where meeting_date >= now() - interval '12 months'
        and event_kind = 'mentor_meeting'
      group by 1
@@ -98,7 +112,7 @@ export default async function AnalyticsPage() {
   const minutesByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', meeting_date), 'YYYY-MM') as key,
            coalesce(sum(duration_minutes),0)::int as value
-      from "meeting_log"
+      from ${T.meeting_log} "meeting_log"
      where meeting_date >= now() - interval '12 months'
        and event_kind in ('mentor_meeting','touchpoint')
      group by 1
@@ -108,7 +122,7 @@ export default async function AnalyticsPage() {
   const ratingByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(make_date(year, month, 1), 'YYYY-MM') as key,
            round(avg(rating)::numeric, 2)::float as value
-      from "monthly_feedback"
+      from ${T.monthly_feedback} "monthly_feedback"
      where make_date(year, month, 1) >= date_trunc('month', now()) - interval '11 months'
      group by 1
      order by 1
@@ -117,7 +131,7 @@ export default async function AnalyticsPage() {
   const newMembersByMonth = await db.execute(sql<{ key: string; value: number }>`
     select to_char(date_trunc('month', created_at), 'YYYY-MM') as key,
            count(*)::int as value
-      from "user"
+      from ${T.user} "user"
      where created_at >= now() - interval '12 months'
      group by 1
      order by 1
@@ -143,12 +157,12 @@ export default async function AnalyticsPage() {
   // -------- KPIs + month-over-month --------
   const [headline] = await db
     .select({
-      members: sql<number>`(select count(*)::int from "user")`,
-      mentors: sql<number>`(select count(*)::int from "user" where is_mentor = true)`,
-      activeMatches: sql<number>`(select count(*)::int from "match" where status = 'active')`,
-      pendingRequests: sql<number>`(select count(*)::int from "request" where status = 'pending')`,
-      pendingApps: sql<number>`(select count(*)::int from "mentor_application" where status = 'pending')`,
-      capacityTotal: sql<number>`(select coalesce(sum(coalesce(mentor_capacity,5)),0)::int from "user" where is_mentor = true and mentor_available = true)`,
+      members: sql<number>`(select count(*)::int from ${T.user} "user")`,
+      mentors: sql<number>`(select count(*)::int from ${T.user} "user" where is_mentor = true)`,
+      activeMatches: sql<number>`(select count(*)::int from ${T.match} "match" where status = 'active')`,
+      pendingRequests: sql<number>`(select count(*)::int from ${T.request} "request" where status = 'pending')`,
+      pendingApps: sql<number>`(select count(*)::int from ${T.mentor_application} "mentor_application" where status = 'pending')`,
+      capacityTotal: sql<number>`(select coalesce(sum(coalesce(mentor_capacity,5)),0)::int from ${T.user} "user" where is_mentor = true and mentor_available = true)`,
     })
     .from(sql`(select 1) as _t`);
 
@@ -167,7 +181,7 @@ export default async function AnalyticsPage() {
   // -------- Distributions --------
   const topMajors = await db.execute(sql<{ label: string; value: number }>`
     select coalesce(major, 'Unknown') as label, count(*)::int as value
-      from "user"
+      from ${T.user} "user"
      where is_mentor = true
      group by 1
      order by value desc
@@ -179,7 +193,7 @@ export default async function AnalyticsPage() {
   // throws "column \"label\" does not exist".
   const semesterDistribution = await db.execute(sql<{ label: string; value: number }>`
     select coalesce(semester_level, 'Unknown') as label, count(*)::int as value
-      from "user"
+      from ${T.user} "user"
      group by 1
      order by case coalesce(semester_level, 'Unknown')
                 when 'Freshman' then 1
@@ -193,7 +207,7 @@ export default async function AnalyticsPage() {
 
   const meetingTypes = await db.execute(sql<{ label: string; value: number }>`
     select meeting_type::text as label, count(*)::int as value
-      from "meeting_log"
+      from ${T.meeting_log} "meeting_log"
      where event_kind = 'mentor_meeting'
      group by 1
      order by value desc
@@ -201,7 +215,7 @@ export default async function AnalyticsPage() {
 
   const topInterests = await db.execute(sql<{ label: string; value: number }>`
     select interest as label, count(*)::int as value
-      from (select unnest(career_interests) as interest from "user") s
+      from (select unnest(career_interests) as interest from ${T.user} "user") s
      where interest is not null
      group by 1
      order by value desc
@@ -211,9 +225,9 @@ export default async function AnalyticsPage() {
   // -------- Engagement / at-risk --------
   const [atRisk] = await db
     .select({
-      stale30: sql<number>`(select count(*)::int from "match" where status = 'active' and coalesce(last_interaction_at, started_at) < now() - interval '30 days')`,
-      stale60: sql<number>`(select count(*)::int from "match" where status = 'active' and coalesce(last_interaction_at, started_at) < now() - interval '60 days')`,
-      capacityFilled: sql<number>`(select count(*)::int from "match" where status = 'active')`,
+      stale30: sql<number>`(select count(*)::int from ${T.match} "match" where status = 'active' and coalesce(last_interaction_at, started_at) < now() - interval '30 days')`,
+      stale60: sql<number>`(select count(*)::int from ${T.match} "match" where status = 'active' and coalesce(last_interaction_at, started_at) < now() - interval '60 days')`,
+      capacityFilled: sql<number>`(select count(*)::int from ${T.match} "match" where status = 'active')`,
     })
     .from(sql`(select 1) as _t`);
 
@@ -233,8 +247,8 @@ export default async function AnalyticsPage() {
       u.mentor_capacity as capacity,
       coalesce(sum(case when m.status = 'active' then 1 else 0 end), 0)::int as active,
       coalesce(count(distinct m.mentee_id), 0)::int as lifetime
-    from "user" u
-    left join "match" m on m.mentor_id = u.id
+    from ${T.user} u
+    left join ${T.match} m on m.mentor_id = u.id
     where u.is_mentor = true
     group by u.id, u.name, u.mentor_capacity
     order by active desc, lifetime desc
@@ -258,6 +272,7 @@ export default async function AnalyticsPage() {
     })
     .from(requests)
     .innerJoin(users, eq(users.id, requests.menteeId))
+    .where(userIdInScope(requests.menteeId, scope))
     .orderBy(desc(requests.requestedAt))
     .limit(8);
 
@@ -267,6 +282,7 @@ export default async function AnalyticsPage() {
       at: matches.startedAt,
     })
     .from(matches)
+    .where(userIdInScope(matches.menteeId, scope))
     .orderBy(desc(matches.startedAt))
     .limit(4);
 
@@ -277,7 +293,7 @@ export default async function AnalyticsPage() {
       topic: meetingLogs.topicsDiscussed,
     })
     .from(meetingLogs)
-    .where(eq(meetingLogs.eventKind, "mentor_meeting"))
+    .where(and(eq(meetingLogs.eventKind, "mentor_meeting"), userIdInScope(meetingLogs.studentId, scope)))
     .orderBy(desc(meetingLogs.meetingDate))
     .limit(6);
 

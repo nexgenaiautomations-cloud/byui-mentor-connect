@@ -4,6 +4,7 @@ import { matches, users } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";
 import { desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
 import {
   ActiveMatchesTable,
@@ -20,6 +21,8 @@ export default async function AdminMatchesPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   if (!me.isAdmin) redirect("/dashboard");
+  // School boundary: program admins see only their school (src/lib/admin-scope.ts).
+  const scope = adminScopeFor(me)!;
 
   const mentor = alias(users, "mentor_u");
   const mentee = alias(users, "mentee_u");
@@ -47,6 +50,7 @@ export default async function AdminMatchesPage() {
     .from(matches)
     .innerJoin(mentor, eq(mentor.id, matches.mentorId))
     .innerJoin(mentee, eq(mentee.id, matches.menteeId))
+    .where(emailInScope(mentee.email, scope))
     .orderBy(desc(matches.startedAt));
 
   const active = rows.filter((r) => r.status === "active");
