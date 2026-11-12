@@ -44,7 +44,7 @@ vi.mock("@/lib/effectiveness-server", () => program);
 
 import { adminScopeFor, auditEventInScope, emailInScope, userIdInScope } from "@/lib/admin-scope";
 import { users, auditEvents, matches as matchesTable } from "@/db/schema";
-import { POST as userPost } from "@/app/api/admin/users/[id]/route";
+import { POST as userPost, PATCH as userPatch } from "@/app/api/admin/users/[id]/route";
 import { DELETE as matchDelete } from "@/app/api/admin/matches/[id]/route";
 import { PATCH as appPatch } from "@/app/api/mentor-applications/[id]/route";
 import { POST as adminsPost } from "@/app/api/admin/admins/route";
@@ -121,6 +121,17 @@ describe("cross-school writes are refused (and nothing is written)", () => {
   it("can still manage their own school's member", async () => {
     fake.push([byuiStudent]);
     expect((await userPost(json({ action: "set_role", role: "mentor" }), params("by1"))).status).toBe(200);
+  });
+  it("can't edit another school's member's profile", async () => {
+    fake.push([stateStudent]);
+    expect((await userPatch(json({ firstName: "Hacked" }, "PATCH"), params("st1"))).status).toBe(404);
+    expect(fake.ops()).not.toContain("update");
+  });
+  it("can edit their own school's member's profile but not their email", async () => {
+    fake.push([{ ...byuiStudent, firstName: "Old", lastName: "Name", name: "Old Name" }]);
+    expect((await userPatch(json({ firstName: "New" }, "PATCH"), params("by1"))).status).toBe(200);
+    expect(fake.ops()).toContain("update");
+    expect((await userPatch(json({ email: "x@state.edu" }, "PATCH"), params("by1"))).status).toBe(400);
   });
   it("can't end another school's match", async () => {
     fake.push([{ menteeId: "st1" }], [{ email: "kid@state.edu" }]);

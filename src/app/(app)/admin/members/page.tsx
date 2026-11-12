@@ -17,6 +17,11 @@ export default async function AdminMembersPage() {
     .select({
       id: users.id,
       name: users.name,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      phone: users.phone,
+      preferredContactMethod: users.preferredContactMethod,
+      bio: users.bio,
       email: users.email,
       image: users.image,
       major: users.major,
@@ -70,6 +75,11 @@ export default async function AdminMembersPage() {
     return {
       id: u.id,
       name: u.name,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      phone: u.phone,
+      preferredContactMethod: u.preferredContactMethod,
+      bio: u.bio,
       email: u.email,
       image: u.image,
       major: u.major,

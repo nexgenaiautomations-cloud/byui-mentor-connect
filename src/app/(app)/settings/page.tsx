@@ -84,6 +84,7 @@ export default async function SettingsPage() {
             minorOptions={[...MINOR_OPTIONS]}
             graduationOptions={[...GRADUATION_OPTIONS]}
             showCareerChats
+            alwaysShowName
           />
         </div>
       </section>

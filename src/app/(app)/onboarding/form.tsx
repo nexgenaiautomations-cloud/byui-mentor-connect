@@ -102,6 +102,7 @@ export function OnboardingForm({
   graduationOptions,
   showCareerChats = false,
   showExperienceStep = false,
+  alwaysShowName = false,
 }: {
   initial: Initial;
   careerOptions: string[];
@@ -117,6 +118,8 @@ export function OnboardingForm({
   // answer the two career-experience questions before reaching the
   // dashboard.
   showExperienceStep?: boolean;
+  // Settings mode — always let people edit their name.
+  alwaysShowName?: boolean;
 }) {
   const STEPS = showExperienceStep
     ? ([...BASE_STEPS, "Experience"] as const)
@@ -268,7 +271,7 @@ export function OnboardingForm({
 
   // If the user arrived from /signup, their name is already saved. Hide the
   // name fields so we don't re-ask — they can still tweak it in /settings.
-  const nameAlreadySet = Boolean(
+  const nameAlreadySet = !alwaysShowName && Boolean(
     initial.firstName.trim() && initial.lastName.trim()
   );
 
@@ -329,9 +332,11 @@ export function OnboardingForm({
             ) : (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">First name</label>
+                  <label className="label" htmlFor="profile-first-name">First name</label>
                   <input
+                    id="profile-first-name"
                     required
+                    maxLength={60}
                     className="input"
                     value={form.firstName}
                     onChange={(e) =>
@@ -340,9 +345,11 @@ export function OnboardingForm({
                   />
                 </div>
                 <div>
-                  <label className="label">Last name</label>
+                  <label className="label" htmlFor="profile-last-name">Last name</label>
                   <input
+                    id="profile-last-name"
                     required
+                    maxLength={60}
                     className="input"
                     value={form.lastName}
                     onChange={(e) =>

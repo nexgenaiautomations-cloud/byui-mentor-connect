@@ -110,6 +110,7 @@ export const auditEventType = pgEnum("audit_event_type", [
   "ADMIN_UPDATED_PROGRAM_SETTINGS",
   "ADMIN_VERIFIED_CAREER_MILESTONE",
   "RETENTION_RUN",
+  "ADMIN_EDITED_PROFILE",
 ]);
 
 // Auth.js users table — also our "members". Everyone who registers is a member.

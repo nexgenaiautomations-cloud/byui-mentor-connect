@@ -13,6 +13,7 @@ import {
 } from "@/lib/user-admin";
 import { clearStewardshipFor } from "@/lib/stewardship-server";
 import { adminScopeFor, emailInScopeJs } from "@/lib/admin-scope";
+import { buildProfileUpdate, checkProfileEdit, type AdminProfileEdit } from "@/lib/member-profile-edit";
 
 export type AdminActionResult = { ok: true } | { ok: false; status: number; error: string };
 
@@ -155,6 +156,33 @@ export async function restoreUser(
     targetUserId: target.id,
     eventType: "ADMIN_RESTORED_USER",
     request,
+  });
+  return { ok: true };
+}
+
+// Admin edit of a member's profile fields. Same school boundary as the other
+// actions: an out-of-school target answers 404. The audit event records which
+// fields changed, not their values.
+export async function editProfile(
+  actor: User,
+  targetId: string,
+  edit: AdminProfileEdit,
+  request?: Request
+): Promise<AdminActionResult> {
+  const target = await loadTarget(targetId, actor);
+  if (!target) return { ok: false, status: 404, error: "Member not found." };
+  const err = checkProfileEdit(actor, target);
+  if (err) return { ok: false, status: 403, error: err };
+
+  const { set, changed } = buildProfileUpdate(target, edit);
+  if (changed.length === 0) return { ok: true };
+  await db.update(users).set(set).where(eq(users.id, target.id));
+  await auditEvent({
+    actorUserId: actor.id,
+    targetUserId: target.id,
+    eventType: "ADMIN_EDITED_PROFILE",
+    request,
+    metadata: { fields: changed },
   });
   return { ok: true };
 }
