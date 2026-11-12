@@ -13,6 +13,9 @@ import { isPlatformAdmin } from "@/lib/platform-admin";
 import { mentorOpenInMajor } from "@/lib/mentor-waitlist-server";
 import { CareerProgress } from "@/components/career-progress";
 import { applicationLogCounts, listMilestones } from "@/lib/career-server";
+import { listCases } from "@/lib/interventions-server";
+import { RISK_LABEL, STATUS_LABEL, type InterventionStatus, type RiskReason } from "@/lib/interventions";
+import { CasePanel } from "../admin/interventions/case-panel";
 
 export default async function DashboardPage() {
   const me = await getCurrentUser();
@@ -54,6 +57,11 @@ export default async function DashboardPage() {
 
   // Mentee KPI snapshot — drives the new strip and the welcome-panel logic.
   const studentKpis = actingAsMentor ? null : await getStudentKpis(me.id);
+  // Intervention cases an admin assigned to this executive mentor.
+  const assignedCases =
+    actingAsMentor && me.isExecutiveMentor
+      ? await listCases({ school: null, status: "open", assignedTo: me.id })
+      : [];
   // Career journey (members only).
   const [careerMilestoneRows, appCounts] = actingAsMentor
     ? [[], new Map<string, number>()]
@@ -263,6 +271,45 @@ export default async function DashboardPage() {
       </section>
 
       {studentKpis && <KpiStrip kpis={studentKpis} />}
+
+      {assignedCases.length > 0 && (
+        <section className="card" aria-labelledby="assigned-cases-title">
+          <h2 id="assigned-cases-title" className="font-display text-lg font-bold text-brand-dark">
+            Mentorships you&apos;re helping with
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            An admin asked you to check in on these pairs. Record each outreach so nobody contacts them twice.
+          </p>
+          <ul className="mt-3 space-y-3">
+            {assignedCases.map((c) => (
+              <li key={c.id} className="rounded-xl border border-slate-200 p-3">
+                <p className="text-sm font-semibold text-plum-800">
+                  {c.studentName ?? "Student"} with {c.mentorName ?? "mentor"}
+                  <span className="ml-2 text-xs font-normal text-slate-600">
+                    {STATUS_LABEL[c.status as InterventionStatus] ?? c.status}
+                  </span>
+                </p>
+                <p className="mt-0.5 text-xs text-slate-600">
+                  {(c.reasons as RiskReason[]).map((r) => RISK_LABEL[r] ?? r).join(" · ") || "Risk cleared"}
+                </p>
+                <details>
+                  <summary className="inline-flex min-h-[44px] cursor-pointer items-center text-sm font-semibold text-plum-700">Update</summary>
+                  <CasePanel
+                    id={c.id}
+                    status={c.status as InterventionStatus}
+                    assignedToId={c.assignedToId}
+                    followUpOn={c.followUpOn ? c.followUpOn.toISOString().slice(0, 10) : null}
+                    staff={[]}
+                    studentEmail={c.studentEmail}
+                    mentorEmail={c.mentorEmail}
+                    limited
+                  />
+                </details>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {!actingAsMentor && (
         <CareerProgress

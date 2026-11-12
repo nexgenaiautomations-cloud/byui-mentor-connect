@@ -55,6 +55,7 @@ function buildNav(
     admin.push(
       { href: "/admin", label: "Overview" },
       { href: "/admin/issues", label: "Issues" },
+      { href: "/admin/interventions", label: "Interventions" },
       { href: "/admin/analytics", label: "Analytics" },
       { href: "/admin/reports", label: "Reports" },
       { href: "/admin/members", label: "Members" },

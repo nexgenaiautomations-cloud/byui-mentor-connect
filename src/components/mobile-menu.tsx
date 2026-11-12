@@ -45,6 +45,7 @@ function buildNav(
       { href: "/admin/applications", label: "Applications" },
       { href: "/admin/matches", label: "Matches" },
       { href: "/admin/matchmaker", label: "Matchmaker" },
+      { href: "/admin/interventions", label: "Interventions" },
       { href: "/admin/meetings", label: "Meetings" }
     );
     if (isHeadAdmin) {

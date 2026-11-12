@@ -1,6 +1,7 @@
 import { notifyWaitingMentees } from "@/lib/mentor-waitlist-server";
 import { NextResponse } from "next/server";
 import { isAuthorizedCron } from "@/lib/cron-auth";
+import { detectInterventions } from "@/lib/interventions-server";
 import { db } from "@/db/client";
 import { matches, users } from "@/db/schema";
 import { and, eq, lt, sql } from "drizzle-orm";
@@ -53,6 +54,15 @@ export async function GET(req: Request) {
   //    in their major has an open spot (throttled to once a week each).
   const waitlistNotified = await notifyWaitingMentees();
 
+  // 4) Intervention Center: open/update cases for at-risk pairs (no email).
+  let interventionsResult: Awaited<ReturnType<typeof detectInterventions>> | { error: string };
+  try {
+    interventionsResult = await detectInterventions(new Date());
+  } catch (e) {
+    console.error("cron/inactivity: intervention detection failed:", e);
+    interventionsResult = { error: "detection failed" };
+  }
+
   return NextResponse.json({
     ok: true,
     waitlistNotified,
@@ -60,5 +70,6 @@ export async function GET(req: Request) {
     disconnectedCount: disconnected.length,
     disconnected: disconnected.map((d) => d.id),
     reopenedMentors: reopenedCount,
+    interventions: interventionsResult,
   });
 }
