@@ -36,7 +36,7 @@ export default async function AdminPage() {
       mentors: sql<number>`(select count(*)::int from "user" where is_mentor = true)`,
       activeMatches: sql<number>`(select count(*)::int from "match" where status = 'active')`,
       pendingRequests: sql<number>`(select count(*)::int from "request" where status = 'pending')`,
-      meetingLogs: sql<number>`(select count(*)::int from "meeting_log")`,
+      meetingLogs: sql<number>`(select count(*)::int from "meeting_log" where event_kind = 'mentor_meeting')`,
       pendingApps: sql<number>`(select count(*)::int from "mentor_application" where status = 'pending')`,
     })
     .from(sql`(select 1) as _t`);
@@ -106,7 +106,7 @@ export default async function AdminPage() {
         <StatTile label="Mentors"      value={counts?.mentors ?? 0}        tone="emerald" hint="Approved" />
         <StatTile label="Matches"      value={counts?.activeMatches ?? 0}  tone="sky"     hint="Active" />
         <StatTile label="Requests"     value={counts?.pendingRequests ?? 0} tone="navy"    hint="Pending" />
-        <StatTile label="Meetings"     value={counts?.meetingLogs ?? 0}    tone="sky"     hint="All time" />
+        <StatTile label="Meetings"     value={counts?.meetingLogs ?? 0}    tone="sky"     hint="Mentor meetings" />
         <StatTile label="To review"    value={counts?.pendingApps ?? 0}    tone="amber"   hint="Applications" />
       </section>
 

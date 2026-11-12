@@ -10,6 +10,9 @@ import {
 } from "@/lib/possible-actions";
 import { evaluateAchievementsForStudent } from "@/lib/achievements";
 import { maybeCreateAutoLogs } from "@/lib/auto-logs";
+import { resolveEventKind } from "@/lib/engagement";
+import { afterLogWrite } from "@/lib/engagement-server";
+import { isValidTimeZone, parseHHMM } from "@/lib/schedule";
 
 // One payload covers both the mentee-self-log and the mentor-on-behalf path.
 // matchId optional: only the mentor path is required to pass it. The mentee
@@ -32,6 +35,13 @@ const logSchema = z.object({
   topicsDiscussed: z.string().max(2000).optional().nullable(),
   actionItems: z.string().max(2000).optional().nullable(),
   nextMeetingDate: z.coerce.date().optional().nullable(),
+  // Optional HH:MM + IANA zone for nextMeetingDate. Without a time,
+  // reminders are date-only (we never invent a time).
+  nextMeetingTime: z.string().max(5).optional().nullable(),
+  nextMeetingTimezone: z.string().max(64).optional().nullable(),
+  // What this log is (docs/specs/accountability-upgrade.md §1). The server
+  // decides the final kind — see resolveEventKind().
+  eventKind: z.enum(["mentor_meeting", "touchpoint", "independent_activity"]).optional().nullable(),
 });
 
 export async function GET() {
@@ -54,7 +64,12 @@ export async function GET() {
       topicsDiscussed: meetingLogs.topicsDiscussed,
       actionItems: meetingLogs.actionItems,
       nextMeetingDate: meetingLogs.nextMeetingDate,
+      nextMeetingTime: meetingLogs.nextMeetingTime,
+      nextMeetingTimezone: meetingLogs.nextMeetingTimezone,
       menteeConfirmed: meetingLogs.menteeConfirmed,
+      mentorConfirmed: meetingLogs.mentorConfirmed,
+      eventKind: meetingLogs.eventKind,
+      actionItemsDoneAt: meetingLogs.actionItemsDoneAt,
       createdAt: meetingLogs.createdAt,
     })
     .from(meetingLogs)
@@ -168,6 +183,16 @@ export async function POST(req: Request) {
     }
   }
 
+  const eventKind = resolveEventKind({
+    path: createdBy === "mentee" ? "self" : "mentor",
+    requested: data.eventKind,
+    hasMatch: !!matchId,
+  });
+  const nextMeetingTime =
+    data.nextMeetingDate && parseHHMM(data.nextMeetingTime) ? data.nextMeetingTime!.trim() : null;
+  const nextMeetingTimezone =
+    data.nextMeetingDate && isValidTimeZone(data.nextMeetingTimezone) ? data.nextMeetingTimezone : null;
+
   const [log] = await db
     .insert(meetingLogs)
     .values({
@@ -183,15 +208,19 @@ export async function POST(req: Request) {
       topicsDiscussed: topics,
       actionItems: data.actionItems ?? null,
       nextMeetingDate: data.nextMeetingDate ?? null,
+      nextMeetingTime,
+      nextMeetingTimezone,
+      eventKind,
+      // The logger vouches for their own side of a meeting/touchpoint.
+      mentorConfirmed: createdBy === "mentor" && eventKind !== "independent_activity",
+      menteeConfirmed: createdBy === "mentee" && eventKind !== "independent_activity",
     })
     .returning();
 
-  if (matchId) {
-    await db
-      .update(matches)
-      .set({ lastActivityAt: new Date() })
-      .where(eq(matches.id, matchId));
-  }
+  // Match timestamps, scheduled meetings and career milestones. Independent
+  // activity no longer bumps the match's last activity — only real
+  // interaction does (docs/specs/accountability-upgrade.md §2).
+  await afterLogWrite(log, me.id);
 
   // Post-write side effects: evaluate achievements and possibly drop a
   // system "goal completed" auto-log. Failures here should not poison the

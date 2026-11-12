@@ -41,7 +41,7 @@ export default async function AdminMeetingsPage() {
   const [totals] = await db
     .select({
       total: sql<number>`(select count(*)::int from "meeting_log" where is_system_generated = false)`,
-      totalMinutes: sql<number>`(select coalesce(sum(duration_minutes), 0)::int from "meeting_log")`,
+      totalMinutes: sql<number>`(select coalesce(sum(duration_minutes), 0)::int from "meeting_log" where event_kind in ('mentor_meeting','touchpoint'))`,
       thisMonth: sql<number>`(select count(*)::int from "meeting_log" where is_system_generated = false and meeting_date >= now() - interval '30 days')`,
       selfLogged: sql<number>`(select count(*)::int from "meeting_log" where created_by = 'mentee')`,
       systemLogged: sql<number>`(select count(*)::int from "meeting_log" where is_system_generated = true)`,

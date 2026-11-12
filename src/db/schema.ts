@@ -55,6 +55,16 @@ export const accomplishmentGroup = pgEnum("accomplishment_group", [
 // (sign-in failed, rate-limit triggered, CSP violation). `critical` = active
 // security incident (unauthorized admin attempt, role-cookie rejected,
 // rejected promotion).
+// What a meeting_log row actually is (docs/specs/accountability-upgrade.md §1).
+// Only mentor_meeting + touchpoint count as mentor engagement.
+export const logEventKind = pgEnum("log_event_kind", [
+  "mentor_meeting",
+  "touchpoint",
+  "independent_activity",
+  "system_event",
+  "unverified",
+]);
+
 export const auditSeverity = pgEnum("audit_severity", [
   "info",
   "warning",
@@ -96,6 +106,9 @@ export const auditEventType = pgEnum("audit_event_type", [
   "USER_SIGNED_PLEDGE",
   "ADMIN_SET_STEWARDSHIP",
   "ADMIN_CHANGED_POD",
+  "ADMIN_UPDATED_INTERVENTION",
+  "ADMIN_UPDATED_PROGRAM_SETTINGS",
+  "ADMIN_VERIFIED_CAREER_MILESTONE",
 ]);
 
 // Auth.js users table — also our "members". Everyone who registers is a member.
@@ -281,6 +294,13 @@ export const matches = pgTable(
     // Bumped on every meeting log or check-in. Drives the 30-day reminder and
     // 6-month auto-disconnect.
     lastActivityAt: timestamp("last_activity_at", { mode: "date" }).notNull().defaultNow(),
+    // Accountability timestamps (docs/specs/accountability-upgrade.md §2).
+    // Recomputed from classified logs; independent student activity never
+    // moves the interaction timestamps.
+    firstMeetingAt: timestamp("first_meeting_at", { mode: "date" }),
+    lastMeetingAt: timestamp("last_meeting_at", { mode: "date" }),
+    lastInteractionAt: timestamp("last_interaction_at", { mode: "date" }),
+    lastStudentActivityAt: timestamp("last_student_activity_at", { mode: "date" }),
     endedAt: timestamp("ended_at", { mode: "date" }),
     status: matchStatus("status").notNull().default("active"),
   },
@@ -321,6 +341,15 @@ export const meetingLogs = pgTable(
     nextMeetingDate: timestamp("next_meeting_date", { mode: "date" }),
     mentorNotes: text("mentor_notes"),
     menteeConfirmed: boolean("mentee_confirmed").notNull().default(false),
+    // Nullable only for legacy rows before the backfill runs; new rows always
+    // set it (docs/specs/accountability-upgrade.md §1).
+    eventKind: logEventKind("event_kind"),
+    mentorConfirmed: boolean("mentor_confirmed").notNull().default(false),
+    // Optional time-of-day (HH:MM) + IANA zone for nextMeetingDate, so
+    // reminders are only time-precise when a time was actually given.
+    nextMeetingTime: text("next_meeting_time"),
+    nextMeetingTimezone: text("next_meeting_timezone"),
+    actionItemsDoneAt: timestamp("action_items_done_at", { mode: "date" }),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }),
   },
@@ -569,6 +598,202 @@ export const auditEvents = pgTable(
     severityIdx: index("audit_event_severity_idx").on(t.severity, t.createdAt),
   })
 );
+
+// ---------------------------------------------------------------------------
+// Accountability upgrade (docs/specs/accountability-upgrade.md)
+// ---------------------------------------------------------------------------
+
+// Per-user email preferences. A missing row means "all defaults on".
+export const notificationPreferences = pgTable("notification_preference", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  meetingReminders: boolean("meeting_reminders").notNull().default(true),
+  followUps: boolean("follow_ups").notNull().default(true),
+  inactivityNudges: boolean("inactivity_nudges").notNull().default(true),
+  timezone: text("timezone").notNull().default("America/Denver"),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+// A planned meeting, created from a log's "next meeting" date. Drives the
+// 24h / 1h reminders and the "did this happen?" follow-up.
+export const scheduledMeetings = pgTable(
+  "scheduled_meeting",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    matchId: uuid("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "cascade" }),
+    sourceLogId: uuid("source_log_id").references(() => meetingLogs.id, {
+      onDelete: "set null",
+    }),
+    scheduledById: text("scheduled_by_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    // Local calendar date YYYY-MM-DD in `timezone`.
+    scheduledDate: text("scheduled_date").notNull(),
+    // HH:MM local, or null when only a date is known.
+    scheduledTime: text("scheduled_time"),
+    timezone: text("timezone").notNull().default("America/Denver"),
+    // Exact instant when a time is known; otherwise local midnight of the day.
+    startsAt: timestamp("starts_at", { mode: "date" }).notNull(),
+    // scheduled | completed | missed | cancelled
+    status: text("status").notNull().default("scheduled"),
+    completedLogId: uuid("completed_log_id").references(() => meetingLogs.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }),
+  },
+  (t) => ({
+    matchIdx: index("scheduled_meeting_match_idx").on(t.matchId),
+    statusStartsIdx: index("scheduled_meeting_status_starts_idx").on(t.status, t.startsAt),
+    sourceUniq: uniqueIndex("scheduled_meeting_source_log_uniq").on(t.sourceLogId),
+  })
+);
+
+// One row per notification the reminder job decided to send. The unique
+// dedupe_key is the idempotency guard: the job claims a key before sending.
+export const notificationDeliveries = pgTable(
+  "notification_delivery",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    dedupeKey: text("dedupe_key").notNull(),
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    matchId: uuid("match_id").references(() => matches.id, { onDelete: "set null" }),
+    scheduledMeetingId: uuid("scheduled_meeting_id").references(() => scheduledMeetings.id, {
+      onDelete: "set null",
+    }),
+    // pending | sent | failed | dry_run | skipped_optout | skipped_cap
+    status: text("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    sentAt: timestamp("sent_at", { mode: "date" }),
+  },
+  (t) => ({
+    dedupeUniq: uniqueIndex("notification_delivery_dedupe_uniq").on(t.dedupeKey),
+    userCreatedIdx: index("notification_delivery_user_created_idx").on(t.userId, t.createdAt),
+    matchIdx: index("notification_delivery_match_idx").on(t.matchId, t.createdAt),
+  })
+);
+
+// Program configuration (thresholds, ROI assumptions). `school` is an email
+// domain, or "*" for the default every school inherits.
+export const programSettings = pgTable(
+  "program_setting",
+  {
+    school: text("school").notNull().default("*"),
+    key: text("key").notNull(),
+    valueJson: text("value_json").notNull(),
+    updatedById: text("updated_by_id").references(() => users.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.school, t.key] }) })
+);
+
+// Career pipeline events (docs/specs/accountability-upgrade.md §4).
+export const careerMilestones = pgTable(
+  "career_milestone",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: text("student_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // exploring | preparing | applying | interviewing | offer_received |
+    // offer_accepted | started
+    stage: text("stage").notNull(),
+    // internship | part_time | full_time | null
+    opportunityType: text("opportunity_type"),
+    careerField: text("career_field"),
+    employer: text("employer"),
+    positionTitle: text("position_title"),
+    occurredOn: timestamp("occurred_on", { mode: "date" }).notNull().defaultNow(),
+    // self_reported | activity_log | admin
+    source: text("source").notNull().default("self_reported"),
+    sourceLogId: uuid("source_log_id").references(() => meetingLogs.id, {
+      onDelete: "cascade",
+    }),
+    // An acceptance / start points back at the offer it concerns so the
+    // offer is never counted twice.
+    relatedMilestoneId: uuid("related_milestone_id"),
+    // self_reported | verified
+    verification: text("verification").notNull().default("self_reported"),
+    verifiedById: text("verified_by_id").references(() => users.id, { onDelete: "set null" }),
+    verifiedAt: timestamp("verified_at", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    studentIdx: index("career_milestone_student_idx").on(t.studentId, t.occurredOn),
+    stageIdx: index("career_milestone_stage_idx").on(t.stage),
+    sourceLogUniq: uniqueIndex("career_milestone_source_log_uniq").on(
+      t.sourceLogId,
+      t.opportunityType
+    ),
+  })
+);
+
+// Intervention Center cases. At most one open case per match (partial
+// unique index created by the migration script).
+export const interventions = pgTable(
+  "intervention",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    matchId: uuid("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "cascade" }),
+    studentId: text("student_id").references(() => users.id, { onDelete: "cascade" }),
+    mentorId: text("mentor_id").references(() => users.id, { onDelete: "cascade" }),
+    school: text("school").notNull(),
+    reasons: text("reasons").array().notNull(),
+    // new | reviewing | contacted | awaiting_response | resolved | closed
+    status: text("status").notNull().default("new"),
+    assignedToId: text("assigned_to_id").references(() => users.id, { onDelete: "set null" }),
+    followUpOn: timestamp("follow_up_on", { mode: "date" }),
+    lastOutreachAt: timestamp("last_outreach_at", { mode: "date" }),
+    lastOutreachById: text("last_outreach_by_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    openedAt: timestamp("opened_at", { mode: "date" }).notNull().defaultNow(),
+    lastDetectedAt: timestamp("last_detected_at", { mode: "date" }).notNull().defaultNow(),
+    resolvedAt: timestamp("resolved_at", { mode: "date" }),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    schoolStatusIdx: index("intervention_school_status_idx").on(t.school, t.status),
+    matchIdx: index("intervention_match_idx").on(t.matchId),
+  })
+);
+
+// Append-only trail of everything done on a case.
+export const interventionEvents = pgTable(
+  "intervention_event",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    interventionId: uuid("intervention_id")
+      .notNull()
+      .references(() => interventions.id, { onDelete: "cascade" }),
+    actorId: text("actor_id").references(() => users.id, { onDelete: "set null" }),
+    // opened | redetected | status | assigned | note | outreach | follow_up |
+    // reassign_recommended
+    action: text("action").notNull(),
+    fromStatus: text("from_status"),
+    toStatus: text("to_status"),
+    note: text("note"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    caseIdx: index("intervention_event_case_idx").on(t.interventionId, t.createdAt),
+  })
+);
+
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type ScheduledMeeting = typeof scheduledMeetings.$inferSelect;
+export type NotificationDelivery = typeof notificationDeliveries.$inferSelect;
+export type CareerMilestone = typeof careerMilestones.$inferSelect;
+export type Intervention = typeof interventions.$inferSelect;
+export type InterventionEvent = typeof interventionEvents.$inferSelect;
 
 export type AuditEvent = typeof auditEvents.$inferSelect;
 export type NewAuditEvent = typeof auditEvents.$inferInsert;

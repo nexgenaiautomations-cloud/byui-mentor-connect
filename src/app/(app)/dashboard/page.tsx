@@ -117,8 +117,8 @@ export default async function DashboardPage() {
       .select({
         menteesHelped: sql<number>`(select count(distinct mentee_id)::int from "match" where mentor_id = ${me.id})`,
         activeMentees: sql<number>`(select count(*)::int from "match" where mentor_id = ${me.id} and status = 'active')`,
-        meetingsLogged: sql<number>`(select count(*)::int from "meeting_log" where mentor_id = ${me.id})`,
-        totalMinutes: sql<number>`(select coalesce(sum(duration_minutes),0)::int from "meeting_log" where mentor_id = ${me.id})`,
+        meetingsLogged: sql<number>`(select count(*)::int from "meeting_log" where mentor_id = ${me.id} and event_kind = 'mentor_meeting')`,
+        totalMinutes: sql<number>`(select coalesce(sum(duration_minutes),0)::int from "meeting_log" where mentor_id = ${me.id} and event_kind in ('mentor_meeting','touchpoint'))`,
         careerAccomplishments: sql<number>`(
           select coalesce(sum(array_length(string_to_array(topics_discussed, ' · '), 1)), 0)::int
           from "meeting_log"

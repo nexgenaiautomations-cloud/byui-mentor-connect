@@ -89,6 +89,7 @@ export default async function AnalyticsPage() {
            count(*)::int as value
       from "meeting_log"
      where meeting_date >= now() - interval '12 months'
+       and event_kind = 'mentor_meeting'
      group by 1
      order by 1
   `);
@@ -98,6 +99,7 @@ export default async function AnalyticsPage() {
            coalesce(sum(duration_minutes),0)::int as value
       from "meeting_log"
      where meeting_date >= now() - interval '12 months'
+       and event_kind in ('mentor_meeting','touchpoint')
      group by 1
      order by 1
   `);
@@ -191,6 +193,7 @@ export default async function AnalyticsPage() {
   const meetingTypes = await db.execute(sql<{ label: string; value: number }>`
     select meeting_type::text as label, count(*)::int as value
       from "meeting_log"
+     where event_kind = 'mentor_meeting'
      group by 1
      order by value desc
   `);
@@ -207,8 +210,8 @@ export default async function AnalyticsPage() {
   // -------- Engagement / at-risk --------
   const [atRisk] = await db
     .select({
-      stale30: sql<number>`(select count(*)::int from "match" where status = 'active' and last_activity_at < now() - interval '30 days')`,
-      stale60: sql<number>`(select count(*)::int from "match" where status = 'active' and last_activity_at < now() - interval '60 days')`,
+      stale30: sql<number>`(select count(*)::int from "match" where status = 'active' and coalesce(last_interaction_at, started_at) < now() - interval '30 days')`,
+      stale60: sql<number>`(select count(*)::int from "match" where status = 'active' and coalesce(last_interaction_at, started_at) < now() - interval '60 days')`,
       capacityFilled: sql<number>`(select count(*)::int from "match" where status = 'active')`,
     })
     .from(sql`(select 1) as _t`);
@@ -273,6 +276,7 @@ export default async function AnalyticsPage() {
       topic: meetingLogs.topicsDiscussed,
     })
     .from(meetingLogs)
+    .where(eq(meetingLogs.eventKind, "mentor_meeting"))
     .orderBy(desc(meetingLogs.meetingDate))
     .limit(6);
 

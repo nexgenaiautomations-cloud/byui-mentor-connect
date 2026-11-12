@@ -69,10 +69,15 @@ export default async function MatchesPage() {
       id: matches.id,
       status: matches.status,
       startedAt: matches.startedAt,
-      lastActivityAt: matches.lastActivityAt,
+      // Inactivity is measured from the last real interaction (meeting or
+      // touchpoint), falling back to the match start — never from the
+      // student's independent activity.
+      lastActivityAt: sql<Date>`coalesce(${matches.lastInteractionAt}, ${matches.startedAt})`.mapWith(matches.startedAt),
       mentorId: matches.mentorId,
       menteeId: matches.menteeId,
-      meetingCount: sql<number>`(select count(*)::int from "meeting_log" where match_id = "match".id)`,
+      // Actual mentor meetings only — independent activity and system
+      // auto-logs are not meetings (docs/specs/accountability-upgrade.md §1).
+      meetingCount: sql<number>`(select count(*)::int from "meeting_log" where match_id = "match".id and event_kind = 'mentor_meeting')`,
       mentorName: mentor.name,
       mentorImage: mentor.image,
       mentorEmail: mentor.email,

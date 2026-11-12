@@ -13,6 +13,25 @@ import {
   OfferCelebration,
   type TrophyToast,
 } from "@/components/celebration";
+import { DictationButton } from "@/components/dictation-button";
+import { suggestAccomplishments } from "@/lib/dictation";
+
+type LogKind = "mentor_meeting" | "touchpoint" | "independent_activity";
+
+// What the log is. Mentors log meetings or quick touchpoints; members log
+// their own activity, or (when they have a mentor) a meeting/touchpoint.
+// Only meetings and touchpoints count as mentor engagement.
+const KIND_OPTIONS: Record<"mentor" | "mentee", { value: LogKind; label: string; hint: string }[]> = {
+  mentor: [
+    { value: "mentor_meeting", label: "Meeting", hint: "You met (in person, video or phone)" },
+    { value: "touchpoint", label: "Touchpoint", hint: "Quick call, message or check-in" },
+  ],
+  mentee: [
+    { value: "independent_activity", label: "On my own", hint: "Something you did yourself" },
+    { value: "mentor_meeting", label: "Met my mentor", hint: "You and your mentor met" },
+    { value: "touchpoint", label: "Mentor touchpoint", hint: "Quick call, message or check-in" },
+  ],
+};
 
 type Match = {
   id: string;
@@ -74,6 +93,20 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
   const [accomplishments, setAccomplishments] = useState<Set<string>>(new Set());
   const [actions, setActions] = useState("");
   const [next, setNext] = useState("");
+  const [nextTime, setNextTime] = useState("");
+  const hasMentor = isMentor || (props.mode === "mentee" && props.hasMentor);
+  const [kind, setKind] = useState<LogKind>(isMentor ? "mentor_meeting" : "independent_activity");
+  const isInteraction = kind !== "independent_activity";
+  // The browser's zone, so a meeting time means what the user meant.
+  const [timeZone, setTimeZone] = useState("America/Denver");
+  useEffect(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz) setTimeZone(tz);
+    } catch {
+      // keep default
+    }
+  }, []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -108,6 +141,12 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
       return next;
     });
   }
+
+  const allLabels = useMemo(() => roleGroups.flatMap((g) => g.options), [roleGroups]);
+  const suggestions = useMemo(
+    () => suggestAccomplishments(actions, isMentor ? "mentor" : "mentee", allLabels, accomplishments),
+    [actions, isMentor, allLabels, accomplishments]
+  );
 
   function validate(): string | null {
     if (isMentor && !matchId) return "Please select a mentee.";
@@ -155,7 +194,10 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
       meetingType: meetingType || null,
       durationMinutes: durationNum,
       actionItems: actions || null,
-      nextMeetingDate: next || null,
+      nextMeetingDate: isInteraction && next ? next : null,
+      nextMeetingTime: isInteraction && next && nextTime ? nextTime : null,
+      nextMeetingTimezone: isInteraction && next ? timeZone : null,
+      eventKind: kind,
     };
     if (isMentor) payload.matchId = matchId;
     const res = await fetch("/api/meeting-logs", {
@@ -178,6 +220,8 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
     setAccomplishments(new Set());
     setActions("");
     setNext("");
+    setNextTime("");
+    if (!isMentor) setKind("independent_activity");
     setMeetingType("");
     setDuration("");
     // Offers get their own celebration (with its own confetti); every other
@@ -244,7 +288,42 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
           </div>
         )}
 
-        {isMentor ? (
+        {hasMentor && (
+          <fieldset>
+            <legend className="label">{isMentor ? "What happened?" : "Who was involved?"}</legend>
+            <div role="radiogroup" className="grid gap-2 sm:grid-cols-3">
+              {KIND_OPTIONS[isMentor ? "mentor" : "mentee"].map((o) => {
+                const on = kind === o.value;
+                return (
+                  <label
+                    key={o.value}
+                    className={
+                      "flex min-h-[44px] cursor-pointer flex-col rounded-lg border px-3 py-2 transition focus-within:ring-2 focus-within:ring-plum-500 " +
+                      (on
+                        ? "border-brand bg-brand/10 text-brand-dark"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-plum-200 hover:bg-plum-50")
+                    }
+                  >
+                    <span className="flex items-center gap-2 text-sm font-semibold">
+                      <input
+                        type="radio"
+                        name="log-kind"
+                        value={o.value}
+                        checked={on}
+                        onChange={() => setKind(o.value)}
+                        className="h-4 w-4 cursor-pointer accent-brand"
+                      />
+                      {o.label}
+                    </span>
+                    <span className="pl-6 text-[11px] text-slate-600">{o.hint}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
+
+        {isMentor || isInteraction ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label className="label">Activity date</label>
@@ -329,7 +408,8 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
             <span className="font-normal text-slate-500">(optional)</span>
           </label>
           <textarea
-            rows={2}
+            id="log-notes"
+            rows={3}
             className="input"
             placeholder={
               isMentor
@@ -339,6 +419,28 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
             value={actions}
             onChange={(e) => setActions(e.target.value)}
           />
+          <div className="mt-2">
+            <DictationButton value={actions} onChange={setActions} />
+          </div>
+          {suggestions.length > 0 && (
+            <div className="mt-2 rounded-lg border border-plum-100 bg-plum-50 px-3 py-2">
+              <p className="text-[11px] font-semibold text-plum-800">
+                Did you also do any of these? Tap to check — nothing is added unless you choose it.
+              </p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {suggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => toggle(s)}
+                    className="min-h-[32px] rounded-full border border-plum-200 bg-white px-3 py-1 text-xs font-medium text-plum-700 transition hover:bg-plum-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-plum-500"
+                  >
+                    + {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <p className="mt-1 text-[11px] leading-snug text-slate-500">
             Please don&apos;t record grades, health information, financial
             details, or other sensitive info — keep notes focused on
@@ -346,18 +448,44 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
           </p>
         </div>
 
-        {isMentor && (
+        {isInteraction && (
           <div>
-            <label className="label">
+            <p className="label">
               Next meeting{" "}
               <span className="font-normal text-slate-500">(optional)</span>
-            </label>
-            <input
-              type="date"
-              className="input"
-              value={next}
-              onChange={(e) => setNext(e.target.value)}
-            />
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="next-date" className="text-xs font-medium text-slate-600">Date</label>
+                <input
+                  id="next-date"
+                  type="date"
+                  className="input"
+                  value={next}
+                  onChange={(e) => setNext(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="next-time" className="text-xs font-medium text-slate-600">
+                  Time <span className="font-normal text-slate-500">(optional)</span>
+                </label>
+                <input
+                  id="next-time"
+                  type="time"
+                  className="input"
+                  value={nextTime}
+                  disabled={!next}
+                  onChange={(e) => setNextTime(e.target.value)}
+                />
+              </div>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-500">
+              {next
+                ? nextTime
+                  ? `You'll both get a reminder the day before and an hour before (${timeZone.replace(/_/g, " ")} time).`
+                  : "You'll both get a reminder the day before. Add a time for an hour-before reminder too."
+                : "Add a date and ICAN will remind you both before you meet."}
+            </p>
           </div>
         )}
 
@@ -442,6 +570,16 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
                   </dd>
                 </div>
               )}
+              {hasMentor && (
+                <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Kind
+                  </dt>
+                  <dd className="mt-0.5 text-slate-800">
+                    {KIND_OPTIONS[isMentor ? "mentor" : "mentee"].find((o) => o.value === kind)?.label}
+                  </dd>
+                </div>
+              )}
               <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
                 <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Activity Date
@@ -501,17 +639,18 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
                   </dd>
                 </div>
               )}
-              {next && (
+              {isInteraction && next && (
                 <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                     Next Meeting
                   </dt>
                   <dd className="mt-0.5 text-slate-800">
-                    {new Date(next).toLocaleDateString(undefined, {
+                    {new Date(`${next}T12:00:00`).toLocaleDateString(undefined, {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
                     })}
+                    {nextTime ? ` at ${nextTime}` : ""}
                   </dd>
                 </div>
               )}
