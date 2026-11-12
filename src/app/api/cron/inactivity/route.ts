@@ -1,7 +1,6 @@
 import { notifyWaitingMentees } from "@/lib/mentor-waitlist-server";
 import { NextResponse } from "next/server";
-import { Buffer } from "node:buffer";
-import { timingSafeEqual } from "node:crypto";
+import { isAuthorizedCron } from "@/lib/cron-auth";
 import { db } from "@/db/client";
 import { matches, users } from "@/db/schema";
 import { and, eq, lt, sql } from "drizzle-orm";
@@ -14,20 +13,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  if (!process.env.CRON_SECRET) {
-    // Loud log, not just a 401 — Vercel cron retries briefly then drops the
-    // invocation silently, so a missing secret would otherwise disable the
-    // inactivity job with no operator-visible signal.
-    console.error(
-      "cron/inactivity: CRON_SECRET is not set — scheduled job cannot run"
-    );
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const auth = req.headers.get("authorization") ?? "";
-  const expected = `Bearer ${process.env.CRON_SECRET}`;
-  const a = Buffer.from(auth);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+  if (!isAuthorizedCron(req, "inactivity")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

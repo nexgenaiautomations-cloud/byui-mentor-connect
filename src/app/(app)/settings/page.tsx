@@ -13,6 +13,7 @@ import { InstallButton } from "@/components/install-button";
 import { listAchievementsForStudent } from "@/lib/achievements";
 import { TrophyBadge } from "@/components/trophy-badge";
 import { missingProfileFields } from "@/lib/profile-completeness";
+import { NotificationPreferences } from "./notification-preferences";
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
@@ -138,6 +139,17 @@ export default async function SettingsPage() {
           )}
         </section>
       )}
+
+      {/* Email reminders (docs/specs/accountability-upgrade.md §3) */}
+      <section className="card" id="notifications">
+        <h2 className="font-display text-lg font-bold text-brand-dark">
+          Email reminders
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Choose which mentorship reminders ICAN emails you. Account and security emails always send.
+        </p>
+        <NotificationPreferences />
+      </section>
 
       {/* PWA install */}
       <section className="card">
