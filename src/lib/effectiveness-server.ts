@@ -1,0 +1,179 @@
+import "server-only";
+// Loads the rows every Program Effectiveness / Executive / ROI / Careers view
+// needs, already restricted to the admin's school and the chosen filters.
+// All queries are parameterized Drizzle; school scoping happens in SQL.
+import { and, eq, inArray, isNull } from "drizzle-orm";
+import { db } from "@/db/client";
+import {
+  careerMilestones,
+  matches,
+  meetingLogs,
+  monthlyFeedback,
+  pods,
+  schoolDomains,
+  users,
+} from "@/db/schema";
+import { emailInScope, type AdminScope } from "@/lib/admin-scope";
+import { departmentOf } from "@/lib/reports";
+import { termOf, type FeedbackRow, type LogRow, type MatchRow, type StudentRow } from "@/lib/effectiveness";
+import type { ExistingMilestone } from "@/lib/career";
+
+export type ProgramFilters = {
+  school: string;
+  department: string;
+  major: string;
+  pod: string;
+  cohort: string;
+};
+
+export function parseProgramFilters(p: Record<string, string | undefined>): ProgramFilters {
+  const clean = (v: string | undefined) => (v ?? "").trim().slice(0, 120);
+  return {
+    school: clean(p.school).toLowerCase(),
+    department: clean(p.department),
+    major: clean(p.major),
+    pod: clean(p.pod),
+    cohort: clean(p.cohort),
+  };
+}
+
+export type ProgramData = {
+  students: StudentRow[];
+  matches: MatchRow[];
+  logs: LogRow[];
+  feedback: FeedbackRow[];
+  milestones: (ExistingMilestone & { verification: string; source: string; employer: string | null })[];
+  options: { majors: string[]; pods: string[]; cohorts: string[]; schools: string[] };
+  studentById: Map<string, StudentRow>;
+};
+
+const CHUNK = 500;
+function chunks<T>(arr: T[]): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += CHUNK) out.push(arr.slice(i, i + CHUNK));
+  return out;
+}
+
+export async function loadProgramData(scope: AdminScope, f: ProgramFilters): Promise<ProgramData> {
+  // Students: active members (not mentors/admins) in the scoped school.
+  const people = await db
+    .select({
+      id: users.id,
+      major: users.major,
+      createdAt: users.createdAt,
+      podName: pods.name,
+    })
+    .from(users)
+    .leftJoin(pods, eq(pods.id, users.podId))
+    .where(
+      and(
+        isNull(users.deactivatedAt),
+        eq(users.isAdmin, false),
+        eq(users.isMentor, false),
+        emailInScope(users.email, scope)
+      )
+    );
+
+  const all: StudentRow[] = people.map((p) => ({
+    id: p.id,
+    major: p.major,
+    department: departmentOf(p.major),
+    podName: p.podName,
+    cohort: termOf(p.createdAt),
+    createdAt: p.createdAt,
+  }));
+  const options = {
+    majors: [...new Set(all.map((s) => s.major).filter((m): m is string => !!m))].sort(),
+    pods: [...new Set(all.map((s) => s.podName).filter((m): m is string => !!m))].sort(),
+    cohorts: [...new Set(all.map((s) => s.cohort))].sort(),
+    schools: scope.platform
+      ? (await db.select({ d: schoolDomains.domain }).from(schoolDomains).where(eq(schoolDomains.active, true))).map((r) => r.d).sort()
+      : [],
+  };
+  const students = all.filter(
+    (s) =>
+      (!f.department || s.department === f.department) &&
+      (!f.major || s.major === f.major) &&
+      (!f.pod || s.podName === f.pod) &&
+      (!f.cohort || s.cohort === f.cohort)
+  );
+  const studentById = new Map(students.map((s) => [s.id, s]));
+  const ids = students.map((s) => s.id);
+  if (ids.length === 0) {
+    return { students, matches: [], logs: [], feedback: [], milestones: [], options, studentById };
+  }
+
+  const matchRows: MatchRow[] = [];
+  const logRows: LogRow[] = [];
+  const milestoneRows: ProgramData["milestones"] = [];
+  for (const part of chunks(ids)) {
+    const [m, l, c] = await Promise.all([
+      db
+        .select({
+          id: matches.id,
+          mentorId: matches.mentorId,
+          menteeId: matches.menteeId,
+          status: matches.status,
+          startedAt: matches.startedAt,
+          endedAt: matches.endedAt,
+          firstMeetingAt: matches.firstMeetingAt,
+          lastInteractionAt: matches.lastInteractionAt,
+        })
+        .from(matches)
+        .where(inArray(matches.menteeId, part)),
+      db
+        .select({
+          studentId: meetingLogs.studentId,
+          matchId: meetingLogs.matchId,
+          eventKind: meetingLogs.eventKind,
+          meetingDate: meetingLogs.meetingDate,
+          group: meetingLogs.accomplishmentGroup,
+          isSystemGenerated: meetingLogs.isSystemGenerated,
+          durationMinutes: meetingLogs.durationMinutes,
+        })
+        .from(meetingLogs)
+        .where(inArray(meetingLogs.studentId, part)),
+      db
+        .select({
+          id: careerMilestones.id,
+          studentId: careerMilestones.studentId,
+          stage: careerMilestones.stage,
+          opportunityType: careerMilestones.opportunityType,
+          relatedMilestoneId: careerMilestones.relatedMilestoneId,
+          occurredOn: careerMilestones.occurredOn,
+          createdAt: careerMilestones.createdAt,
+          verification: careerMilestones.verification,
+          source: careerMilestones.source,
+          employer: careerMilestones.employer,
+        })
+        .from(careerMilestones)
+        .where(inArray(careerMilestones.studentId, part)),
+    ]);
+    matchRows.push(...m);
+    logRows.push(...l);
+    milestoneRows.push(...c);
+  }
+
+  const feedback: FeedbackRow[] = [];
+  for (const part of chunks(matchRows.map((m) => m.id))) {
+    const rows = await db
+      .select({
+        matchId: monthlyFeedback.matchId,
+        role: monthlyFeedback.submittedByRole,
+        rating: monthlyFeedback.rating,
+        year: monthlyFeedback.year,
+        month: monthlyFeedback.month,
+      })
+      .from(monthlyFeedback)
+      .where(inArray(monthlyFeedback.matchId, part));
+    feedback.push(...rows);
+  }
+
+  return { students, matches: matchRows, logs: logRows, feedback, milestones: milestoneRows, options, studentById };
+}
+
+// Used by pages to decide what school a platform admin is looking at.
+export function scopeLabel(scope: AdminScope): string {
+  return scope.school ?? "All schools";
+}
+

@@ -10,6 +10,7 @@ import {
 } from "@/db/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
+import { AnalyticsTabs } from "@/components/analytics-tabs";
 import { StatTile } from "@/components/stat-card";
 import {
   MonthlyLine,
@@ -291,6 +292,7 @@ export default async function AnalyticsPage() {
   // -------- Render --------
   return (
     <div className="space-y-6">
+      <AnalyticsTabs current="/admin/analytics" />
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Program</p>

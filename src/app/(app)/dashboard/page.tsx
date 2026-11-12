@@ -11,6 +11,8 @@ import { KpiStrip } from "@/components/kpi-strip";
 import { getStudentKpis } from "@/lib/kpis";
 import { isPlatformAdmin } from "@/lib/platform-admin";
 import { mentorOpenInMajor } from "@/lib/mentor-waitlist-server";
+import { CareerProgress } from "@/components/career-progress";
+import { applicationLogCounts, listMilestones } from "@/lib/career-server";
 
 export default async function DashboardPage() {
   const me = await getCurrentUser();
@@ -52,6 +54,10 @@ export default async function DashboardPage() {
 
   // Mentee KPI snapshot — drives the new strip and the welcome-panel logic.
   const studentKpis = actingAsMentor ? null : await getStudentKpis(me.id);
+  // Career journey (members only).
+  const [careerMilestoneRows, appCounts] = actingAsMentor
+    ? [[], new Map<string, number>()]
+    : await Promise.all([listMilestones(me.id), applicationLogCounts([me.id])]);
 
   const mentor = alias(users, "mentor_u");
   const mentee = alias(users, "mentee_u");
@@ -257,6 +263,25 @@ export default async function DashboardPage() {
       </section>
 
       {studentKpis && <KpiStrip kpis={studentKpis} />}
+
+      {!actingAsMentor && (
+        <CareerProgress
+          milestones={careerMilestoneRows.map((m) => ({
+            id: m.id,
+            studentId: m.studentId,
+            stage: m.stage,
+            opportunityType: m.opportunityType,
+            employer: m.employer,
+            positionTitle: m.positionTitle,
+            careerField: m.careerField,
+            occurredOn: m.occurredOn.toISOString(),
+            source: m.source,
+            verification: m.verification,
+            relatedMilestoneId: m.relatedMilestoneId,
+          }))}
+          applicationsLogged={appCounts.get(me.id) ?? 0}
+        />
+      )}
 
       {actingAsMentor && impact && (
         <section className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">

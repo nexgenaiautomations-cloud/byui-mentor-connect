@@ -442,3 +442,149 @@ export function DeltaPill({
     </span>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Program Effectiveness additions (docs/specs/accountability-upgrade.md §6).
+// Same no-dependency approach as above: plain markup, server-renderable.
+// ---------------------------------------------------------------------------
+
+// Rate bars where a value can be suppressed (null) for small groups. Each
+// row shows the numerator/denominator so a "100%" of 1 reads honestly.
+export function RateBars({
+  rows,
+  color = "#4A2585",
+  emptyText = "No data yet",
+}: {
+  rows: { label: string; pct: number | null; num: number; den: number; note?: string }[];
+  color?: string;
+  emptyText?: string;
+}) {
+  if (rows.length === 0) return <p className="text-xs text-slate-500">{emptyText}</p>;
+  return (
+    <ul className="space-y-2.5">
+      {rows.map((r) => (
+        <li key={r.label}>
+          <div className="flex items-start justify-between gap-3 text-xs">
+            <span className="min-w-0 break-words font-medium text-slate-700">{r.label}</span>
+            <span className="shrink-0 font-semibold text-slate-900">
+              {r.pct === null ? (
+                <span className="text-slate-500" title="Not enough data to show a reliable rate">—</span>
+              ) : (
+                `${r.pct}%`
+              )}
+              <span className="ml-1 font-normal text-slate-500">
+                ({r.num}/{r.den})
+              </span>
+            </span>
+          </div>
+          <div className="mt-1 h-1.5 rounded-full bg-slate-100" aria-hidden>
+            {r.pct !== null && (
+              <div className="h-1.5 rounded-full" style={{ width: `${Math.max(2, r.pct)}%`, background: color }} />
+            )}
+          </div>
+          {r.note && <p className="mt-0.5 text-[10px] text-slate-500">{r.note}</p>}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// Group x month heatmap. Cells carry the value AND n as text (not color
+// alone), and the table is a real <table> so screen readers can navigate it.
+export function Heatmap({
+  rows,
+  columns,
+  caption,
+}: {
+  rows: { group: string; cells: { month: string; active: number; engaged: number; pct: number | null }[] }[];
+  columns: { key: string; label: string }[];
+  caption: string;
+}) {
+  if (rows.length === 0) return <p className="text-xs text-slate-500">No mentorship pairs in this view yet.</p>;
+  const tone = (pct: number | null) =>
+    pct === null
+      ? "bg-slate-50 text-slate-500"
+      : pct >= 75
+        ? "bg-emerald-600 text-white"
+        : pct >= 50
+          ? "bg-emerald-200 text-emerald-950"
+          : pct >= 25
+            ? "bg-amber-200 text-amber-950"
+            : "bg-rose-200 text-rose-950";
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-separate border-spacing-1 text-xs">
+        <caption className="sr-only">{caption}</caption>
+        <thead>
+          <tr>
+            <th scope="col" className="text-left font-semibold text-slate-600">Group</th>
+            {columns.map((c) => (
+              <th key={c.key} scope="col" className="min-w-[52px] text-center font-semibold text-slate-600">
+                {c.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.group}>
+              <th scope="row" className="whitespace-nowrap pr-2 text-left font-medium text-slate-800">{r.group}</th>
+              {r.cells.map((c) => (
+                <td
+                  key={c.month}
+                  className={`rounded-md px-1 py-1.5 text-center ${tone(c.active ? c.pct : null)}`}
+                  title={c.active ? `${c.engaged} of ${c.active} pairs interacted` : "No active pairs"}
+                >
+                  {c.active ? (
+                    <>
+                      <span className="block font-bold">{c.pct}%</span>
+                      <span className="block text-[10px] opacity-80">n={c.active}</span>
+                    </>
+                  ) : (
+                    "·"
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-2 flex flex-wrap gap-3 text-[10px] text-slate-600">
+        <span><span className="mr-1 inline-block h-2 w-3 rounded-sm bg-emerald-600 align-middle" />75%+ of pairs interacted</span>
+        <span><span className="mr-1 inline-block h-2 w-3 rounded-sm bg-emerald-200 align-middle" />50–74%</span>
+        <span><span className="mr-1 inline-block h-2 w-3 rounded-sm bg-amber-200 align-middle" />25–49%</span>
+        <span><span className="mr-1 inline-block h-2 w-3 rounded-sm bg-rose-200 align-middle" />under 25%</span>
+      </p>
+    </div>
+  );
+}
+
+// Stage funnel: each bar is unique students, width relative to the first
+// stage, with step conversion shown alongside.
+export function Funnel({ steps }: { steps: { label: string; value: number }[] }) {
+  if (steps.every((s) => s.value === 0)) return <p className="text-xs text-slate-500">No career updates in this view yet.</p>;
+  const max = Math.max(...steps.map((s) => s.value), 1);
+  return (
+    <ol className="space-y-2">
+      {steps.map((s, i) => {
+        const prev = i > 0 ? steps[i - 1].value : null;
+        const conv = prev ? Math.round((s.value / prev) * 100) : null;
+        return (
+          <li key={s.label} className="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-2 text-xs">
+            <span className="font-medium text-slate-700">{s.label}</span>
+            <span className="h-5 rounded bg-slate-100" aria-hidden>
+              <span
+                className="block h-5 rounded bg-plum-600"
+                style={{ width: `${Math.max(s.value ? 3 : 0, Math.round((s.value / max) * 100))}%` }}
+              />
+            </span>
+            <span className="w-20 text-right font-semibold text-slate-900">
+              {s.value}
+              {conv !== null && <span className="ml-1 font-normal text-slate-500">({conv}%)</span>}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
