@@ -56,7 +56,8 @@ export type AuditEventType =
   | "ADMIN_CHANGED_POD"
   | "ADMIN_UPDATED_INTERVENTION"
   | "ADMIN_UPDATED_PROGRAM_SETTINGS"
-  | "ADMIN_VERIFIED_CAREER_MILESTONE";
+  | "ADMIN_VERIFIED_CAREER_MILESTONE"
+  | "RETENTION_RUN";
 
 export type AuditSeverity = "info" | "warning" | "critical";
 

@@ -28,6 +28,7 @@ const AUDIT_VALUES = [
   "ADMIN_UPDATED_INTERVENTION",
   "ADMIN_UPDATED_PROGRAM_SETTINGS",
   "ADMIN_VERIFIED_CAREER_MILESTONE",
+  "RETENTION_RUN",
 ];
 
 const DDL = [
@@ -157,12 +158,26 @@ const DDL = [
    )`,
   `CREATE INDEX IF NOT EXISTS "intervention_event_case_idx" ON "intervention_event" ("intervention_id", "created_at")`,
 
+  // Legal / investigation holds honoured by the retention job. user_id is
+  // deliberately not a foreign key: a hold must survive account deletion.
+  `CREATE TABLE IF NOT EXISTS "retention_hold" (
+     "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+     "user_id" text NOT NULL,
+     "reason" text NOT NULL,
+     "created_by_id" text REFERENCES "user"("id") ON DELETE SET NULL,
+     "created_at" timestamp DEFAULT now() NOT NULL,
+     "released_at" timestamp
+   )`,
+  `CREATE INDEX IF NOT EXISTS "retention_hold_user_idx" ON "retention_hold" ("user_id")`,
+
   `DO $$ BEGIN
      IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_user') THEN
        GRANT SELECT, INSERT, UPDATE, DELETE ON
          "notification_preference", "scheduled_meeting", "notification_delivery",
          "program_setting", "career_milestone", "intervention", "intervention_event"
        TO app_user;
+       -- The app may read holds; only operators (owner role) create/release them.
+       GRANT SELECT ON "retention_hold" TO app_user;
      END IF;
    END $$`,
 ];

@@ -109,6 +109,7 @@ export const auditEventType = pgEnum("audit_event_type", [
   "ADMIN_UPDATED_INTERVENTION",
   "ADMIN_UPDATED_PROGRAM_SETTINGS",
   "ADMIN_VERIFIED_CAREER_MILESTONE",
+  "RETENTION_RUN",
 ]);
 
 // Auth.js users table — also our "members". Everyone who registers is a member.
@@ -786,6 +787,21 @@ export const interventionEvents = pgTable(
   (t) => ({
     caseIdx: index("intervention_event_case_idx").on(t.interventionId, t.createdAt),
   })
+);
+
+// Legal / investigation holds. While a hold is open (released_at null) the
+// retention job never treats that person's records as eligible.
+export const retentionHolds = pgTable(
+  "retention_hold",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id").notNull(),
+    reason: text("reason").notNull(),
+    createdById: text("created_by_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    releasedAt: timestamp("released_at", { mode: "date" }),
+  },
+  (t) => ({ userIdx: index("retention_hold_user_idx").on(t.userId) })
 );
 
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
