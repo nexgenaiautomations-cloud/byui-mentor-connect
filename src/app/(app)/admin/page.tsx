@@ -93,12 +93,20 @@ export default async function AdminPage() {
             Program overview, mentor application review, recent activity.
           </p>
         </div>
-        <Link
-          href="/admin/analytics"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-brand-dark active:scale-[0.98] cursor-pointer"
-        >
-          Full analytics →
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/interventions" className="btn-outline min-h-[44px]">
+            Intervention Center
+          </Link>
+          <Link href="/admin/analytics/executive" className="btn-outline min-h-[44px]">
+            Executive summary
+          </Link>
+          <Link
+            href="/admin/analytics"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-brand-dark active:scale-[0.98] cursor-pointer"
+          >
+            Full analytics →
+          </Link>
+        </div>
       </header>
 
       <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">

@@ -61,6 +61,15 @@ export function monthKey(d: Date): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
+export function monthLabel(key: string, withYear = false): string {
+  const [y, m] = key.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleString("en-US", {
+    month: "short",
+    ...(withYear ? { year: "2-digit" } : {}),
+    timeZone: "UTC",
+  });
+}
+
 export function lastMonthKeys(now: Date, n: number): string[] {
   const out: string[] = [];
   for (let i = n - 1; i >= 0; i--) {

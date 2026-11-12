@@ -2,10 +2,13 @@ import "server-only";
 // Loads the rows every Program Effectiveness / Executive / ROI / Careers view
 // needs, already restricted to the admin's school and the chosen filters.
 // All queries are parameterized Drizzle; school scoping happens in SQL.
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   careerMilestones,
+  interventionEvents,
+  interventions,
+  notificationDeliveries,
   matches,
   meetingLogs,
   monthlyFeedback,
@@ -17,6 +20,9 @@ import { emailInScope, type AdminScope } from "@/lib/admin-scope";
 import { departmentOf } from "@/lib/reports";
 import { termOf, type FeedbackRow, type LogRow, type MatchRow, type StudentRow } from "@/lib/effectiveness";
 import type { ExistingMilestone } from "@/lib/career";
+import { OPEN_STATUSES } from "@/lib/interventions";
+import { FOLLOW_UP_KINDS, REMINDER_KINDS, trackedMentorship, type RoiTracked } from "@/lib/program-report";
+
 
 export type ProgramFilters = {
   school: string;
@@ -177,3 +183,98 @@ export function scopeLabel(scope: AdminScope): string {
   return scope.school ?? "All schools";
 }
 
+
+// ---- Executive / ROI extras ----
+
+
+export async function openInterventionStudents(scope: AdminScope): Promise<Set<string>> {
+  const rows = await db
+    .select({ studentId: interventions.studentId })
+    .from(interventions)
+    .where(
+      and(
+        inArray(interventions.status, [...OPEN_STATUSES]),
+        scope.school ? eq(interventions.school, scope.school) : sql`true`
+      )
+    );
+  return new Set(rows.map((r) => r.studentId).filter((v): v is string => !!v));
+}
+
+export async function interventionOutcomes(scope: AdminScope, range: { start: Date; end: Date }) {
+  const schoolCond = scope.school ? eq(interventions.school, scope.school) : sql`true`;
+  const [opened, byStatus] = await Promise.all([
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(interventions)
+      .where(and(schoolCond, gte(interventions.openedAt, range.start), lt(interventions.openedAt, range.end))),
+    db
+      .select({ status: interventions.status, n: sql<number>`count(*)::int` })
+      .from(interventions)
+      .where(and(schoolCond, gte(interventions.openedAt, range.start), lt(interventions.openedAt, range.end)))
+      .groupBy(interventions.status),
+  ]);
+  return { opened: opened[0]?.n ?? 0, byStatus: Object.fromEntries(byStatus.map((r) => [r.status, r.n])) as Record<string, number> };
+}
+
+// Tracked (not modeled) quantities for the ROI view, scoped to the school
+// through the people involved.
+export async function loadRoiTracked(scope: AdminScope, data: ProgramData, range: { start: Date; end: Date }): Promise<RoiTracked> {
+  const studentIds = data.students.map((s) => s.id);
+  const matchIds = data.matches.map((m) => m.id);
+  const schoolCond = scope.school ? eq(interventions.school, scope.school) : sql`true`;
+  const [deliveries, actionsDone, outreach, resolved] = await Promise.all([
+    matchIds.length
+      ? db
+          .select({ kind: notificationDeliveries.kind, n: sql<number>`count(*)::int` })
+          .from(notificationDeliveries)
+          .where(
+            and(
+              eq(notificationDeliveries.status, "sent"),
+              inArray(notificationDeliveries.matchId, matchIds),
+              gte(notificationDeliveries.createdAt, range.start),
+              lt(notificationDeliveries.createdAt, range.end)
+            )
+          )
+          .groupBy(notificationDeliveries.kind)
+      : Promise.resolve([] as { kind: string; n: number }[]),
+    studentIds.length
+      ? db
+          .select({ n: sql<number>`count(*)::int` })
+          .from(meetingLogs)
+          .where(
+            and(
+              inArray(meetingLogs.studentId, studentIds),
+              isNotNull(meetingLogs.actionItemsDoneAt),
+              gte(meetingLogs.actionItemsDoneAt, range.start),
+              lt(meetingLogs.actionItemsDoneAt, range.end)
+            )
+          )
+      : Promise.resolve([{ n: 0 }]),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(interventionEvents)
+      .innerJoin(interventions, eq(interventions.id, interventionEvents.interventionId))
+      .where(
+        and(
+          schoolCond,
+          eq(interventionEvents.action, "outreach"),
+          gte(interventionEvents.createdAt, range.start),
+          lt(interventionEvents.createdAt, range.end)
+        )
+      ),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(interventions)
+      .where(and(schoolCond, isNotNull(interventions.resolvedAt), gte(interventions.resolvedAt, range.start), lt(interventions.resolvedAt, range.end))),
+  ]);
+  const byKind = new Map(deliveries.map((d) => [d.kind, d.n]));
+  const sum = (kinds: string[]) => kinds.reduce((s, k) => s + (byKind.get(k) ?? 0), 0);
+  return {
+    ...trackedMentorship(data.logs, range),
+    remindersDelivered: sum(REMINDER_KINDS),
+    followUpsDelivered: sum(FOLLOW_UP_KINDS),
+    followUpTasksCompleted: actionsDone[0]?.n ?? 0,
+    interventionsRecorded: outreach[0]?.n ?? 0,
+    casesResolved: resolved[0]?.n ?? 0,
+  };
+}
