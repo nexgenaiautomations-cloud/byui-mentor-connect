@@ -74,8 +74,8 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <div>
-        <label className="label">Why do you want to mentor?</label>
-        <textarea
+        <label className="label" htmlFor="apply-field-1">Why do you want to mentor?</label>
+        <textarea id="apply-field-1"
           required
           rows={4}
           minLength={20}
@@ -126,8 +126,8 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
       </div>
 
       <div>
-        <label className="label">How many mentees can you manage?</label>
-        <input
+        <label className="label" htmlFor="apply-field-2">How many mentees can you manage?</label>
+        <input id="apply-field-2"
           type="number"
           min={1}
           max={10}
@@ -142,7 +142,7 @@ export function ApplyForm({ hasOpenApplication }: { hasOpenApplication: boolean 
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
       )}
 
       <button type="submit" disabled={submitting} className="btn-primary w-full">

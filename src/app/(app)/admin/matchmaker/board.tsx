@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 import {
   DndContext,
   DragOverlay,
@@ -147,6 +148,17 @@ export function MatchmakerBoard({
     }
   }
 
+  // Keyboard / screen-reader alternative to dragging (WCAG 2.1.1): pick the
+  // mentor from a menu in the row. Same state as a drop, so "Match" and
+  // "Match All" work identically either way.
+  function assignFromMenu(menteeId: string, mentorId: string) {
+    if (!mentorId) {
+      clearSlot(menteeId);
+      return;
+    }
+    setAssignments((prev) => ({ ...prev, [menteeId]: mentorId }));
+  }
+
   function clearSlot(menteeId: string) {
     setAssignments((prev) => {
       const next = { ...prev };
@@ -236,6 +248,9 @@ export function MatchmakerBoard({
     setTimeout(() => setFlash(null), 3500);
   }
 
+  // Focus moves in, Tab stays inside, focus returns to the opener (WCAG 2.4.3).
+  const dialogFocusRef = useDialogFocus(confirmAllOpen);
+
   useEffect(() => {
     if (!confirmAllOpen) return;
     const prev = document.body.style.overflow;
@@ -291,12 +306,12 @@ export function MatchmakerBoard({
       </div>
 
       {flash && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <div role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
           {flash}
         </div>
       )}
       {err && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {err}
         </div>
       )}
@@ -324,8 +339,11 @@ export function MatchmakerBoard({
                 <MenteeRow mentee={m} />
                 <MentorSlot
                   menteeId={m.id}
+                  menteeName={m.name ?? "this mentee"}
                   mentor={assignedMentor}
                   matchTier={matchTier}
+                  mentors={mentors}
+                  onAssign={(mentorId) => assignFromMenu(m.id, mentorId)}
                   onClear={() => clearSlot(m.id)}
                 />
                 <div className="flex items-center justify-end">
@@ -360,6 +378,7 @@ export function MatchmakerBoard({
             className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
           />
           <div
+            ref={dialogFocusRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="match-all-title"
@@ -514,12 +533,14 @@ function MentorChip({
   return (
     <div
       className={
-        "flex items-center gap-2 rounded-lg border bg-white px-2 py-2 transition " +
+        "flex items-center gap-2 rounded-lg border px-2 py-2 transition " +
         (dragging
-          ? "border-brand shadow-lift ring-2 ring-brand"
+          ? "border-brand bg-white shadow-lift ring-2 ring-brand"
           : disabled
-          ? "border-slate-200 opacity-50"
-          : "border-slate-200 hover:border-brand-light")
+          ? // Dimmed with a dashed border and grey fill, not opacity: opacity
+            // pushed the names below 4.5:1 contrast (WCAG 1.4.3).
+            "border-dashed border-slate-300 bg-slate-50"
+          : "border-slate-200 bg-white hover:border-brand-light")
       }
     >
       <button
@@ -565,7 +586,7 @@ function MentorChip({
         className={
           "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold " +
           (disabled
-            ? "bg-slate-100 text-slate-500"
+            ? "bg-slate-100 text-slate-700"
             : mentor.slotsLeft === 1
             ? "bg-amber-50 text-amber-700"
             : "bg-emerald-50 text-emerald-700")
@@ -614,70 +635,97 @@ function MenteeRow({ mentee }: { mentee: MenteeCard }) {
 
 function MentorSlot({
   menteeId,
+  menteeName,
   mentor,
   matchTier,
+  mentors,
+  onAssign,
   onClear,
 }: {
   menteeId: string;
+  menteeName: string;
   mentor: MentorCard | undefined;
   matchTier: ReturnType<typeof matchQuality>;
+  mentors: MentorCard[];
+  onAssign: (mentorId: string) => void;
   onClear: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `mentee:${menteeId}` });
+  const selectId = `assign-${menteeId}`;
+  // Mentors with room, plus whoever is already in this slot.
+  const options = mentors.filter((m) => m.slotsLeft > 0 || m.id === mentor?.id);
   return (
-    <div
-      ref={setNodeRef}
-      className={
-        "min-h-[72px] rounded-xl p-2 transition " +
-        (isOver
-          ? "bg-brand-light/30 ring-2 ring-brand"
-          : mentor
-          ? "bg-white ring-1 ring-slate-200"
-          : "bg-slate-50 ring-1 ring-dashed ring-slate-300")
-      }
-    >
-      {mentor ? (
-        <div className="flex items-start gap-2">
-          <div className="flex-1">
-            <DraggableMentor mentor={mentor} dragId={`slot:${menteeId}`} />
-            {matchTier && (
-              <p
-                className={
-                  "mt-1 px-1 text-[10px] font-semibold " +
-                  (matchTier.tier === "major"
-                    ? "text-brand"
-                    : "text-slate-500")
-                }
-              >
-                ↳ {matchTier.label}
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={onClear}
-            aria-label="Remove mentor"
-            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
+    <div>
+      <div
+        ref={setNodeRef}
+        className={
+          "min-h-[72px] rounded-xl p-2 transition " +
+          (isOver
+            ? "bg-brand-light/30 ring-2 ring-brand"
+            : mentor
+            ? "bg-white ring-1 ring-slate-200"
+            : "bg-slate-50 ring-1 ring-dashed ring-slate-300")
+        }
+      >
+        {mentor ? (
+          <div className="flex items-start gap-2">
+            <div className="flex-1">
+              <DraggableMentor mentor={mentor} dragId={`slot:${menteeId}`} />
+              {matchTier && (
+                <p
+                  className={
+                    "mt-1 px-1 text-[10px] font-semibold " +
+                    (matchTier.tier === "major"
+                      ? "text-brand"
+                      : "text-slate-500")
+                  }
+                >
+                  ↳ {matchTier.label}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={onClear}
+              aria-label="Remove mentor"
+              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
             >
-              <path d="M6 6 18 18M18 6 6 18" />
-            </svg>
-          </button>
-        </div>
-      ) : (
-        <p className="grid h-full place-items-center text-xs font-medium text-slate-500">
-          Drop a mentor here
-        </p>
-      )}
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M6 6 18 18M18 6 6 18" />
+              </svg>
+            </button>
+          </div>
+        ) : (
+          <p className="grid h-full place-items-center text-xs font-medium text-slate-500">
+            Drop a mentor here
+          </p>
+        )}
+      </div>
+      <label htmlFor={selectId} className="sr-only">
+        Mentor for {menteeName}
+      </label>
+      <select
+        id={selectId}
+        value={mentor?.id ?? ""}
+        onChange={(e) => onAssign(e.target.value)}
+        className="input mt-2 py-1.5 text-xs"
+      >
+        <option value="">{mentor ? "No mentor (clear)" : "Choose a mentor…"}</option>
+        {options.map((m) => (
+          <option key={m.id} value={m.id}>
+            {(m.name ?? "Mentor") + (m.major ? ` — ${m.major}` : "") + ` (${m.slotsLeft} open)`}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

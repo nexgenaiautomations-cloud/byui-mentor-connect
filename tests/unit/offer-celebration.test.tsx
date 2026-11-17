@@ -132,11 +132,19 @@ describe("OfferCelebration", () => {
     });
   });
 
-  it.each([
-    ["internship", 7000],
-    ["part_time", 7500],
-    ["full_time", 6000],
-  ] as const)("%s closes on its own after %ims", (kind, ms) => {
+  it.each(["internship", "part_time"] as const)(
+    "%s dialog stays open until the user closes it (WCAG 2.2.1)",
+    (kind) => {
+      vi.useFakeTimers();
+      const onDone = vi.fn();
+      render(<OfferCelebration kind={kind} onDone={onDone} />);
+      act(() => vi.advanceTimersByTime(60_000));
+      expect(onDone).not.toHaveBeenCalled();
+      expect(screen.getByRole("dialog")).toBeTruthy();
+    }
+  );
+
+  it.each([["full_time", 6000]] as const)("%s banner closes on its own after %ims", (kind, ms) => {
     vi.useFakeTimers();
     const onDone = vi.fn();
     render(<OfferCelebration kind={kind} onDone={onDone} />);
@@ -181,7 +189,8 @@ describe("OfferCelebration", () => {
     rerender(<OfferCelebration kind="internship" onDone={second} />);
     await flush();
     act(() => vi.advanceTimersByTime(3000));
-    // Original 7s timer still fires (4s + 3s), using the latest onDone.
+    // Closing after the re-render uses the latest onDone, exactly once.
+    fireEvent.click(screen.getByRole("button", { name: "Keep going" }));
     expect(second).toHaveBeenCalledTimes(1);
     expect(first).not.toHaveBeenCalled();
     expect(confetti.mock.calls.length).toBeLessThanOrEqual(callsAfterStart + 4);

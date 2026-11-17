@@ -11,6 +11,8 @@ import { MentorProfileButton } from "./profile-modal";
 import { sameSchoolAs } from "@/lib/school-scope";
 import { rankMentors, RECOMMENDED_MIN_SCORE } from "@/lib/mentor-ranking";
 
+export const metadata = { title: "Find a mentor" };
+
 export default async function MentorsPage({
   searchParams,
 }: {

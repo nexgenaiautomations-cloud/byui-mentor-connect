@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useTransition } from "react";
-import { setActiveRoleAction, signOutAction } from "@/lib/actions";
+import { usePathname } from "next/navigation";
+import { signOutAction } from "@/lib/actions";
 import type { User } from "@/db/schema";
 import { ROLE_LABELS, type ActiveRole } from "@/lib/roles";
 import { Logo } from "./logo";
 import { InstallButton } from "./install-button";
 import { ReportIssueButton } from "./report-issue-button";
+import { RoleSwitcher } from "./role-switcher";
 
 function initials(name: string | null | undefined, fallback: string) {
   if (!name) return fallback;
@@ -118,6 +118,7 @@ export function Sidebar({
         {/* Role switcher — only shown when the user has more than one role */}
         {availableRoles.length > 1 && (
           <RoleSwitcher
+            id="role-switcher"
             activeRole={activeRole}
             availableRoles={availableRoles}
           />
@@ -181,46 +182,6 @@ export function Sidebar({
         </form>
       </div>
     </aside>
-  );
-}
-
-function RoleSwitcher({
-  activeRole,
-  availableRoles,
-}: {
-  activeRole: ActiveRole;
-  availableRoles: ActiveRole[];
-}) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  return (
-    <div className="mb-4">
-      <label
-        htmlFor="role-switcher"
-        className="block text-[10px] font-bold uppercase tracking-wider text-white/70"
-      >
-        Active role
-      </label>
-      <select
-        id="role-switcher"
-        value={activeRole}
-        disabled={pending}
-        onChange={(e) => {
-          const next = e.target.value as ActiveRole;
-          startTransition(async () => {
-            await setActiveRoleAction(next);
-            router.push("/dashboard");
-          });
-        }}
-        className="mt-1 w-full rounded-lg border border-white/30 bg-white/10 px-2 py-1.5 text-xs font-semibold text-white outline-none ring-brand-light focus:ring-2 disabled:opacity-50 cursor-pointer"
-      >
-        {availableRoles.map((r) => (
-          <option key={r} value={r} className="text-slate-800">
-            {ROLE_LABELS[r]}
-          </option>
-        ))}
-      </select>
-    </div>
   );
 }
 

@@ -14,6 +14,8 @@ import {
 import { loadReport } from "@/lib/reports-server";
 import { adminScopeFor } from "@/lib/admin-scope";
 
+export const metadata = { title: "Reports" };
+
 type Search = Record<string, string | undefined>;
 
 function fmtDay(iso: string) {
@@ -169,7 +171,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
       </p>
 
       <div className="card overflow-hidden p-0">
-        <div className="overflow-x-auto">
+        <div tabIndex={0} role="region" aria-label="Report table" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-plum-500 overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-600">
               <tr>

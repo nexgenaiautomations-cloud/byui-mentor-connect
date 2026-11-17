@@ -15,6 +15,8 @@ import {
 } from "@/lib/issues-server";
 import { IssueActions } from "./issue-actions";
 
+export const metadata = { title: "Reported issues" };
+
 const STATUS_TONE: Record<string, string> = {
   open: "bg-amber-100 text-amber-900",
   addressed: "bg-emerald-100 text-emerald-900",

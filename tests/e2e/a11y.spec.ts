@@ -32,3 +32,18 @@ for (const path of PUBLIC_PAGES) {
     expect(summary, JSON.stringify(summary, null, 2)).toEqual([]);
   });
 }
+
+// WCAG 2.4.2: every page names itself, not just the product.
+const TITLED_PAGES: [string, string][] = [
+  ["/login", "Sign in · ICAN"],
+  ["/signup", "Create account · ICAN"],
+  ["/forgot-password", "Forgot password · ICAN"],
+  ["/accessibility", "Accessibility · ICAN"],
+  ["/privacy", "Privacy Notice · ICAN"],
+];
+for (const [path, title] of TITLED_PAGES) {
+  test(`WCAG 2.4.2 page title: ${path} @public`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page).toHaveTitle(title);
+  });
+}

@@ -5,6 +5,8 @@ import { Logo } from "@/components/logo";
 import { IndependenceNotice } from "@/components/independence-notice";
 import { SignupForm } from "./signup-form";
 
+export const metadata = { title: "Create account" };
+
 const AUTH_PHOTO = "/hero-students.jpg";
 
 export default async function SignupPage() {

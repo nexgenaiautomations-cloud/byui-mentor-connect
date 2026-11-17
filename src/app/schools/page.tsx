@@ -5,7 +5,7 @@ import { IndependenceNotice } from "@/components/independence-notice";
 import { SchoolInquiryForm } from "./inquiry-form";
 
 export const metadata: Metadata = {
-  title: "For schools — ICAN",
+  title: "For schools",
   description:
     "Bring ICAN peer mentorship to your school. Tell us about your school and we'll add your student email domain.",
 };

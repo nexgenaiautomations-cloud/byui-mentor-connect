@@ -8,6 +8,8 @@ import { adminScopeFor, emailInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
 import { ActiveMatchesTable, EndedMatchesTable, type ActiveMatchRow, type EndedMatchRow } from "./matches-table";
 
+export const metadata = { title: "Matches" };
+
 function daysSince(d: Date) {
   return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
 }

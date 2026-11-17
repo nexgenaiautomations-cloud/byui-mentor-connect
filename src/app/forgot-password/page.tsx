@@ -4,6 +4,8 @@ import { auth } from "../../../auth";
 import { Logo } from "@/components/logo";
 import { ForgotPasswordForm } from "./forgot-form";
 
+export const metadata = { title: "Forgot password" };
+
 export default async function ForgotPasswordPage() {
   const session = await auth();
   if (session?.user?.id) redirect("/dashboard");

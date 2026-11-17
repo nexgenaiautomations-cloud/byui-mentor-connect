@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef } from "react";
 import type { CelebrationKind } from "@/lib/possible-actions";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 export type TrophyToast = {
   key: string;
   title: string;
@@ -13,6 +14,7 @@ export type TrophyToast = {
 // route's bundle. Safe to await; if the module fails to load we just skip
 // the burst rather than crash the page.
 export async function fireConfetti() {
+  if (prefersReducedMotion()) return; // WCAG 2.3.3: no motion burst when the user opted out
   try {
     const confetti = (await import("canvas-confetti")).default;
     confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
@@ -86,7 +88,8 @@ export function AchievementToast({
 //   internship → Trophy pop      (dimmed page, side cannons, trophy card)
 //   part_time  → Fireworks night (deep purple, bursts, gold "Congratulations")
 //   full_time  → Gold seal       (no overlay: "HIRED!" stamp, streamers, banner)
-// All auto-dismiss; click, Esc, or "Keep going" closes early. Confetti is
+// The full-time banner auto-dismisses; the two dialogs wait for click, Esc
+// or "Keep going". Confetti is
 // skipped for prefers-reduced-motion and the CSS animations fall back to a
 // static card (see .ican-* in globals.css).
 
@@ -133,6 +136,9 @@ export function OfferCelebration({
 }) {
   const timers = useRef<number[]>([]);
   const keepGoing = useRef<HTMLButtonElement>(null);
+  // The two blocking celebrations are modal: keep Tab inside and give focus
+  // back afterwards. Escape is already handled below.
+  const dialogFocusRef = useDialogFocus(kind === "internship" || kind === "part_time");
   // Parent passes an inline onDone; keep it in a ref so re-renders (e.g.
   // router.refresh after saving) don't restart the animation.
   const onDoneRef = useRef(onDone);
@@ -163,7 +169,10 @@ export function OfferCelebration({
       if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
-    later(close, DURATION[kind]);
+    // Only the non-blocking full-time banner times out. The internship and
+    // part-time celebrations are dialogs that hold focus, so they stay until
+    // the user closes them (WCAG 2.2.1 Timing Adjustable).
+    if (kind === "full_time") later(close, DURATION[kind]);
     keepGoing.current?.focus();
 
     if (!prefersReducedMotion()) {
@@ -260,6 +269,7 @@ export function OfferCelebration({
   if (kind === "internship") {
     return (
       <div
+        ref={dialogFocusRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="offer-celebration-title"
@@ -287,6 +297,7 @@ export function OfferCelebration({
     const word = "Congratulations";
     return (
       <div
+        ref={dialogFocusRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="offer-celebration-title"

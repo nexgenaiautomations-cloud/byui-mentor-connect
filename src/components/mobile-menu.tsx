@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
-import { setActiveRoleAction, signOutAction } from "@/lib/actions";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { signOutAction } from "@/lib/actions";
+import { RoleSwitcher } from "./role-switcher";
 import type { User } from "@/db/schema";
 import { ROLE_LABELS, type ActiveRole } from "@/lib/roles";
 import { Logo } from "./logo";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 type NavItem = { href: string; label: string };
 
 function buildNav(
@@ -72,8 +74,6 @@ export function MobileMenu({
   availableRoles: ActiveRole[];
 }) {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
-  const [switching, startSwitch] = useTransition();
   const pathname = usePathname() || "/";
   const { primary, admin } = buildNav(activeRole, user.isHeadAdmin);
 
@@ -83,6 +83,10 @@ export function MobileMenu({
     setLastPath(pathname);
     setOpen(false);
   }
+
+  // The open drawer is a modal dialog: focus moves in, Tab stays inside,
+  // Escape closes it and focus returns to the menu button (WCAG 2.1.2, 2.4.3, 4.1.2).
+  const drawerRef = useDialogFocus<HTMLElement>(open, () => setOpen(false));
 
   // Lock body scroll while drawer is open
   useEffect(() => {
@@ -101,9 +105,10 @@ export function MobileMenu({
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
-        className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 text-white ring-1 ring-white/30 hover:bg-white/25 cursor-pointer"
+        aria-expanded={open}
+        className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 text-white ring-1 ring-white/30 hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
+        <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
              strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
           <path d="M3 6h18M3 12h18M3 18h18" />
         </svg>
@@ -113,11 +118,18 @@ export function MobileMenu({
         <div className="fixed inset-0 z-50 lg:hidden">
           {/* Backdrop */}
           <div
+            aria-hidden
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-plum-900/70 backdrop-blur-sm"
           />
           {/* Drawer — slides in from the right to match the trigger button */}
-          <aside className="absolute right-0 top-0 flex h-full w-72 flex-col bg-plum-900 text-white shadow-2xl">
+          <aside
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
+            className="absolute right-0 top-0 flex h-full w-72 flex-col bg-plum-900 text-white shadow-2xl focus:outline-none"
+          >
             <div className="flex items-center justify-between px-6 pt-6 pb-5">
               <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
                 <Logo size={36} />
@@ -132,9 +144,9 @@ export function MobileMenu({
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close menu"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10 cursor-pointer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+                <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
                      strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                   <path d="M6 6 18 18M18 6 6 18" />
                 </svg>
@@ -143,34 +155,13 @@ export function MobileMenu({
 
             <nav className="flex-1 overflow-y-auto px-6">
               {availableRoles.length > 1 && (
-                <div className="mb-4">
-                  <label
-                    htmlFor="mobile-role-switcher"
-                    className="block text-[10px] font-bold uppercase tracking-wider text-white/60"
-                  >
-                    Active role
-                  </label>
-                  <select
-                    id="mobile-role-switcher"
-                    value={activeRole}
-                    disabled={switching}
-                    onChange={(e) => {
-                      const next = e.target.value as ActiveRole;
-                      startSwitch(async () => {
-                        await setActiveRoleAction(next);
-                        router.push("/dashboard");
-                        setOpen(false);
-                      });
-                    }}
-                    className="mt-1 w-full rounded-lg border border-white/30 bg-white/10 px-2 py-1.5 text-sm font-semibold text-white outline-none disabled:opacity-50 cursor-pointer"
-                  >
-                    {availableRoles.map((r) => (
-                      <option key={r} value={r} className="text-slate-800">
-                        {ROLE_LABELS[r]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <RoleSwitcher
+                  id="mobile-role-switcher"
+                  activeRole={activeRole}
+                  availableRoles={availableRoles}
+                  onSwitched={() => setOpen(false)}
+                  textSize="text-sm"
+                />
               )}
               <ul className="space-y-1.5">
                 {primary.map((item) => (

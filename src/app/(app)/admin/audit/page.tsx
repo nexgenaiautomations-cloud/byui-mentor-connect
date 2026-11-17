@@ -6,6 +6,8 @@ import { auditEvents, users } from "@/db/schema";
 import { getCurrentUser } from "@/lib/session";
 import { adminScopeFor, auditEventInScope } from "@/lib/admin-scope";
 
+export const metadata = { title: "Audit log" };
+
 const SEVERITY_TONE: Record<string, string> = {
   info: "bg-slate-100 text-slate-700",
   warning: "bg-amber-100 text-amber-800",
@@ -135,7 +137,7 @@ export default async function AdminAuditPage({
         </a>
       </form>
 
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-soft">
+      <div tabIndex={0} role="region" aria-label="Audit log table" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-plum-500 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-soft">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left">
             <tr>

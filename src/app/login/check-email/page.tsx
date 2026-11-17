@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ResendVerifyButton } from "./resend-button";
 
+export const metadata = { title: "Check your email" };
+
 export default async function CheckEmailPage({
   searchParams,
 }: {

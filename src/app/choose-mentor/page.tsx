@@ -14,7 +14,7 @@ import { joinMentorWaitlist } from "@/lib/mentor-waitlist-server";
 import { ChooseMentorButton } from "./choose-button";
 
 export const metadata: Metadata = {
-  title: "Choose your mentor · ICAN",
+  title: "Choose your mentor",
 };
 
 // Last step of sign-up (Shaun Franklin, 2026-11-09): profile, then the

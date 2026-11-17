@@ -4,6 +4,8 @@ import { adminScopeFor } from "@/lib/admin-scope";
 import { loadStewardship } from "@/lib/stewardship-server";
 import { StewardshipBoard } from "./board";
 
+export const metadata = { title: "Stewardship" };
+
 // /admin/stewardship — assign mentors to executive mentors by dragging them
 // between columns. Shaun Franklin, 2026-11-09.
 export default async function StewardshipPage() {

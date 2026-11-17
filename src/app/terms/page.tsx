@@ -12,7 +12,7 @@ import {
 } from "@/lib/disclaimers";
 
 export const metadata: Metadata = {
-  title: "Terms of Use — ICAN",
+  title: "Terms of Use",
   description:
     "Terms of Use for ICAN, an independent, student-run peer mentorship website that is not affiliated with BYU-Idaho.",
 };

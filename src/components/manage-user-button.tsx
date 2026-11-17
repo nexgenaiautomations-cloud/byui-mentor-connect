@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MANAGED_ROLES, ROLE_NAMES, type ManagedRole } from "@/lib/user-admin";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 export type ManageTarget = {
   id: string;
   name: string | null;
@@ -58,6 +59,9 @@ function ManageUserModal({ target, onClose }: { target: ManageTarget; onClose: (
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Focus moves in, Tab stays inside, focus returns to the opener (WCAG 2.4.3).
+  const dialogFocusRef = useDialogFocus(true);
+
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -98,7 +102,7 @@ function ManageUserModal({ target, onClose }: { target: ManageTarget; onClose: (
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 text-left" onClick={(e) => e.stopPropagation()}>
       <div aria-hidden onClick={() => !busy && onClose()} className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm" />
-      <div role="dialog" aria-modal="true" aria-labelledby="manage-title" className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-brand sm:p-6">
+      <div ref={dialogFocusRef} role="dialog" aria-modal="true" aria-labelledby="manage-title" className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl ring-4 ring-brand sm:p-6">
         <p className="text-[11px] font-bold uppercase tracking-wider text-brand">Manage member</p>
         <h2 id="manage-title" className="mt-1 font-display text-xl font-black text-brand-dark">{who}</h2>
         <p className="text-xs text-slate-600">{target.email}</p>

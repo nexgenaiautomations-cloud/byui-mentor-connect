@@ -9,6 +9,8 @@ import {
 import { getTrophyStats } from "@/lib/trophy-stats";
 import { TrophyBadge } from "@/components/trophy-badge";
 
+export const metadata = { title: "Trophy case" };
+
 export default async function TrophyCasePage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
@@ -174,7 +176,7 @@ function BadgeCard({ achievement }: { achievement: AchievementListing }) {
           {description}
         </p>
         {isEarned && earnedAt && (
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
             Earned{" "}
             {new Date(earnedAt).toLocaleDateString(undefined, {
               month: "short",

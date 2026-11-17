@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 import {
   REJECTION_EMAIL_BODY,
   REJECTION_EMAIL_SUBJECT,
@@ -21,6 +22,9 @@ export function ApplicationActions({
   const [toEmail, setToEmail] = useState(applicantEmail);
   const [subject, setSubject] = useState(REJECTION_EMAIL_SUBJECT);
   const [body, setBody] = useState(REJECTION_EMAIL_BODY);
+
+  // Focus moves in, Tab stays inside, focus returns to the opener (WCAG 2.4.3).
+  const dialogFocusRef = useDialogFocus(rejectOpen);
 
   useEffect(() => {
     if (!rejectOpen) return;
@@ -84,7 +88,7 @@ export function ApplicationActions({
   return (
     <>
       <div className="mt-4 flex items-center justify-end gap-2">
-        {err && !rejectOpen && <span className="text-xs text-red-600">{err}</span>}
+        {err && !rejectOpen && <span role="alert" className="text-xs text-red-600">{err}</span>}
         <button
           type="button"
           onClick={openReject}
@@ -106,6 +110,7 @@ export function ApplicationActions({
             className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
           />
           <div
+            ref={dialogFocusRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="reject-email-title"
@@ -191,7 +196,7 @@ export function ApplicationActions({
             </div>
 
             {err && (
-              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {err}
               </div>
             )}

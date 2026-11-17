@@ -64,6 +64,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         style={{ objectPosition: "36% top" }}
       />
 
+      {/* First focusable element: lets keyboard users jump past the nav (WCAG 2.4.1). */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-brand-dark focus:shadow-lift focus:outline-none focus:ring-2 focus:ring-plum-500"
+      >
+        Skip to main content
+      </a>
+
       {user.isMentor && activeRole === "mentor" && (
         <PendingRequestBanner userId={user.id} />
       )}
@@ -79,7 +87,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Right column — offset for the pinned sidebar on lg+ */}
       <div className="flex min-h-screen min-w-0 flex-col lg:pl-64">
         <TopBar user={user} activeRole={activeRole} availableRoles={roles} />
-        <main className="flex-1 p-2 pb-24 lg:p-6 lg:pb-8">
+        <main id="main" tabIndex={-1} className="flex-1 p-2 pb-24 outline-none lg:p-6 lg:pb-8">
           <div className="rounded-2xl bg-slate-50 px-4 py-5 shadow-lift lg:rounded-3xl lg:px-8 lg:py-6">
             <div className="mx-auto max-w-6xl">{children}</div>
           </div>

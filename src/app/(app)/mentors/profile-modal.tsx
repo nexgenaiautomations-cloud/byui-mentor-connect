@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 
 export type MentorProfile = {
   id: string;
@@ -41,13 +42,8 @@ export function MentorProfileButton({
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
@@ -87,6 +83,10 @@ function ProfileModal({
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(myStatus === "pending");
   const [error, setError] = useState<string | null>(null);
+  // Focus in, Tab trapped, Escape closes (unless sending), focus back to "View profile".
+  const dialogRef = useDialogFocus(true, () => {
+    if (!sending) onClose();
+  });
 
   async function sendRequest() {
     setSending(true);
@@ -123,6 +123,7 @@ function ProfileModal({
         className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
       />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={`mentor-${m.id}-title`}
@@ -160,7 +161,7 @@ function ProfileModal({
             aria-label="Close"
             className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-white hover:text-slate-700 cursor-pointer"
           >
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 6 18 18M18 6 6 18" />
             </svg>
           </button>
@@ -247,7 +248,7 @@ function ProfileModal({
                 onChange={(e) => setMessage(e.target.value)}
               />
               {error && (
-                <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+                <p role="alert" className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
                   {error}
                 </p>
               )}

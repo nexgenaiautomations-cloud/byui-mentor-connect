@@ -5,6 +5,8 @@ import { Logo } from "@/components/logo";
 import { IndependenceNotice } from "@/components/independence-notice";
 import { LoginForm } from "./login-form";
 
+export const metadata = { title: "Sign in" };
+
 const AUTH_PHOTO = "/hero-students.jpg";
 
 export default async function LoginPage({
@@ -106,7 +108,7 @@ export default async function LoginPage({
             </p>
 
             {error && (
-              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {error === "AccessDenied"
                   ? "That email isn't from a school on ICAN yet. Use your school email."
                   : error === "RateLimited"
