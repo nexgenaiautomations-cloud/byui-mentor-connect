@@ -13,6 +13,8 @@ import { AnalyticsTabs } from "@/components/analytics-tabs";
 import { AnalyticsCard, ProgramFilterBar, filterQuery } from "@/components/program-filter-bar";
 import { SettingsForm } from "@/components/settings-form";
 
+export const metadata = { title: "ROI analytics" };
+
 export const dynamic = "force-dynamic";
 
 type Search = Record<string, string | undefined>;

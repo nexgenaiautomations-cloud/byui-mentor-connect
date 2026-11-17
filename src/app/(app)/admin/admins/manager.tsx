@@ -99,7 +99,7 @@ function PromoteForm() {
         </button>
       </form>
       {error && (
-        <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+        <p role="alert" className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
           {error}
         </p>
       )}
@@ -210,7 +210,7 @@ function AdminRowItem({
           })}
         </p>
         {error && (
-          <p className="mt-1 text-[11px] text-rose-600">{error}</p>
+          <p role="alert" className="mt-1 text-[11px] font-semibold text-rose-700">{error}</p>
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2">

@@ -3,7 +3,7 @@ import { Logo } from "@/components/logo";
 import { signOutAction } from "@/lib/actions";
 
 export const metadata: Metadata = {
-  title: "Account not active · ICAN",
+  title: "Account not active",
 };
 
 // Landing page for a signed-in session whose account an admin removed.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 
 export function RequestButton({
   mentorId,
@@ -15,6 +16,8 @@ export function RequestButton({
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+
+  const dialogRef = useDialogFocus(open, () => setOpen(false));
 
   async function send() {
     setStatus("loading");
@@ -43,7 +46,11 @@ export function RequestButton({
   }
 
   if (status === "sent") {
-    return <span className="text-sm font-bold text-emerald-700">Request sent ✓</span>;
+    return (
+      <span role="status" className="text-sm font-bold text-emerald-700">
+        Request sent ✓
+      </span>
+    );
   }
 
   if (!open) {
@@ -67,16 +74,23 @@ export function RequestButton({
       />
       <div className="fixed inset-0 z-50 grid place-items-center px-4">
         <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="request-mentor-title"
           className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lift"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="font-display text-lg font-bold text-plum-800">
+          <p id="request-mentor-title" className="font-display text-lg font-bold text-plum-800">
             Request {mentorName || "this mentor"}
           </p>
-          <p className="mt-1 text-sm text-slate-600">
+          <label htmlFor="request-mentor-message" className="mt-1 block text-sm text-slate-600">
             A short, specific note doubles your accept rate. What do you want to work on?
-          </p>
+          </label>
           <textarea
+            id="request-mentor-message"
+            autoFocus
+            aria-describedby="request-mentor-hint"
             rows={4}
             className="input mt-4"
             placeholder="e.g. Hi! I'm a sophomore Marketing major exploring brand work. Would love your take on agency vs. in-house and a resume review."
@@ -84,12 +98,13 @@ export function RequestButton({
             onChange={(e) => setMessage(e.target.value)}
             maxLength={1000}
           />
-          <p className="mt-1 text-[11px] text-slate-500">Optional. 1000 characters max.</p>
+          <p id="request-mentor-hint" className="mt-1 text-[11px] text-slate-500">Optional. 1000 characters max.</p>
           {error && (
-            <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
+            <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
           )}
           <div className="mt-5 flex items-center justify-end gap-2">
             <button
+              type="button"
               onClick={() => setOpen(false)}
               className="btn-ghost"
             >

@@ -6,6 +6,8 @@ import { getCurrentUser } from "@/lib/session";
 import { adminScopeFor, emailInScope, userIdInScope } from "@/lib/admin-scope";
 import { MembersTable, type MemberRow } from "./members-table";
 
+export const metadata = { title: "Members" };
+
 export default async function AdminMembersPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");

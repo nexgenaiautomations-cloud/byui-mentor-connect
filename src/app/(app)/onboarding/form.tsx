@@ -335,6 +335,7 @@ export function OnboardingForm({
                   <label className="label" htmlFor="profile-first-name">First name</label>
                   <input
                     id="profile-first-name"
+                    autoComplete="given-name"
                     required
                     maxLength={60}
                     className="input"
@@ -348,6 +349,7 @@ export function OnboardingForm({
                   <label className="label" htmlFor="profile-last-name">Last name</label>
                   <input
                     id="profile-last-name"
+                    autoComplete="family-name"
                     required
                     maxLength={60}
                     className="input"
@@ -377,6 +379,7 @@ export function OnboardingForm({
                   <input
                     type="text"
                     className="input mt-2"
+                    aria-label="Your major"
                     placeholder="Type your major"
                     maxLength={120}
                     value={majorOther}
@@ -401,6 +404,7 @@ export function OnboardingForm({
                   <input
                     type="text"
                     className="input mt-2"
+                    aria-label="Your minor"
                     placeholder="Type your minor"
                     maxLength={120}
                     value={minorOther}
@@ -466,7 +470,7 @@ export function OnboardingForm({
                   <button
                     type="button"
                     onClick={() => setForm({ ...form, image: "" })}
-                    className="mt-1 text-[11px] font-semibold text-rose-600 hover:underline cursor-pointer"
+                    className="mt-1 text-[11px] font-semibold text-rose-700 hover:underline cursor-pointer"
                   >
                     Remove photo
                   </button>
@@ -479,8 +483,9 @@ export function OnboardingForm({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Phone <span className="font-normal text-slate-500">(optional)</span></label>
-                <input
+                <label className="label" htmlFor="onb-field-1">Phone <span className="font-normal text-slate-500">(optional)</span></label>
+                <input id="onb-field-1"
+                  autoComplete="tel"
                   type="tel"
                   className="input"
                   value={form.phone}
@@ -488,8 +493,8 @@ export function OnboardingForm({
                 />
               </div>
               <div>
-                <label className="label">Preferred contact method <span className="font-normal text-slate-500">(optional)</span></label>
-                <select
+                <label className="label" htmlFor="onb-field-2">Preferred contact method <span className="font-normal text-slate-500">(optional)</span></label>
+                <select id="onb-field-2"
                   className="input"
                   value={form.preferredContactMethod}
                   onChange={(e) => setForm({ ...form, preferredContactMethod: e.target.value })}
@@ -502,8 +507,8 @@ export function OnboardingForm({
               </div>
             </div>
             <div>
-              <label className="label">Short bio <span className="font-normal text-slate-500">(optional)</span></label>
-              <textarea
+              <label className="label" htmlFor="onb-field-3">Short bio <span className="font-normal text-slate-500">(optional)</span></label>
+              <textarea id="onb-field-3"
                 rows={3}
                 className="input"
                 placeholder="A sentence or two about you — specific is better than safe."
@@ -516,13 +521,13 @@ export function OnboardingForm({
 
         {step === 2 && (
           <div>
-            <label className="label">
+            <p id="onb-careers-label" className="label">
               Career interests{" "}
               <span className="font-normal text-slate-500">
                 (optional — choose all that apply)
               </span>
-            </label>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            </p>
+            <div role="group" aria-labelledby="onb-careers-label" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {careerOptions.map((opt) => {
                 const selected =
                   opt === "Other"
@@ -533,13 +538,20 @@ export function OnboardingForm({
                     type="button"
                     key={opt}
                     onClick={() => toggleCareer(opt)}
-                    className={`cursor-pointer rounded-lg border px-3 py-2 text-left text-sm transition ${
+                    aria-pressed={selected}
+                    className={`flex cursor-pointer items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition ${
                       selected
-                        ? "border-plum-600 bg-plum-50 text-plum-800"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-plum-300"
+                        ? "border-plum-600 bg-plum-50 font-semibold text-plum-800"
+                        : "border-slate-400 bg-white text-slate-700 hover:border-plum-300"
                     }`}
                   >
-                    {opt}
+                    <span>{opt}</span>
+                    {/* Check mark so "selected" isn't shown by color alone (WCAG 1.4.1). */}
+                    {selected && (
+                      <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4 flex-none" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clipRule="evenodd" />
+                      </svg>
+                    )}
                   </button>
                 );
               })}
@@ -548,7 +560,8 @@ export function OnboardingForm({
               <input
                 type="text"
                 className="input mt-3"
-                placeholder="Type your career interest"
+                aria-label="Your other career interest"
+                    placeholder="Type your career interest"
                 maxLength={200}
                 value={otherCareerText}
                 onChange={(e) => setOtherCareerText(e.target.value)}
@@ -685,7 +698,7 @@ export function OnboardingForm({
         )}
 
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
           </div>
         )}

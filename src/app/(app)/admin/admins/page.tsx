@@ -6,6 +6,8 @@ import { getCurrentUser } from "@/lib/session";
 import { adminScopeFor, emailInScope } from "@/lib/admin-scope";
 import { AdminManager } from "./manager";
 
+export const metadata = { title: "Admins" };
+
 export default async function ManageAdminsPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");

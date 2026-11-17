@@ -7,7 +7,7 @@ import { PLEDGE_ITEMS, needsPledge } from "@/lib/pledge";
 import { PledgeForm } from "./pledge-form";
 
 export const metadata: Metadata = {
-  title: "The 3-2-1 pledge · ICAN",
+  title: "The 3-2-1 pledge",
 };
 
 // Every user signs the 3-2-1 pledge (typing their name) after setting up a

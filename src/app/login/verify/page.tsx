@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { isAllowedSchoolEmail } from "@/lib/school-domains";
 
+export const metadata = { title: "Verify sign-in link" };
+
 // Two-step magic-link confirmation. The email links to this page (not directly
 // to /api/auth/callback/resend) so that Microsoft Defender / Outlook Safe
 // Links / Gmail link-preview can prefetch this page without burning the

@@ -7,6 +7,8 @@ import { adminScopeFor, emailInScope } from "@/lib/admin-scope";
 import { ManageUserButton } from "@/components/manage-user-button";
 import { currentRole } from "@/lib/user-admin";
 
+export const metadata = { title: "Mentors" };
+
 export default async function AdminMentorsPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");

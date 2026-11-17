@@ -8,6 +8,8 @@ import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/
 import { StatTile } from "@/components/stat-card";
 import { ApplicationActions } from "./actions";
 
+export const metadata = { title: "Admin overview" };
+
 export default async function AdminPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");

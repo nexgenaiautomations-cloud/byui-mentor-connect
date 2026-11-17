@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useClientValue, useHydrated } from "@/lib/use-client-value";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 export type PendingRequest = {
   id: string;
   menteeName: string | null;
@@ -71,6 +72,13 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
     };
   }, [hydrated, dismissed, requests]);
 
+  const isOpen = hydrated && requests.some((r) => !dismissed.has(r.id));
+  // Focus in, Tab trapped, focus restored. Escape = "decide later" (dismissed
+  // for this session), unless an accept/decline is in flight.
+  const dialogFocusRef = useDialogFocus(isOpen, () => {
+    if (!busy) dismissCurrent();
+  });
+
   if (!hydrated) return null;
 
   const queue = requests.filter((r) => !dismissed.has(r.id));
@@ -125,6 +133,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
         className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
       />
       <div
+        ref={dialogFocusRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="pending-popup-title"
@@ -166,7 +175,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
 
         {result === "accepted" ? (
           <div className="mt-5 flex flex-col items-stretch gap-2">
-            <div className="rounded-lg bg-emerald-50 px-3 py-2 text-center text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200">
+            <div role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-center text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200">
               ✓ Accepted — match created.
             </div>
             <Link
@@ -177,7 +186,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
             </Link>
           </div>
         ) : result === "declined" ? (
-          <div className="mt-5 rounded-lg bg-slate-100 px-3 py-2 text-center text-sm font-semibold text-slate-600">
+          <div role="status" className="mt-5 rounded-lg bg-slate-100 px-3 py-2 text-center text-sm font-semibold text-slate-600">
             Declined.
           </div>
         ) : confirmingDecline ? (
@@ -190,7 +199,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
             </p>
             <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               {result === "error" && (
-                <span className="self-center text-xs font-semibold text-rose-600">Try again</span>
+                <span role="alert" className="self-center text-xs font-semibold text-rose-700">That didn&apos;t work. Try again.</span>
               )}
               <button
                 type="button"
@@ -213,7 +222,7 @@ export function PendingRequestPopup({ requests }: { requests: PendingRequest[] }
         ) : (
           <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             {result === "error" && (
-              <span className="self-center text-xs font-semibold text-rose-600">Try again</span>
+              <span role="alert" className="self-center text-xs font-semibold text-rose-700">That didn&apos;t work. Try again.</span>
             )}
             <button
               type="button"

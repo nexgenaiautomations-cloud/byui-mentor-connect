@@ -83,7 +83,7 @@ function Stat({
       <p className="font-display text-lg font-black leading-tight md:text-xl">
         {value}
       </p>
-      <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider opacity-70">
+      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider">
         {label}
       </p>
     </div>

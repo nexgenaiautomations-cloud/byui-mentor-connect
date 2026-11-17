@@ -7,6 +7,8 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { PodControls } from "./pod-controls";
 
+export const metadata = { title: "Leaderboard" };
+
 function monthLabel(d: Date) {
   return d.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "America/Denver" });
 }

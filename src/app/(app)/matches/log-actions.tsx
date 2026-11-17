@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 import {
   ACCOMPLISHMENT_GROUPS,
   ALL_ACCOMPLISHMENTS,
@@ -63,13 +64,13 @@ export function LogActions({ log }: { log: LogForEdit }) {
           type="button"
           onClick={onDelete}
           disabled={deleting}
-          className="rounded px-1.5 py-0.5 text-rose-600 hover:bg-rose-50 disabled:opacity-40 cursor-pointer"
+          className="rounded px-1.5 py-0.5 text-rose-700 hover:bg-rose-50 disabled:opacity-40 cursor-pointer"
         >
           {deleting ? "…" : "Delete"}
         </button>
       </div>
       {error && (
-        <p className="mt-1 text-[10px] text-rose-600">{error}</p>
+        <p role="alert" className="mt-1 text-[10px] font-semibold text-rose-700">{error}</p>
       )}
       {editOpen && (
         <EditLogModal
@@ -99,6 +100,8 @@ function EditLogModal({
       (ALL_ACCOMPLISHMENTS as readonly string[]).includes(s)
     )
   );
+  // One modal per log on the page, so field ids must be unique per instance.
+  const fieldId = useId();
   const [date, setDate] = useState(log.meetingDate);
   const [accomplishments, setAccomplishments] = useState<Set<string>>(
     initialAccomplishments
@@ -106,6 +109,9 @@ function EditLogModal({
   const [actions, setActions] = useState(log.actionItems ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Focus moves in, Tab stays inside, focus returns to the opener (WCAG 2.4.3).
+  const dialogFocusRef = useDialogFocus(true);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -162,6 +168,7 @@ function EditLogModal({
         className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
       />
       <div
+        ref={dialogFocusRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-log-title"
@@ -201,8 +208,9 @@ function EditLogModal({
 
         <div className="mt-4 space-y-4">
           <div>
-            <label className="label">Activity date</label>
+            <label className="label" htmlFor={`${fieldId}-date`}>Activity date</label>
             <input
+              id={`${fieldId}-date`}
               type="date"
               className="input"
               value={date}
@@ -249,11 +257,12 @@ function EditLogModal({
           </div>
 
           <div>
-            <label className="label">
+            <label className="label" htmlFor={`${fieldId}-actions`}>
               Action items{" "}
               <span className="font-normal text-slate-500">(optional)</span>
             </label>
             <textarea
+              id={`${fieldId}-actions`}
               rows={2}
               className="input"
               value={actions}
@@ -263,7 +272,7 @@ function EditLogModal({
         </div>
 
         {error && (
-          <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
           </div>
         )}

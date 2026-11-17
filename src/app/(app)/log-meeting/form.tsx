@@ -17,6 +17,7 @@ import { DictationButton } from "@/components/dictation-button";
 import { suggestAccomplishments } from "@/lib/dictation";
 import { useClientValue } from "@/lib/use-client-value";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 type LogKind = "mentor_meeting" | "touchpoint" | "independent_activity";
 
 function browserTimeZone(): string {
@@ -169,6 +170,9 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
     setConfirmOpen(true);
   }
 
+  // Focus moves in, Tab stays inside, focus returns to the opener (WCAG 2.4.3).
+  const dialogFocusRef = useDialogFocus(confirmOpen);
+
   // Lock body scroll while the confirmation modal is open + Escape closes it.
   useEffect(() => {
     if (!confirmOpen) return;
@@ -254,9 +258,9 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
       <form onSubmit={onReview} className="space-y-5">
         {isMentor && matches.length > 0 && (
           <div>
-            <label className="label">Mentee</label>
+            <label className="label" htmlFor="logmtg-field-1">Mentee</label>
             <div className="flex flex-wrap items-center gap-3">
-              <select
+              <select id="logmtg-field-1"
                 className="input w-auto min-w-[180px] flex-none"
                 value={matchId}
                 onChange={(e) => setMatchId(e.target.value)}
@@ -328,8 +332,8 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
         {isMentor || isInteraction ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label className="label">Activity date</label>
-              <input
+              <label className="label" htmlFor="logmtg-field-2">Activity date</label>
+              <input id="logmtg-field-2"
                 type="date"
                 className="input"
                 value={date}
@@ -338,10 +342,10 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
               />
             </div>
             <div>
-              <label className="label">
+              <label className="label" htmlFor="logmtg-field-3">
                 Type <span className="font-normal text-slate-500">(optional)</span>
               </label>
-              <select
+              <select id="logmtg-field-3"
                 className="input"
                 value={meetingType}
                 onChange={(e) => setMeetingType(e.target.value)}
@@ -355,11 +359,11 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
               </select>
             </div>
             <div>
-              <label className="label">
+              <label className="label" htmlFor="logmtg-field-4">
                 Duration (min){" "}
                 <span className="font-normal text-slate-500">(optional)</span>
               </label>
-              <input
+              <input id="logmtg-field-4"
                 type="number"
                 min={1}
                 max={600}
@@ -373,8 +377,8 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
           // Mentees report independent work — Type and Duration don't apply
           // (they're meeting-specific). Just an activity date.
           <div className="max-w-xs">
-            <label className="label">Activity date</label>
-            <input
+            <label className="label" htmlFor="logmtg-field-5">Activity date</label>
+            <input id="logmtg-field-5"
               type="date"
               className="input"
               value={date}
@@ -405,7 +409,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
         </fieldset>
 
         <div>
-          <label className="label">
+          <label className="label" htmlFor="log-notes">
             {isMentor ? "Action items" : "Other activity"}{" "}
             <span className="font-normal text-slate-500">(optional)</span>
           </label>
@@ -492,7 +496,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
         )}
 
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
           </div>
         )}
@@ -523,6 +527,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
             className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
           />
           <div
+            ref={dialogFocusRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="confirm-log-title"
@@ -659,7 +664,7 @@ export function LogActivityForm(props: MentorProps | MenteeProps) {
             </dl>
 
             {error && (
-              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {error}
               </div>
             )}

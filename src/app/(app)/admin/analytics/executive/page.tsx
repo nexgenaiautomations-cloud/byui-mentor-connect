@@ -38,6 +38,8 @@ import { AreaTrend, HeatmapChart } from "@/components/analytics-charts";
 import { CHART_COLORS } from "@/lib/chart-colors";
 import { StatTile } from "@/components/stat-card";
 
+export const metadata = { title: "Executive analytics" };
+
 export const dynamic = "force-dynamic";
 
 type Search = Record<string, string | undefined>;

@@ -13,6 +13,7 @@ import {
 } from "@/lib/member-sort";
 import { MemberEditForm } from "./member-edit-form";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 export type MemberRow = {
   id: string;
   name: string | null;
@@ -273,7 +274,7 @@ export function MembersTable({ rows, viewer }: { rows: MemberRow[]; viewer: View
 
       {/* Desktop table */}
       <div className="card hidden overflow-hidden p-0 md:block">
-        <div className="overflow-x-auto">
+        <div tabIndex={0} role="region" aria-label="Members table" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-plum-500 overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-100 text-sm">
             <thead className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               <tr>
@@ -290,19 +291,13 @@ export function MembersTable({ rows, viewer }: { rows: MemberRow[]; viewer: View
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {sorted.map((u) => (
+                // The whole row is a mouse shortcut; keyboard and screen-reader
+                // users get a real button on the name. A row with role="button"
+                // hid the table structure and nested the Manage button (WCAG 1.3.1).
                 <tr
                   key={u.id}
                   onClick={() => setSelected(u)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setSelected(u);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Open profile for ${u.name || u.email}`}
-                  className={`${u.removedAt ? "opacity-60 " : ""}cursor-pointer hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand`}
+                  className={`${u.removedAt ? "opacity-60 " : ""}cursor-pointer hover:bg-slate-50 focus-within:bg-slate-50`}
                 >
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
@@ -314,7 +309,17 @@ export function MembersTable({ rows, viewer }: { rows: MemberRow[]; viewer: View
                         className="h-9 w-9 rounded-full object-cover"
                       />
                       <div>
-                        <p className="font-semibold text-plum-800">{u.name || "—"}</p>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelected(u);
+                          }}
+                          aria-label={`Open profile for ${u.name || u.email}`}
+                          className="cursor-pointer rounded text-left font-semibold text-plum-800 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                        >
+                          {u.name || "—"}
+                        </button>
                         <p className="text-xs text-slate-500">{u.email}</p>
                       </div>
                     </div>
@@ -368,6 +373,9 @@ function MemberProfileModal({
   editBlocked: string | null;
   onClose: () => void;
 }) {
+  // Focus moves in, Tab stays inside, focus returns to the opener (WCAG 2.4.3).
+  // Escape is handled by the table, which owns the open state.
+  const dialogFocusRef = useDialogFocus(true);
   const [editing, setEditing] = useState(false);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -377,6 +385,7 @@ function MemberProfileModal({
         className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
       />
       <div
+        ref={dialogFocusRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="member-profile-title"

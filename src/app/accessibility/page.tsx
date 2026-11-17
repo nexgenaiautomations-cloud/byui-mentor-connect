@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Logo } from "@/components/logo";
 
 export const metadata: Metadata = {
-  title: "Accessibility — ICAN",
+  title: "Accessibility",
   description:
     "Accessibility statement for ICAN: our conformance target, known limitations, and how to report barriers.",
 };

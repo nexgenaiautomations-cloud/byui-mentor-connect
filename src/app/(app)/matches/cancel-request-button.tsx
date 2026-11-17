@@ -37,7 +37,7 @@ export function CancelRequestButton({ requestId }: { requestId: string }) {
       >
         {busy ? "…" : "Cancel"}
       </button>
-      {err && <span className="text-[11px] font-semibold text-rose-600">{err}</span>}
+      {err && <span role="alert" className="text-[11px] font-semibold text-rose-700">{err}</span>}
     </div>
   );
 }

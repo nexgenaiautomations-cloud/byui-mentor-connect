@@ -10,6 +10,8 @@ import { StatTile } from "@/components/stat-card";
 import { SettingsForm } from "@/components/settings-form";
 import { CasePanel, RefreshRiskButton } from "./case-panel";
 
+export const metadata = { title: "Intervention center" };
+
 export const dynamic = "force-dynamic";
 
 type Search = Record<string, string | undefined>;

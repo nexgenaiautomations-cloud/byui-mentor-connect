@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 export type PendingIssue = {
   id: string;
   categoryLabel: string;
@@ -38,6 +39,10 @@ export function AdminIssuePopup({ issues }: { issues: PendingIssue[] }) {
       document.body.style.overflow = prev;
     };
   }, [current]);
+
+  // Tab trapped + focus restored. No onClose: Escape must not skip the
+  // acknowledgement this dialog records.
+  const dialogFocusRef = useDialogFocus(!!current);
 
   if (!current) return null;
 
@@ -79,6 +84,7 @@ export function AdminIssuePopup({ issues }: { issues: PendingIssue[] }) {
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div aria-hidden className="absolute inset-0 bg-brand-dark/75 backdrop-blur-sm" />
       <div
+        ref={dialogFocusRef}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="admin-issue-title"

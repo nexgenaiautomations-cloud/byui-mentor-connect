@@ -6,6 +6,8 @@ import { desc, eq, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { adminScopeFor, emailInScope, rawUserIdInScope, userIdInScope } from "@/lib/admin-scope";
 
+export const metadata = { title: "Activity" };
+
 export default async function AdminActivityPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");

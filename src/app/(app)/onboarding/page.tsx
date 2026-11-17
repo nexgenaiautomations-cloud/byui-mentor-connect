@@ -8,6 +8,8 @@ import {
 } from "@/lib/academic-options";
 import { OnboardingForm } from "./form";
 
+export const metadata = { title: "Set up your profile" };
+
 export default async function OnboardingPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

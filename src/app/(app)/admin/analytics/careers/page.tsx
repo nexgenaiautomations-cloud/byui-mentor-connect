@@ -27,6 +27,8 @@ import { lastMonthKeys, monthLabel } from "@/lib/effectiveness";
 import { StatTile } from "@/components/stat-card";
 import { VerifyButton } from "./verify-button";
 
+export const metadata = { title: "Career outcomes" };
+
 export const dynamic = "force-dynamic";
 
 type Search = Record<string, string | undefined>;
@@ -211,7 +213,7 @@ export default async function CareerOutcomesPage({ searchParams }: { searchParam
         {offerRows.length === 0 ? (
           <p className="text-sm text-slate-600">No offers reported in this period yet.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div tabIndex={0} role="region" aria-label="Career outcomes table" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-plum-500 overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="text-left text-xs text-slate-600">

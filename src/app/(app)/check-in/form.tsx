@@ -77,8 +77,8 @@ export function CheckInForm({
   return (
     <form onSubmit={onSubmit} className="card space-y-5">
       <div>
-        <label className="label">Match</label>
-        <select
+        <label className="label" htmlFor="checkin-field-1">Match</label>
+        <select id="checkin-field-1"
           className="input"
           value={matchId}
           onChange={(e) => setMatchId(e.target.value)}
@@ -104,8 +104,13 @@ export function CheckInForm({
       )}
 
       <div>
-        <label className="label">How is mentoring going this month?</label>
-        <div className="mt-1 flex gap-2">
+        <p id="checkin-rating-label" className="label">How is mentoring going this month?</p>
+        <div
+          role="group"
+          aria-labelledby="checkin-rating-label"
+          aria-describedby="checkin-rating-scale"
+          className="mt-1 flex gap-2"
+        >
           {[1, 2, 3, 4, 5].map((n) => (
             <button
               key={n}
@@ -124,17 +129,17 @@ export function CheckInForm({
             </button>
           ))}
         </div>
-        <p className="mt-1 text-xs text-slate-500">
+        <p id="checkin-rating-scale" className="mt-1 text-xs text-slate-500">
           1 = not working · 5 = best mentor relationship ever
         </p>
       </div>
 
       <div>
-        <label className="label">
+        <label className="label" htmlFor="checkin-field-2">
           How often are you meeting?{" "}
           <span className="font-normal text-slate-500">(optional)</span>
         </label>
-        <input
+        <input id="checkin-field-2"
           className="input"
           value={frequency}
           disabled={blocked}
@@ -143,11 +148,11 @@ export function CheckInForm({
         />
       </div>
       <div>
-        <label className="label">
+        <label className="label" htmlFor="checkin-field-3">
           What&apos;s been most valuable?{" "}
           <span className="font-normal text-slate-500">(optional)</span>
         </label>
-        <textarea
+        <textarea id="checkin-field-3"
           rows={2}
           className="input"
           value={value}
@@ -156,11 +161,11 @@ export function CheckInForm({
         />
       </div>
       <div>
-        <label className="label">
+        <label className="label" htmlFor="checkin-field-4">
           Any blockers we can help with?{" "}
           <span className="font-normal text-slate-500">(optional)</span>
         </label>
-        <textarea
+        <textarea id="checkin-field-4"
           rows={2}
           className="input"
           value={blockers}
@@ -170,7 +175,7 @@ export function CheckInForm({
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
         </div>
       )}

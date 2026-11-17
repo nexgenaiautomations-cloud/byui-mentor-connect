@@ -4,7 +4,7 @@ import { Logo } from "@/components/logo";
 import { OPERATOR, THIRD_PARTY_NOTICE, VOLUNTARY_NOTICE } from "@/lib/disclaimers";
 
 export const metadata: Metadata = {
-  title: "Privacy Notice — ICAN",
+  title: "Privacy Notice",
   description:
     "What ICAN collects, why, who processes it, how long it is kept, and the choices you have.",
 };

@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 export function CanTodosButton({ actions }: { actions: readonly string[] }) {
   const [open, setOpen] = useState(false);
+
+  // Focus moves in, Tab stays inside, focus returns to the opener (WCAG 2.4.3).
+  const dialogFocusRef = useDialogFocus(open);
 
   // Lock body scroll while open and close on Escape.
   useEffect(() => {
@@ -38,6 +42,7 @@ export function CanTodosButton({ actions }: { actions: readonly string[] }) {
             className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
           />
           <div
+            ref={dialogFocusRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="can-todos-title"

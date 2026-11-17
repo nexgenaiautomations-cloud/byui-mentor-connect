@@ -7,6 +7,8 @@ import { getCurrentUser } from "@/lib/session";
 import { adminScopeFor, emailInScope, rawUserIdInScope } from "@/lib/admin-scope";
 import { StatTile } from "@/components/stat-card";
 
+export const metadata = { title: "Meetings" };
+
 export default async function AdminMeetingsPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");

@@ -126,9 +126,27 @@ function yAxisFor(format: Format) {
   );
 }
 
-const tooltip = (format: Format) => (
+// WCAG 1.4.13 (Content on Hover or Focus): the tooltip must be dismissible
+// without moving the pointer or focus. Escape hides it; the next pointer move
+// or arrow key (recharts' accessibility layer) brings it back.
+function useDismissibleTooltip() {
+  const [hidden, setHidden] = React.useState(false);
+  const figureProps = {
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") setHidden(true);
+      else if (e.key.startsWith("Arrow")) setHidden(false);
+    },
+    onMouseMove: () => {
+      if (hidden) setHidden(false);
+    },
+  };
+  return { hidden, figureProps };
+}
+
+const tooltip = (format: Format, hidden = false) => (
   <ChartTooltip
     cursor
+    active={hidden ? false : undefined}
     content={
       <ChartTooltipContent
         formatter={(value, name, item) => (
@@ -148,9 +166,10 @@ const tooltip = (format: Format) => (
 // Smooth area chart for trends (optionally stacked).
 export function AreaTrend({ title, data, series, format = "count", height = 240, emptyText = "No data for this period yet.", stacked = false, className }: CommonProps & { stacked?: boolean }) {
   const reduced = useReducedMotion();
+  const tip = useDismissibleTooltip();
   if (!hasData(data, series)) return <Empty text={emptyText} height={height} />;
   return (
-    <figure className={cn("w-full", className)}>
+    <figure className={cn("w-full", className)} {...tip.figureProps}>
       <ChartContainer config={config(series)} className="aspect-auto w-full" style={{ height }} role="img" aria-label={title}>
         <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} accessibilityLayer>
           <defs>
@@ -164,7 +183,7 @@ export function AreaTrend({ title, data, series, format = "count", height = 240,
           <CartesianGrid vertical={false} strokeDasharray="3 3" />
           <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={16} />
           {yAxisFor(format)}
-          {tooltip(format)}
+          {tooltip(format, tip.hidden)}
           {series.map((s) => (
             <Area
               key={s.key}
@@ -191,15 +210,16 @@ export function AreaTrend({ title, data, series, format = "count", height = 240,
 // Line chart for comparing rates over time.
 export function LineTrend({ title, data, series, format = "count", height = 240, emptyText = "No data for this period yet.", className }: CommonProps) {
   const reduced = useReducedMotion();
+  const tip = useDismissibleTooltip();
   if (!hasData(data, series)) return <Empty text={emptyText} height={height} />;
   return (
-    <figure className={cn("w-full", className)}>
+    <figure className={cn("w-full", className)} {...tip.figureProps}>
       <ChartContainer config={config(series)} className="aspect-auto w-full" style={{ height }} role="img" aria-label={title}>
         <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }} accessibilityLayer>
           <CartesianGrid vertical={false} strokeDasharray="3 3" />
           <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={16} />
           {yAxisFor(format)}
-          {tooltip(format)}
+          {tooltip(format, tip.hidden)}
           {series.map((s) => (
             <Line
               key={s.key}
@@ -239,10 +259,11 @@ export function Bars({
   className,
 }: CommonProps & { stacked?: boolean; horizontal?: boolean; rowColors?: string[]; showValues?: boolean }) {
   const reduced = useReducedMotion();
+  const tip = useDismissibleTooltip();
   if (!hasData(data, series)) return <Empty text={emptyText} height={height} />;
   const h = horizontal ? Math.max(height, data.length * 44 + 32) : height;
   return (
-    <figure className={cn("w-full", className)}>
+    <figure className={cn("w-full", className)} {...tip.figureProps}>
       <ChartContainer config={config(series)} className="aspect-auto w-full" style={{ height: h }} role="img" aria-label={title}>
         <BarChart
           data={data}
@@ -270,7 +291,7 @@ export function Bars({
               {yAxisFor(format)}
             </>
           )}
-          {tooltip(format)}
+          {tooltip(format, tip.hidden)}
           {series.map((s, i) => (
             <Bar
               key={s.key}

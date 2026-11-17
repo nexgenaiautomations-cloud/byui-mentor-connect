@@ -85,8 +85,9 @@ function KpiCard({
           {label}
         </p>
         {complete && (
-          <span className="text-emerald-600" aria-label="complete">
+          <span className="text-emerald-600" role="img" aria-label="complete">
             <svg
+              aria-hidden
               viewBox="0 0 20 20"
               fill="currentColor"
               className="h-4 w-4"
@@ -100,8 +101,8 @@ function KpiCard({
           </span>
         )}
         {streakFlame && !complete && (
-          <span className="text-orange-500" aria-label="streak active">
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+          <span className="text-orange-500" role="img" aria-label="streak active">
+            <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
               <path d="M12 2c1 4-2 5-2 8a3 3 0 0 0 6 0c0-1-.4-2-1-3 3 2 5 5 5 9a8 8 0 1 1-15.5-3C5 9 9 8 12 2z" />
             </svg>
           </span>

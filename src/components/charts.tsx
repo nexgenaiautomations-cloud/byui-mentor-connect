@@ -3,6 +3,13 @@
 
 type Pt = { label: string; value: number };
 
+// Text equivalent for an SVG trend chart (WCAG 1.1.1): every point, in order.
+function describe(points: Pt[]) {
+  return points.length === 0
+    ? "Trend chart, no data"
+    : "Trend: " + points.map((p) => `${p.label} ${p.value}`).join(", ");
+}
+
 function niceTop(max: number) {
   if (max <= 0) return 1;
   const pow = Math.pow(10, Math.floor(Math.log10(max)));
@@ -76,6 +83,8 @@ export function MonthlyLine({
   return (
     <div>
       <svg
+        role="img"
+        aria-label={describe(points)}
         viewBox={`0 0 100 ${FULL.height}`}
         preserveAspectRatio="xMidYMid meet"
         className="block h-36 w-full"
@@ -168,6 +177,8 @@ function Sparkline({
     const padX = (colW - barW) / 2;
     return (
       <svg
+        role="img"
+        aria-label={describe(points)}
         viewBox={`0 0 ${w} ${h}`}
         preserveAspectRatio="none"
         className="block h-12 w-full"
@@ -200,6 +211,8 @@ function Sparkline({
   const gradId = `spark-${color.replace("#", "")}`;
   return (
     <svg
+      role="img"
+      aria-label={describe(points)}
       viewBox={`0 0 ${w} ${h}`}
       preserveAspectRatio="none"
       className="block h-12 w-full"

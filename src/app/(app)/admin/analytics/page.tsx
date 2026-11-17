@@ -11,6 +11,8 @@ import { MonthlyLine, HBarList, DeltaPill } from "@/components/charts";
 import { AreaTrend, LineTrend } from "@/components/analytics-charts";
 import { CHART_COLORS } from "@/lib/chart-colors";
 
+export const metadata = { title: "Analytics" };
+
 export const dynamic = "force-dynamic";
 
 type Bucket = { label: string; value: number };

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef } from "react";
 import type { CelebrationKind } from "@/lib/possible-actions";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 export type TrophyToast = {
   key: string;
   title: string;
@@ -13,6 +14,7 @@ export type TrophyToast = {
 // route's bundle. Safe to await; if the module fails to load we just skip
 // the burst rather than crash the page.
 export async function fireConfetti() {
+  if (prefersReducedMotion()) return; // WCAG 2.3.3: no motion burst when the user opted out
   try {
     const confetti = (await import("canvas-confetti")).default;
     confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
@@ -30,22 +32,15 @@ export async function fireConfetti() {
 }
 
 // Slim, fixed-position toast that mimics an Xbox-style achievement card.
-// Auto-dismisses after `durationMs` so the user doesn't have to interact.
+// It stays until closed: a toast that vanished on a timer failed WCAG 2.2.1
+// (Timing Adjustable) for slow readers and screen magnifier users.
 export function AchievementToast({
   trophies,
   onDismiss,
-  durationMs = 4500,
 }: {
   trophies: TrophyToast[];
   onDismiss: () => void;
-  durationMs?: number;
 }) {
-  useEffect(() => {
-    if (trophies.length === 0) return;
-    const t = window.setTimeout(onDismiss, durationMs);
-    return () => window.clearTimeout(t);
-  }, [trophies, onDismiss, durationMs]);
-
   if (trophies.length === 0) return null;
   return (
     <div
@@ -67,7 +62,7 @@ export function AchievementToast({
             <path d="M5 4h14v3a5 5 0 0 1-5 5h-.07A5 5 0 0 1 9 14v2.5A1.5 1.5 0 0 0 10.5 18H13v2H7v-2h2.5A1.5 1.5 0 0 0 11 16.5V14a5 5 0 0 1-5-5V7H3v3a3 3 0 0 0 3 3v-2a1 1 0 0 1-1-1V8H4V4zm14 0v4a1 1 0 0 1-1 1v2a3 3 0 0 0 3-3V4h-2z" />
           </svg>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-300">
             Achievement unlocked
           </p>
@@ -75,6 +70,16 @@ export function AchievementToast({
             {trophies.map((t) => t.title).join(" · ")}
           </p>
         </div>
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Close achievement message"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-300 cursor-pointer"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden>
+            <path d="M6 6 18 18M18 6 6 18" />
+          </svg>
+        </button>
       </div>
     </div>
   );
@@ -86,7 +91,8 @@ export function AchievementToast({
 //   internship → Trophy pop      (dimmed page, side cannons, trophy card)
 //   part_time  → Fireworks night (deep purple, bursts, gold "Congratulations")
 //   full_time  → Gold seal       (no overlay: "HIRED!" stamp, streamers, banner)
-// All auto-dismiss; click, Esc, or "Keep going" closes early. Confetti is
+// The full-time banner auto-dismisses; the two dialogs wait for click, Esc
+// or "Keep going". Confetti is
 // skipped for prefers-reduced-motion and the CSS animations fall back to a
 // static card (see .ican-* in globals.css).
 
@@ -133,6 +139,9 @@ export function OfferCelebration({
 }) {
   const timers = useRef<number[]>([]);
   const keepGoing = useRef<HTMLButtonElement>(null);
+  // The two blocking celebrations are modal: keep Tab inside and give focus
+  // back afterwards. Escape is already handled below.
+  const dialogFocusRef = useDialogFocus(kind === "internship" || kind === "part_time");
   // Parent passes an inline onDone; keep it in a ref so re-renders (e.g.
   // router.refresh after saving) don't restart the animation.
   const onDoneRef = useRef(onDone);
@@ -163,7 +172,10 @@ export function OfferCelebration({
       if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
-    later(close, DURATION[kind]);
+    // Only the non-blocking full-time banner times out. The internship and
+    // part-time celebrations are dialogs that hold focus, so they stay until
+    // the user closes them (WCAG 2.2.1 Timing Adjustable).
+    if (kind === "full_time") later(close, DURATION[kind]);
     keepGoing.current?.focus();
 
     if (!prefersReducedMotion()) {
@@ -260,6 +272,7 @@ export function OfferCelebration({
   if (kind === "internship") {
     return (
       <div
+        ref={dialogFocusRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="offer-celebration-title"
@@ -287,6 +300,7 @@ export function OfferCelebration({
     const word = "Congratulations";
     return (
       <div
+        ref={dialogFocusRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="offer-celebration-title"

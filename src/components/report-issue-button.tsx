@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 const CATEGORIES = [
   { value: "it", label: "IT" },
   { value: "mentor", label: "I have an issue with my mentor" },
@@ -47,6 +48,9 @@ function IssueModal({ onClose }: { onClose: () => void }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+
+  // Focus moves in, Tab stays inside, focus returns to the opener (WCAG 2.4.3).
+  const dialogFocusRef = useDialogFocus(true);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -95,6 +99,7 @@ function IssueModal({ onClose }: { onClose: () => void }) {
         className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
       />
       <div
+        ref={dialogFocusRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="issue-title"
@@ -189,7 +194,7 @@ function IssueModal({ onClose }: { onClose: () => void }) {
               </p>
             </div>
             {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {error}
               </div>
             )}

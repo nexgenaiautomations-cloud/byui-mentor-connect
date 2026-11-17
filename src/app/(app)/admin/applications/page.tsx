@@ -7,6 +7,8 @@ import { adminScopeFor, emailInScope } from "@/lib/admin-scope";
 import { ApplicationActions } from "../actions";
 import { EmptyState } from "@/components/empty-state";
 
+export const metadata = { title: "Mentor applications" };
+
 export default async function AdminApplicationsPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");

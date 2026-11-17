@@ -6,6 +6,8 @@ import { getCurrentUser } from "@/lib/session";
 import { isPlatformAdmin } from "@/lib/platform-admin";
 import { SchoolsManager } from "./manager";
 
+export const metadata = { title: "Schools" };
+
 // Platform-admin only (PLATFORM_ADMIN_EMAILS): which schools' email domains
 // can register, plus the inbox of "bring ICAN to your school" requests.
 export default async function SchoolsAdminPage() {

@@ -10,6 +10,8 @@ import { LogActivityForm } from "./form";
 import { MentorWorkspace } from "./mentor-workspace";
 import { KpiStrip } from "@/components/kpi-strip";
 
+export const metadata = { title: "Log a meeting" };
+
 export default async function LogActivityPage({
   searchParams,
 }: {

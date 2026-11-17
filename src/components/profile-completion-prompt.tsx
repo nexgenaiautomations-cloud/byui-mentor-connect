@@ -6,6 +6,7 @@ import { useEffect, useReducer, useState } from "react";
 import { useClientValue, useHydrated } from "@/lib/use-client-value";
 import { shouldNagProfile } from "@/lib/profile-completeness";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 const SNOOZE_KEY = "ican-profile-nag-snoozed-at";
 
 // Wall clock, kept out of the component body so render stays pure-looking;
@@ -44,6 +45,9 @@ export function ProfileCompletionPrompt({ missing }: { missing: string[] }) {
     };
   }, [show]);
 
+  // Focus in, Tab trapped, focus restored; Escape = "Not now".
+  const dialogFocusRef = useDialogFocus(show, () => snooze());
+
   if (!show) return null;
 
   function snooze() {
@@ -59,6 +63,7 @@ export function ProfileCompletionPrompt({ missing }: { missing: string[] }) {
     <div className="fixed inset-0 z-[65] flex items-center justify-center p-4">
       <div aria-hidden className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm" />
       <div
+        ref={dialogFocusRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="profile-nag-title"

@@ -17,6 +17,8 @@ import { listCases } from "@/lib/interventions-server";
 import { RISK_LABEL, STATUS_LABEL, type InterventionStatus, type RiskReason } from "@/lib/interventions";
 import { CasePanel } from "../admin/interventions/case-panel";
 
+export const metadata = { title: "Dashboard" };
+
 export default async function DashboardPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");

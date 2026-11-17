@@ -16,6 +16,8 @@ import { LogActions } from "./log-actions";
 import { MeetingFollowUps, type FollowUpItem } from "./meeting-follow-ups";
 import { EVENT_KIND_LABEL, type EventKind } from "@/lib/engagement";
 
+export const metadata = { title: "My matches" };
+
 function daysSince(d: Date) {
   return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
 }
@@ -451,8 +453,12 @@ export default async function MatchesPage() {
                       Call
                     </a>
                   ) : (
-                    <span className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold text-slate-300 pointer-events-none">
-                      Call
+                    // Unavailable state: dashed border + readable grey, not faint text (WCAG 1.4.3).
+                    <span
+                      title="No phone number on file"
+                      className="inline-flex items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-500 pointer-events-none"
+                    >
+                      Call<span className="sr-only"> (no phone number on file)</span>
                     </span>
                   )}
                   <a

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 export type ActiveMatchRow = {
   id: string;
   mentorName: string | null;
@@ -159,6 +160,9 @@ export function ActiveMatchesTable({ rows }: { rows: ActiveMatchRow[] }) {
     return copy;
   }, [rows, sortKey, sortDir]);
 
+  // Focus moves in, Tab stays inside, focus returns to the opener (WCAG 2.4.3).
+  const dialogFocusRef = useDialogFocus(confirming !== null);
+
   // Lock scroll + Escape closes confirm modal.
   useEffect(() => {
     if (!confirming) return;
@@ -199,7 +203,7 @@ export function ActiveMatchesTable({ rows }: { rows: ActiveMatchRow[] }) {
   return (
     <>
       <div className="card overflow-hidden p-0">
-        <div className="overflow-x-auto">
+        <div tabIndex={0} role="region" aria-label="Matches table" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-plum-500 overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-100 text-sm">
             <thead className="bg-slate-50 text-left">
               <tr>
@@ -326,6 +330,7 @@ export function ActiveMatchesTable({ rows }: { rows: ActiveMatchRow[] }) {
             className="absolute inset-0 bg-brand-dark/70 backdrop-blur-sm"
           />
           <div
+            ref={dialogFocusRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="break-match-title"
@@ -354,7 +359,7 @@ export function ActiveMatchesTable({ rows }: { rows: ActiveMatchRow[] }) {
             </p>
 
             {err && (
-              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {err}
               </div>
             )}
@@ -427,7 +432,7 @@ export function EndedMatchesTable({ rows }: { rows: EndedMatchRow[] }) {
 
   return (
     <div className="card overflow-hidden p-0">
-      <div className="overflow-x-auto">
+      <div tabIndex={0} role="region" aria-label="Matches table" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-plum-500 overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-100 text-sm">
           <thead className="bg-slate-50 text-left">
             <tr>

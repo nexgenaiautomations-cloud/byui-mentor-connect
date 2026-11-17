@@ -6,6 +6,8 @@ import { getCurrentUser } from "@/lib/session";
 import { MatchmakerBoard, type MenteeCard, type MentorCard } from "./board";
 import { sameSchoolAs } from "@/lib/school-scope";
 
+export const metadata = { title: "Matchmaker" };
+
 // Score how well a mentor fits a mentee. Higher = better. Returns null when
 // the mentor has zero remaining slots — those are filtered out.
 function suggestionScore(mentee: MenteeCard, mentor: MentorCard): number | null {

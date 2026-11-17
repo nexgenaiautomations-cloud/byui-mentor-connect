@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ICAN",
+  title: { default: "ICAN · Peer mentorship for college students", template: "%s · ICAN" },
   description: "An independent, student-run peer mentorship platform for college students.",
   manifest: "/manifest.webmanifest",
   applicationName: "ICAN",

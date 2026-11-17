@@ -7,6 +7,8 @@ import { getCurrentUser } from "@/lib/session";
 import { readActiveRole } from "@/lib/roles-server";
 import { CheckInForm } from "./form";
 
+export const metadata = { title: "Check-in" };
+
 export default async function CheckInPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");

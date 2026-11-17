@@ -15,6 +15,8 @@ import { TrophyBadge } from "@/components/trophy-badge";
 import { missingProfileFields } from "@/lib/profile-completeness";
 import { NotificationPreferences } from "./notification-preferences";
 
+export const metadata = { title: "Settings" };
+
 export default async function SettingsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -111,7 +113,7 @@ export default async function SettingsPage() {
             </Link>
           </div>
           {achievements.length > 0 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            <div tabIndex={0} role="region" aria-label="Recent achievements" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-plum-500 mt-3 flex gap-2 overflow-x-auto pb-1">
               {achievements.slice(0, 8).map((a) => (
                 <div
                   key={a.key}

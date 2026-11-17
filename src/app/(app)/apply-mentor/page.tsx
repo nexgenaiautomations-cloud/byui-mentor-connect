@@ -5,6 +5,8 @@ import { desc, eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/session";
 import { ApplyForm } from "./form";
 
+export const metadata = { title: "Apply to mentor" };
+
 export default async function ApplyMentorPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
