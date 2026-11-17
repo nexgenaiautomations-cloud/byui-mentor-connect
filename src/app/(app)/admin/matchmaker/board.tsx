@@ -283,6 +283,10 @@ export function MatchmakerBoard({
           No unassigned mentees right now. New members will appear here after they
           onboard.
         </p>
+        {/* Keep the last result announced when the final mentee is matched (WCAG 4.1.3). */}
+        <p role="status" className="mt-2 text-sm font-semibold text-emerald-700">
+          {flash ?? ""}
+        </p>
       </div>
     );
   }

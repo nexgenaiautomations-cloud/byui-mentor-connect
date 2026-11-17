@@ -32,22 +32,15 @@ export async function fireConfetti() {
 }
 
 // Slim, fixed-position toast that mimics an Xbox-style achievement card.
-// Auto-dismisses after `durationMs` so the user doesn't have to interact.
+// It stays until closed: a toast that vanished on a timer failed WCAG 2.2.1
+// (Timing Adjustable) for slow readers and screen magnifier users.
 export function AchievementToast({
   trophies,
   onDismiss,
-  durationMs = 4500,
 }: {
   trophies: TrophyToast[];
   onDismiss: () => void;
-  durationMs?: number;
 }) {
-  useEffect(() => {
-    if (trophies.length === 0) return;
-    const t = window.setTimeout(onDismiss, durationMs);
-    return () => window.clearTimeout(t);
-  }, [trophies, onDismiss, durationMs]);
-
   if (trophies.length === 0) return null;
   return (
     <div
@@ -69,7 +62,7 @@ export function AchievementToast({
             <path d="M5 4h14v3a5 5 0 0 1-5 5h-.07A5 5 0 0 1 9 14v2.5A1.5 1.5 0 0 0 10.5 18H13v2H7v-2h2.5A1.5 1.5 0 0 0 11 16.5V14a5 5 0 0 1-5-5V7H3v3a3 3 0 0 0 3 3v-2a1 1 0 0 1-1-1V8H4V4zm14 0v4a1 1 0 0 1-1 1v2a3 3 0 0 0 3-3V4h-2z" />
           </svg>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-300">
             Achievement unlocked
           </p>
@@ -77,6 +70,16 @@ export function AchievementToast({
             {trophies.map((t) => t.title).join(" · ")}
           </p>
         </div>
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Close achievement message"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-white/80 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-300 cursor-pointer"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden>
+            <path d="M6 6 18 18M18 6 6 18" />
+          </svg>
+        </button>
       </div>
     </div>
   );
